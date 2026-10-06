@@ -1,0 +1,46 @@
+services:
+  academic-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: academic_db
+      POSTGRES_USER: academic
+      POSTGRES_PASSWORD: academic
+    ports:
+      - "5435:5432"
+    volumes:
+      - academic_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academic -d academic_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  academic-migrate:
+    build:
+      context: ./services/academic-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://academic:academic@academic-db:5432/academic_db
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      academic-db:
+        condition: service_healthy
+
+  academic-service:
+    build:
+      context: ./services/academic-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://academic:academic@academic-db:5432/academic_db
+      JWT_ISSUER: ${ACADEMIC_JWT_ISSUER:-http://localhost:8001}
+      JWT_ACCESS_AUDIENCE: ${ACADEMIC_JWT_ACCESS_AUDIENCE:-smart-education-api}
+      JWT_JWKS_URL: ${ACADEMIC_JWT_JWKS_URL:-http://identity-service:8000/.well-known/jwks.json}
+      CORS_ORIGINS: '["http://localhost:5173"]'
+    ports:
+      - "8002:8000"
+    depends_on:
+      academic-db:
+        condition: service_healthy
+      academic-migrate:
+        condition: service_completed_successfully
+
+volumes:
+  academic_postgres_data:
