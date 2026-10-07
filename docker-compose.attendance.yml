@@ -1,0 +1,49 @@
+services:
+  attendance-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: attendance_db
+      POSTGRES_USER: attendance
+      POSTGRES_PASSWORD: attendance
+    ports:
+      - "${ATTENDANCE_DB_PORT:-5436}:5432"
+    volumes:
+      - attendance_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U attendance -d attendance_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  attendance-migrate:
+    build:
+      context: ./services/attendance-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://attendance:attendance@attendance-db:5432/attendance_db
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      attendance-db:
+        condition: service_healthy
+
+  attendance-service:
+    build:
+      context: ./services/attendance-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://attendance:attendance@attendance-db:5432/attendance_db
+      ACADEMIC_SERVICE_BASE_URL: ${ATTENDANCE_ACADEMIC_SERVICE_BASE_URL:-http://academic-service:8000}
+      ACADEMIC_SERVICE_TIMEOUT_SECONDS: ${ATTENDANCE_ACADEMIC_SERVICE_TIMEOUT_SECONDS:-5}
+      JWT_ISSUER: ${ATTENDANCE_JWT_ISSUER:-http://localhost:8001}
+      JWT_ACCESS_AUDIENCE: ${ATTENDANCE_JWT_ACCESS_AUDIENCE:-smart-education-api}
+      JWT_JWKS_URL: ${ATTENDANCE_JWT_JWKS_URL:-http://identity-service:8000/.well-known/jwks.json}
+      LOW_ATTENDANCE_THRESHOLD_PERCENT: ${LOW_ATTENDANCE_THRESHOLD_PERCENT:-75}
+      CORS_ORIGINS: '["http://localhost:5173"]'
+    ports:
+      - "8003:8000"
+    depends_on:
+      attendance-db:
+        condition: service_healthy
+      attendance-migrate:
+        condition: service_completed_successfully
+
+volumes:
+  attendance_postgres_data:
