@@ -1,0 +1,73 @@
+name: Production Readiness
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Sprint 22 release tag accepted by Sprint 25 UAT"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smartedu-production-readiness
+  cancel-in-progress: false
+
+jobs:
+  offline-readiness-validation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install readiness toolkit
+        run: python -m pip install -e "libs/python/smartedu_readiness[dev]"
+
+      - name: Validate readiness catalog
+        run: python scripts/validate-readiness-catalog.py
+
+      - name: Toolkit tests
+        run: pytest -q libs/python/smartedu_readiness/tests
+
+      - name: Readiness config tests
+        run: pytest -q tests/readiness
+
+      - name: Download immutable release manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p readiness-release
+          gh release download "${{ inputs.release_tag }}" \
+            --pattern "release-manifest.json" \
+            --pattern "SHA256SUMS" \
+            --dir readiness-release
+
+      - name: Verify release manifest checksum
+        shell: bash
+        run: |
+          cd readiness-release
+          EXPECTED="$(awk '{print tolower($1)}' SHA256SUMS | head -n 1)"
+          ACTUAL="$(sha256sum release-manifest.json | awk '{print tolower($1)}')"
+          test "$EXPECTED" = "$ACTUAL"
+
+      - name: Generate human readiness checklist
+        run: |
+          mkdir -p readiness-artifacts
+          python scripts/generate-launch-checklist.py \
+            --output readiness-artifacts/PRODUCTION_READINESS_CHECKLIST.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: production-readiness-${{ inputs.release_tag }}
+          path: |
+            readiness-release
+            readiness-artifacts
+          retention-days: 30

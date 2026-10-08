@@ -1,0 +1,7 @@
+# Merge into repository .gitignore.
+readiness/evidence/*
+!readiness/evidence/.gitkeep
+readiness-runs/
+readiness-artifacts/
+PRODUCTION_READINESS_REPORT.generated.md
+PRODUCTION_EVIDENCE_INDEX.generated.json

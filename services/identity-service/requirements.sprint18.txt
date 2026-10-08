@@ -1,0 +1,2 @@
+smartedu-security==0.1.0
+redis>=5,<7

@@ -1,0 +1,17 @@
+version: 1
+required_phases:
+- preflight
+- backup
+- migrations
+- application-rollout
+- public-smoke
+- role-smoke
+- event-smoke
+- observability
+require_readiness_gate_pass: true
+require_exact_release_identity: true
+require_backup_before_migrations: true
+require_all_migrations_complete_before_rollout: true
+require_digest_pinned_images: true
+require_no_open_sev1: true
+rollback_database_downgrade_allowed: false

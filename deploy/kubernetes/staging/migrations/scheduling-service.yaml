@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-scheduling-service
+  namespace: smartedu-staging
+  labels:
+    smartedu.io/component: scheduling-service
+    smartedu.io/job: migration
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        smartedu.io/component: scheduling-service
+    spec:
+      restartPolicy: Never
+      serviceAccountName: scheduling-service
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: migration
+        image: smartedu.local/scheduling-service:bootstrap
+        command:
+        - python
+        - -m
+        - alembic
+        - -c
+        - alembic.ini
+        - upgrade
+        - head
+        envFrom:
+        - configMapRef:
+            name: smartedu-staging-runtime
+        - secretRef:
+            name: scheduling-service-secrets
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 64Mi

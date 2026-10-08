@@ -1,0 +1,31 @@
+version: 1
+severities:
+  BLOCKER:
+    definition: UAT cannot continue or release candidate is unusable for a core role/workflow.
+    examples:
+    - login unavailable for an intended role
+    - data corruption
+    - migration prevents platform use
+    release_gate: must be closed
+  CRITICAL:
+    definition: Serious security, authorization, data-integrity, or core workflow
+      failure with no acceptable workaround.
+    examples:
+    - Student can see another Student's protected result
+    - Teacher can perform Admin-only action
+    - assessment answer key exposed
+    release_gate: must be closed
+  MAJOR:
+    definition: Important workflow fails or materially diverges from acceptance requirements.
+    examples:
+    - Teacher cannot finalize attendance
+    - Admin report is materially incorrect
+    - facility conflict rule fails
+    release_gate: must be closed by default
+  MINOR:
+    definition: Workflow remains usable but has a localized defect or low-impact inconsistency.
+    release_gate: may be deferred with owner and target release
+  COSMETIC:
+    definition: Presentation-only issue that does not affect usability, accessibility,
+      correctness, or security.
+    release_gate: may be deferred

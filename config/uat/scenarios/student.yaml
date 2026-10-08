@@ -1,0 +1,214 @@
+version: 1
+scenarios:
+- id: UAT-STU-001
+  role: Student
+  title: Student login and workspace access
+  domain: Identity
+  priority: P0
+  execution: hybrid
+  preconditions:
+  - Student QA account exists and is active.
+  steps:
+  - Open staging login page.
+  - Authenticate with the approved Student QA account.
+  - Open the Student workspace.
+  expected_results:
+  - Authentication succeeds.
+  - Student workspace loads.
+  - Teacher/Admin-only navigation and actions are unavailable.
+  requirement_refs:
+  - REQ-IDENTITY-AUTH
+  - REQ-RBAC
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-STU-002
+  role: Student
+  title: View own timetable
+  domain: Scheduling
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open Student timetable.
+  - Inspect current week/date groups.
+  - Attempt to navigate available timetable views.
+  expected_results:
+  - Only the signed-in Student's authorized timetable is shown.
+  - Course/section/date information is understandable.
+  - No other Student's data is exposed.
+  requirement_refs:
+  - REQ-SCHEDULING
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-STU-003
+  role: Student
+  title: View attendance summary and records
+  domain: Attendance
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open attendance page.
+  - Inspect summary percentage/status.
+  - Inspect detailed records.
+  expected_results:
+  - Summary and records correspond to the Student's enrollment.
+  - Displayed percentage matches backend result rather than a contradictory client calculation.
+  - Interaction remains within the accepted Attendance performance target.
+  requirement_refs:
+  - REQ-ATTENDANCE
+  - REQ-PERF-ATTENDANCE
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-STU-004
+  role: Student
+  title: Access authorized learning resources
+  domain: Learning
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open learning resources.
+  - Open a published resource assigned to the Student's course/section.
+  - Download a protected file resource if available.
+  expected_results:
+  - Published authorized resources are visible.
+  - Protected download succeeds through authenticated application flow.
+  - Draft/unassigned resources are not exposed.
+  requirement_refs:
+  - REQ-LEARNING
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-STU-005
+  role: Student
+  title: Complete an assigned assessment
+  domain: Assessment
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open assigned assessments.
+  - Start an available assessment.
+  - Answer objective and/or short-text questions.
+  - Save answers and submit.
+  expected_results:
+  - Attempt rules are enforced.
+  - Answers save successfully.
+  - Submission completes once.
+  - Correct-answer keys are not exposed before/through Student read APIs.
+  requirement_refs:
+  - REQ-ASSESSMENT
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-STU-006
+  role: Student
+  title: View assessment result without answer leakage
+  domain: Assessment
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open results after a graded attempt.
+  - Inspect score/status and permitted feedback.
+  expected_results:
+  - Only the Student's result is visible.
+  - Score/status match the graded attempt.
+  - No protected grading data or other Student results are exposed.
+  requirement_refs:
+  - REQ-ASSESSMENT
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-STU-007
+  role: Student
+  title: Book an available facility
+  domain: Facility
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open facilities.
+  - Choose a bookable facility and valid time.
+  - Submit booking.
+  - Open own bookings.
+  expected_results:
+  - Valid booking is accepted according to backend rules.
+  - Booking appears in the Student's own list.
+  - Conflicting/invalid time requests are rejected authoritatively.
+  requirement_refs:
+  - REQ-FACILITY
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-STU-008
+  role: Student
+  title: Receive and manage notifications
+  domain: Notifications
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open notifications.
+  - Open an unread notification.
+  - Mark it read.
+  - Update available notification preferences.
+  expected_results:
+  - Unread state changes correctly.
+  - Preferences persist.
+  - Representative notification flow meets the accepted end-to-end notification target when timed.
+  requirement_refs:
+  - REQ-NOTIFICATIONS
+  - REQ-PERF-NOTIFICATION
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-STU-009
+  role: Student
+  title: Responsive Student core workflow
+  domain: Usability
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Repeat dashboard, timetable, learning, and assessment navigation at desktop width.
+  - Repeat at a mobile-width viewport.
+  expected_results:
+  - Core controls remain usable without hidden mandatory actions.
+  - Content does not require impractical horizontal scrolling.
+  - Navigation remains understandable on both layouts.
+  requirement_refs:
+  - REQ-RESPONSIVE
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-STU-010
+  role: Student
+  title: Logout and protected-route denial
+  domain: Identity
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Log out from the Student workspace.
+  - Attempt to revisit a protected Student route using browser history/direct URL.
+  expected_results:
+  - Session is ended.
+  - Protected route is not usable after logout.
+  - User is redirected/re-authenticated according to the final auth contract.
+  requirement_refs:
+  - REQ-IDENTITY-SESSION
+  - REQ-RBAC
+  evidence:
+  - screenshot or test artifact
+  - tester notes

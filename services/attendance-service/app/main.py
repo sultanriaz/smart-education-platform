@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from uuid import uuid4
-
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -14,11 +12,17 @@ from app.api.health import router as health_router
 from app.api.v1.router import router as api_router
 from app.core.config import get_settings
 from app.core.exceptions import DomainError
+from app.sprint16 import install_sprint16
+from app.sprint18 import install_sprint18
+from app.sprint21 import install_sprint21
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title=settings.APP_NAME, version="0.3.0")
+    install_sprint21(app)
+    install_sprint16(app)
+    install_sprint18(app)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
@@ -26,13 +30,6 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PATCH", "PUT"],
         allow_headers=["Authorization", "Content-Type"],
     )
-
-    @app.middleware("http")
-    async def correlation_id(request: Request, call_next):
-        request.state.request_id = uuid4().hex
-        response = await call_next(request)
-        response.headers["X-Request-ID"] = request.state.request_id
-        return response
 
     def error(request: Request, status: int, detail: str, code: str, *, headers=None, errors=None):
         body = {"detail": detail, "code": code, "request_id": request.state.request_id}

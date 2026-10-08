@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: learning-service
+  namespace: smartedu
+  labels:
+    smartedu.io/component: learning-service
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      smartedu.io/component: learning-service

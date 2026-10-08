@@ -1,0 +1,6 @@
+# Merge into repository .gitignore.
+.env.performance
+tests/performance/results/*
+!tests/performance/results/.gitkeep
+dist/perf/
+performance-reports/

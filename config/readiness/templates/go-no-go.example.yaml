@@ -1,0 +1,9 @@
+release_tag: REPLACE
+commit_sha: REPLACE
+decision: NO_GO
+meeting_time_utc: REPLACE
+conditions: []
+open_medium_low_risks: []
+deployment_window_utc: REPLACE
+abort_authority: REPLACE
+notes: Complete from the structured readiness run/report.

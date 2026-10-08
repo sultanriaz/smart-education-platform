@@ -1,0 +1,4 @@
+# Build/install repository-local smartedu-contracts and smartedu-infra wheels.
+smartedu-contracts==0.1.0
+smartedu-infra==0.1.0
+psycopg[binary]>=3.2,<4

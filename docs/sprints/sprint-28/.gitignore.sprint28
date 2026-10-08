@@ -1,0 +1,6 @@
+# Merge into repository .gitignore.
+stabilization/evidence/*
+!stabilization/evidence/.gitkeep
+stabilization-runs/
+stabilization/PRODUCTION_STABILIZATION_REPORT.md
+stabilization/PRODUCTION_STABILIZATION_EVIDENCE_INDEX.json

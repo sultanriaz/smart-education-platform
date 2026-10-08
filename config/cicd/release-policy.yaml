@@ -1,0 +1,25 @@
+version: 1
+tag_format: vMAJOR.MINOR.PATCH
+required_release_branch: main
+image_policy:
+  immutable: true
+  require_digest: true
+  sign_images: true
+  generate_sbom: true
+  generate_provenance: true
+  allow_latest_tag: false
+migration_policy:
+  default: forward-only
+  require_single_alembic_head: true
+  require_schema_drift_check: true
+  require_backup_before_staging_migration: true
+  production_rollback: forward-fix unless migration is explicitly tested reversible
+quality_gates:
+- service tests
+- migration checks
+- frontend checks
+- gateway tests
+- security workflow
+- observability config
+- container scan
+- release manifest verification

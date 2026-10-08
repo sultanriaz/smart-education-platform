@@ -1,0 +1,135 @@
+{
+  "uid": "smartedu-slo",
+  "title": "Smart Education SLO Overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "tags": [
+    "smartedu",
+    "slo"
+  ],
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "30-day request availability by service",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "1 - (sum by (service) (increase(smartedu_http_requests_total{status_class=\"5xx\"}[30d])) / clamp_min(sum by (service) (increase(smartedu_http_requests_total[30d])), 1))",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "30-day availability error-budget remaining",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "(0.01 - (sum by (service) (increase(smartedu_http_requests_total{status_class=\"5xx\"}[30d])) / clamp_min(sum by (service) (increase(smartedu_http_requests_total[30d])), 1))) / 0.01",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "General p95 latency vs 3s target",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "smartedu:http_request_duration:p95",
+          "legendFormat": "{{service}}"
+        },
+        {
+          "expr": "vector(3)",
+          "legendFormat": "3s target"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Attendance p95 vs 2s target",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "smartedu:http_request_duration:p95{service=\"attendance-service\"}",
+          "legendFormat": "Attendance"
+        },
+        {
+          "expr": "vector(2)",
+          "legendFormat": "2s target"
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Notification event p95 lag vs 5s target",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "expr": "max(smartedu:event_processing_lag:p95{service=\"notification-service\"})",
+          "legendFormat": "Notification"
+        },
+        {
+          "expr": "vector(5)",
+          "legendFormat": "5s target"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 8
+      }
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+version: 1
+envelope_schema: contracts/events/v1/envelope.schema.json
+
+events:
+  identity.user.created:
+    owner: identity-service
+    version: 1
+  identity.user.status_changed:
+    owner: identity-service
+    version: 1
+
+  academic.enrollment.created:
+    owner: academic-service
+    version: 1
+  academic.enrollment.status_changed:
+    owner: academic-service
+    version: 1
+  academic.teaching_assignment.changed:
+    owner: academic-service
+    version: 1
+
+  attendance.session.finalized:
+    owner: attendance-service
+    version: 1
+  attendance.record.corrected:
+    owner: attendance-service
+    version: 1
+  attendance.low_detected:
+    owner: attendance-service
+    version: 1
+
+  schedule.changed:
+    owner: scheduling-service
+    version: 1
+  schedule.occurrence.cancelled:
+    owner: scheduling-service
+    version: 1
+  schedule.occurrence.rescheduled:
+    owner: scheduling-service
+    version: 1
+
+  facility.booking.requested:
+    owner: facility-service
+    version: 1
+  facility.booking.approved:
+    owner: facility-service
+    version: 1
+  facility.booking.rejected:
+    owner: facility-service
+    version: 1
+  facility.booking.cancelled:
+    owner: facility-service
+    version: 1
+
+  learning.resource.published:
+    owner: learning-service
+    version: 1
+  learning.resource.archived:
+    owner: learning-service
+    version: 1
+
+  assessment.attempt.submitted:
+    owner: assessment-service
+    version: 1
+  assessment.attempt.graded:
+    owner: assessment-service
+    version: 1
+
+  notification.delivery.succeeded:
+    owner: notification-service
+    version: 1
+  notification.delivery.failed:
+    owner: notification-service
+    version: 1
+
+consumer_rules:
+  - Consumers must ignore unknown metadata fields.
+  - Consumers must reject unsupported event_version values explicitly.
+  - Consumers must deduplicate by event_id.
+  - Producers must use UTC timezone-aware occurred_at timestamps.
+  - correlation_id is required.
+  - causation_id should be the triggering event_id or request identifier when known.
+  - Producer transaction/outbox semantics remain owned by the source service.

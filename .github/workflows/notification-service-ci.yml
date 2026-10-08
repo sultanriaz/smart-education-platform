@@ -1,0 +1,43 @@
+name: Notification Service CI
+
+on:
+  push:
+    paths:
+      - "services/notification-service/**"
+      - ".github/workflows/notification-service-ci.yml"
+  pull_request:
+    paths:
+      - "services/notification-service/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: notification_test
+          POSTGRES_USER: notification
+          POSTGRES_PASSWORD: notification
+        ports:
+          - 55438:5432
+        options: >-
+          --health-cmd "pg_isready -U notification -d notification_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: services/notification-service
+    env:
+      TEST_POSTGRES_URL: postgresql+psycopg://notification:notification@localhost:55438/notification_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest -q
+      - run: DATABASE_URL=$TEST_POSTGRES_URL alembic upgrade head
+      - run: DATABASE_URL=$TEST_POSTGRES_URL alembic check

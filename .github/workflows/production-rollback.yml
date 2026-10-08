@@ -1,0 +1,91 @@
+name: Production Application Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      current_release_tag:
+        description: "Current production release tag"
+        required: true
+        type: string
+      previous_release_tag:
+        description: "Previous release tag to redeploy"
+        required: true
+        type: string
+      confirm:
+        description: "Type PRODUCTION_ROLLBACK"
+        required: true
+        type: string
+      schema_compatible:
+        description: "Type SCHEMA_COMPATIBLE after technical review"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smartedu-production
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    runs-on: [self-hosted, production]
+    environment: production
+    timeout-minutes: 60
+
+    steps:
+      - name: Require explicit rollback confirmation
+        shell: pwsh
+        run: |
+          if ("${{ inputs.confirm }}" -ne "PRODUCTION_ROLLBACK") {
+            throw "Rollback confirmation did not match."
+          }
+          if ("${{ inputs.schema_compatible }}" -ne "SCHEMA_COMPATIBLE") {
+            throw "Schema compatibility has not been explicitly confirmed."
+          }
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deployment toolkit
+        shell: pwsh
+        run: |
+          python -m pip install -e .\libs\python\smartedu_deploy
+
+      - name: Download current and previous immutable manifests
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          New-Item -ItemType Directory -Force .\rollback\current | Out-Null
+          New-Item -ItemType Directory -Force .\rollback\previous | Out-Null
+
+          gh release download "${{ inputs.current_release_tag }}" `
+            --pattern "release-manifest.json" `
+            --dir .\rollback\current
+
+          gh release download "${{ inputs.previous_release_tag }}" `
+            --pattern "release-manifest.json" `
+            --dir .\rollback\previous
+
+      - name: Application-only rollback
+        shell: pwsh
+        env:
+          PRODUCTION_KUBE_CONTEXT: ${{ vars.PRODUCTION_KUBE_CONTEXT }}
+        run: |
+          .\scripts\rollback-production-app.ps1 `
+            -PreviousReleaseManifest .\rollback\previous\release-manifest.json `
+            -CurrentReleaseManifest .\rollback\current\release-manifest.json `
+            -Confirm PRODUCTION_ROLLBACK `
+            -SchemaCompatibility SCHEMA_COMPATIBLE
+
+      - name: Post-rollback public smoke
+        shell: pwsh
+        env:
+          SMARTEDU_PRODUCTION_URL: ${{ vars.SMARTEDU_PRODUCTION_URL }}
+        run: |
+          python .\scripts\production-public-smoke.py `
+            --base-url $env:SMARTEDU_PRODUCTION_URL

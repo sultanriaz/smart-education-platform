@@ -1,0 +1,334 @@
+# These directives live in this rendered template because official Nginx
+# Docker images env-substitute /etc/nginx/templates/*.template.
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    '' close;
+}
+
+map $http_origin $cors_origin {
+    default "";
+    "${CORS_ALLOWED_ORIGIN}" $http_origin;
+}
+
+limit_req_zone $binary_remote_addr zone=general_api:10m rate=${GENERAL_RATE_LIMIT};
+limit_req_zone $binary_remote_addr zone=auth_api:10m rate=${AUTH_RATE_LIMIT};
+limit_req_zone $binary_remote_addr zone=login_api:10m rate=${LOGIN_RATE_LIMIT};
+limit_req_zone $binary_remote_addr zone=refresh_api:10m rate=${REFRESH_RATE_LIMIT};
+limit_req_zone $binary_remote_addr zone=recovery_api:10m rate=${RECOVERY_RATE_LIMIT};
+limit_conn_zone $binary_remote_addr zone=per_ip_connections:10m;
+
+# ---------------------------------------------------------
+# Smart Education Platform API Gateway
+# Public HTTP listener for local/staging use.
+# Production should terminate TLS here or at a trusted LB.
+# ---------------------------------------------------------
+
+upstream identity_upstream {
+    server ${IDENTITY_UPSTREAM};
+    keepalive 32;
+}
+upstream academic_upstream {
+    server ${ACADEMIC_UPSTREAM};
+    keepalive 32;
+}
+upstream attendance_upstream {
+    server ${ATTENDANCE_UPSTREAM};
+    keepalive 32;
+}
+upstream scheduling_upstream {
+    server ${SCHEDULING_UPSTREAM};
+    keepalive 32;
+}
+upstream notification_upstream {
+    server ${NOTIFICATION_UPSTREAM};
+    keepalive 32;
+}
+upstream facility_upstream {
+    server ${FACILITY_UPSTREAM};
+    keepalive 32;
+}
+upstream learning_upstream {
+    server ${LEARNING_UPSTREAM};
+    keepalive 32;
+}
+upstream assessment_upstream {
+    server ${ASSESSMENT_UPSTREAM};
+    keepalive 32;
+}
+upstream reporting_upstream {
+    server ${REPORTING_UPSTREAM};
+    keepalive 32;
+}
+upstream platform_upstream {
+    server ${PLATFORM_UPSTREAM};
+    keepalive 32;
+}
+
+server {
+    listen 8080 default_server;
+    server_name _;
+
+    client_max_body_size ${CLIENT_MAX_BODY_SIZE};
+
+    proxy_http_version 1.1;
+    proxy_connect_timeout ${PROXY_CONNECT_TIMEOUT};
+    proxy_send_timeout ${PROXY_SEND_TIMEOUT};
+    proxy_read_timeout ${PROXY_READ_TIMEOUT};
+
+    limit_conn per_ip_connections ${MAX_CONNECTIONS_PER_IP};
+
+    gzip on;
+    gzip_types
+        application/json
+        application/javascript
+        text/css
+        text/plain
+        application/xml;
+
+    # Security headers
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+    add_header Cross-Origin-Resource-Policy "same-site" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+    add_header X-DNS-Prefetch-Control "off" always;
+
+    # CORS headers. Credentials are enabled only for an explicitly allowed origin.
+    add_header Access-Control-Allow-Origin $cors_origin always;
+    add_header Access-Control-Allow-Credentials "true" always;
+    add_header X-Request-ID $request_id always;
+    add_header X-Correlation-ID $correlation_id always;
+    add_header Access-Control-Expose-Headers "X-Request-ID, X-Correlation-ID, X-Service-Name, X-Idempotent-Replay, Content-Disposition, X-Content-SHA256" always;
+    add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
+    add_header Access-Control-Allow-Headers "Authorization, Content-Type, Accept, Idempotency-Key, X-Requested-With, X-Request-ID, X-Correlation-ID, traceparent, tracestate" always;
+    add_header Access-Control-Max-Age "600" always;
+    add_header Vary "Origin" always;
+
+    # Gateway health is intentionally independent of downstream services.
+    location = /health {
+        access_log off;
+        default_type application/json;
+        return 200 '{"status":"ok","service":"api-gateway"}';
+    }
+
+    location = /ready {
+        access_log off;
+        default_type application/json;
+        return 200 '{"status":"ready","service":"api-gateway"}';
+    }
+
+    location = / {
+        default_type application/json;
+        return 200 '{"service":"smart-education-api-gateway","status":"ok"}';
+    }
+
+
+    limit_req_status 429;
+
+    # Unknown external API namespace.
+    location /api/v1/ {
+        default_type application/json;
+        return 404 '{"error":{"code":"route_not_found","message":"Unknown API route","request_id":"$request_id","correlation_id":"$correlation_id"}}';
+    }
+
+
+    # Explicitly block every namespaced service-internal API from the public edge.
+    # Longer-prefix locations win over the corresponding service namespace.
+    location ^~ /api/v1/identity/internal/      { return 404; }
+    location ^~ /api/v1/academic/internal/      { return 404; }
+    location ^~ /api/v1/attendance/internal/    { return 404; }
+    location ^~ /api/v1/scheduling/internal/    { return 404; }
+    location ^~ /api/v1/notifications/internal/ { return 404; }
+    location ^~ /api/v1/facilities/internal/    { return 404; }
+    location ^~ /api/v1/learning/internal/      { return 404; }
+    location ^~ /api/v1/assessments/internal/   { return 404; }
+    location ^~ /api/v1/reporting/internal/     { return 404; }
+    location ^~ /api/v1/platform/internal/      { return 404; }
+
+    # -------------------------
+    # Identity
+    # External: /api/v1/identity/*
+    # Internal: /api/v1/*
+    # -------------------------
+
+    # Sprint 18 high-risk Identity endpoints receive stricter edge throttles.
+    # Identity also applies account-aware Redis lockout/rate limiting.
+    location = /api/v1/identity/auth/login {
+        limit_req zone=login_api burst=${LOGIN_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/response_headers.conf;
+        add_header Cache-Control "no-store, max-age=0" always;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/identity/(.*)$ /api/v1/$1 break;
+        proxy_pass http://identity_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location = /api/v1/identity/auth/refresh {
+        limit_req zone=refresh_api burst=${REFRESH_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/response_headers.conf;
+        add_header Cache-Control "no-store, max-age=0" always;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/identity/(.*)$ /api/v1/$1 break;
+        proxy_pass http://identity_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location = /api/v1/identity/auth/logout {
+        limit_req zone=refresh_api burst=${REFRESH_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/response_headers.conf;
+        add_header Cache-Control "no-store, max-age=0" always;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/identity/(.*)$ /api/v1/$1 break;
+        proxy_pass http://identity_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location = /api/v1/identity/auth/password/forgot {
+        limit_req zone=recovery_api burst=${RECOVERY_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/response_headers.conf;
+        add_header Cache-Control "no-store, max-age=0" always;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/identity/(.*)$ /api/v1/$1 break;
+        proxy_pass http://identity_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location = /api/v1/identity/auth/password/reset {
+        limit_req zone=recovery_api burst=${RECOVERY_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/response_headers.conf;
+        add_header Cache-Control "no-store, max-age=0" always;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/identity/(.*)$ /api/v1/$1 break;
+        proxy_pass http://identity_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location = /api/v1/identity/auth/email/verification/request {
+        limit_req zone=recovery_api burst=${RECOVERY_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/response_headers.conf;
+        add_header Cache-Control "no-store, max-age=0" always;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/identity/(.*)$ /api/v1/$1 break;
+        proxy_pass http://identity_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location = /api/v1/identity/auth/email/verification/confirm {
+        limit_req zone=recovery_api burst=${RECOVERY_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/response_headers.conf;
+        add_header Cache-Control "no-store, max-age=0" always;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/identity/(.*)$ /api/v1/$1 break;
+        proxy_pass http://identity_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/identity/ {
+        limit_req zone=auth_api burst=${AUTH_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/identity/(.*)$ /api/v1/$1 break;
+        proxy_pass http://identity_upstream;
+
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/academic/ {
+        limit_req zone=general_api burst=${GENERAL_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/academic/(.*)$ /api/v1/$1 break;
+        proxy_pass http://academic_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/attendance/ {
+        limit_req zone=general_api burst=${GENERAL_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/attendance/(.*)$ /api/v1/$1 break;
+        proxy_pass http://attendance_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/scheduling/ {
+        limit_req zone=general_api burst=${GENERAL_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/scheduling/(.*)$ /api/v1/$1 break;
+        proxy_pass http://scheduling_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/notifications/ {
+        limit_req zone=general_api burst=${GENERAL_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/notifications/(.*)$ /api/v1/$1 break;
+        proxy_pass http://notification_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/facilities/ {
+        limit_req zone=general_api burst=${GENERAL_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/facilities/(.*)$ /api/v1/$1 break;
+        proxy_pass http://facility_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/learning/ {
+        limit_req zone=general_api burst=${GENERAL_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/learning/(.*)$ /api/v1/$1 break;
+        proxy_pass http://learning_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/assessments/ {
+        limit_req zone=general_api burst=${GENERAL_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/assessments/(.*)$ /api/v1/$1 break;
+        proxy_pass http://assessment_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/reporting/ {
+        limit_req zone=general_api burst=${GENERAL_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/reporting/(.*)$ /api/v1/$1 break;
+        proxy_pass http://reporting_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    location ^~ /api/v1/platform/ {
+        limit_req zone=general_api burst=${GENERAL_RATE_BURST} nodelay;
+        include /etc/nginx/snippets/preflight.conf;
+        rewrite ^/api/v1/platform/(.*)$ /api/v1/$1 break;
+        proxy_pass http://platform_upstream;
+        include /etc/nginx/snippets/proxy_common.conf;
+    }
+
+    # Internal service endpoints are NOT publicly routed.
+    # No route exists for:
+    #   /api/v1/*/internal/*
+    # unless it is intentionally exposed by a service-specific public contract.
+    # During repository integration, confirm all service internal paths remain hidden.
+
+    location @upstream_unavailable {
+        include /etc/nginx/snippets/response_headers.conf;
+        default_type application/json;
+        return 503 '{"error":{"code":"upstream_unavailable","message":"A required service is temporarily unavailable","request_id":"$request_id","correlation_id":"$correlation_id"}}';
+    }
+
+    location @rate_limited {
+        include /etc/nginx/snippets/response_headers.conf;
+        default_type application/json;
+        add_header Retry-After "1" always;
+        return 429 '{"error":{"code":"rate_limited","message":"Too many requests","request_id":"$request_id","correlation_id":"$correlation_id"}}';
+    }
+
+    error_page 413 = @payload_too_large;
+    location @payload_too_large {
+        default_type application/json;
+        return 413 '{"error":{"code":"payload_too_large","message":"Request body is too large","request_id":"$request_id","correlation_id":"$correlation_id"}}';
+    }
+}

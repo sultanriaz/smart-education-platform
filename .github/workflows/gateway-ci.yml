@@ -1,0 +1,82 @@
+name: gateway-ci
+
+on:
+  push:
+    paths:
+      - "infra/gateway/**"
+      - "docker-compose.gateway.yml"
+      - "docker-compose.gateway.tls.yml"
+      - ".github/workflows/gateway-ci.yml"
+  pull_request:
+    paths:
+      - "infra/gateway/**"
+      - "docker-compose.gateway.yml"
+      - "docker-compose.gateway.tls.yml"
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/gateway
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+      - run: docker build -t smart-education-gateway .
+      - name: Validate rendered Nginx config
+        run: |
+          docker run --rm \
+            -e CORS_ALLOWED_ORIGIN=http://localhost:5173 \
+            -e IDENTITY_UPSTREAM=identity-service:8000 \
+            -e ACADEMIC_UPSTREAM=academic-service:8000 \
+            -e ATTENDANCE_UPSTREAM=attendance-service:8000 \
+            -e SCHEDULING_UPSTREAM=scheduling-service:8000 \
+            -e NOTIFICATION_UPSTREAM=notification-service:8000 \
+            -e FACILITY_UPSTREAM=facility-service:8000 \
+            -e LEARNING_UPSTREAM=learning-service:8000 \
+            -e ASSESSMENT_UPSTREAM=assessment-service:8000 \
+            -e REPORTING_UPSTREAM=reporting-service:8000 \
+            -e PLATFORM_UPSTREAM=platform-service:8000 \
+            -e GENERAL_RATE_LIMIT=30r/s \
+            -e GENERAL_RATE_BURST=60 \
+            -e AUTH_RATE_LIMIT=5r/s \
+            -e AUTH_RATE_BURST=10 \
+            -e MAX_CONNECTIONS_PER_IP=100 \
+            -e CLIENT_MAX_BODY_SIZE=25m \
+            -e PROXY_CONNECT_TIMEOUT=3s \
+            -e PROXY_SEND_TIMEOUT=30s \
+            -e PROXY_READ_TIMEOUT=30s \
+            -e TLS_SERVER_NAME=localhost \
+            smart-education-gateway nginx -t
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start mock integration stack
+        run: docker compose -f infra/gateway/tests/docker-compose.gateway-test.yml up -d --build
+      - name: Wait for gateway
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS http://localhost:18080/health && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Check routing and request ID
+        run: |
+          body=$(curl -fsS -H "Authorization: Bearer ci" http://localhost:18080/api/v1/academic/courses)
+          echo "$body" | grep '"path":"/api/v1/courses"'
+          echo "$body" | grep '"request_id":'
+      - name: Check CORS preflight
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" -X OPTIONS \
+            -H "Origin: http://localhost:5173" \
+            -H "Access-Control-Request-Method: GET" \
+            http://localhost:18080/api/v1/academic/courses)
+          test "$status" = "204"
+      - if: always()
+        run: docker compose -f infra/gateway/tests/docker-compose.gateway-test.yml down -v

@@ -1,0 +1,191 @@
+version: 1
+scenarios:
+- id: UAT-X-001
+  role: CrossRole
+  title: Role isolation across Student, Teacher, and Admin
+  domain: Security
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Authenticate as each role in turn.
+  - Attempt at least one forbidden action from each lower-privilege role.
+  expected_results:
+  - Each role can perform intended work only.
+  - Server-side authorization rejects forbidden operations.
+  requirement_refs:
+  - REQ-RBAC
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-X-002
+  role: CrossRole
+  title: Session inactivity and re-authentication behavior
+  domain: Identity
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Authenticate with a QA account.
+  - Leave the session inactive for the configured inactivity period or use approved test acceleration.
+  - Attempt a protected action.
+  expected_results:
+  - Session handling matches the final 10-minute inactivity requirement/implementation.
+  - Expired session cannot silently continue privileged work.
+  requirement_refs:
+  - REQ-IDENTITY-SESSION
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-X-003
+  role: CrossRole
+  title: No cross-user protected data exposure
+  domain: Security
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Capture a protected resource identifier from QA user A.
+  - Attempt access as QA user B without required relationship/role.
+  expected_results:
+  - Request is denied or returns no protected data.
+  - UI does not reveal inaccessible data.
+  requirement_refs:
+  - REQ-PRIVACY
+  - REQ-RBAC
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-X-004
+  role: CrossRole
+  title: General performance acceptance evidence
+  domain: Performance
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Review latest Sprint 20 staging performance evidence for the exact release candidate.
+  expected_results:
+  - Required normal p95 and concurrency evidence exists for the release/environment or is explicitly blocked from
+    promotion.
+  - Evidence references exact release tag/commit.
+  requirement_refs:
+  - REQ-PERF-GENERAL
+  - REQ-CONCURRENCY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-X-005
+  role: CrossRole
+  title: Availability and readiness behavior
+  domain: Reliability
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Review Sprint 21 SLO/availability evidence and staging pod-failure/rolling-update drills.
+  - Confirm readiness removes unhealthy instances.
+  expected_results:
+  - Release has no unresolved availability blocker.
+  - Application remains usable through the accepted failure drills.
+  requirement_refs:
+  - REQ-AVAILABILITY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-X-006
+  role: CrossRole
+  title: Recovery evidence review
+  domain: Reliability
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Review Sprint 24 database restore drill.
+  - Review object-storage recovery drill.
+  - Review release redeploy/secret recovery evidence.
+  expected_results:
+  - Recovery evidence is complete and internally consistent.
+  - Failed recovery drill blocks promotion.
+  requirement_refs:
+  - REQ-RECOVERY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-X-007
+  role: CrossRole
+  title: Keyboard-only core navigation
+  domain: Accessibility
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Use keyboard only through login and one core workflow for each role.
+  - Inspect focus visibility and logical order.
+  expected_results:
+  - All required controls are reachable.
+  - Visible focus is maintained.
+  - No keyboard trap blocks completion.
+  requirement_refs:
+  - REQ-ACCESSIBILITY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-X-008
+  role: CrossRole
+  title: Labels, errors, and accessible names
+  domain: Accessibility
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Trigger representative validation errors.
+  - Inspect form labels, error association, button/link accessible names using browser accessibility tooling.
+  expected_results:
+  - Required inputs have understandable labels.
+  - Errors identify the affected field/action.
+  - Controls have meaningful names.
+  requirement_refs:
+  - REQ-ACCESSIBILITY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-X-009
+  role: CrossRole
+  title: Responsive core workflows
+  domain: Usability
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Run representative Student, Teacher, and Admin tasks at desktop width.
+  - Repeat critical navigation at mobile/tablet width where supported.
+  expected_results:
+  - Core tasks remain usable.
+  - No required control becomes unreachable.
+  - Layout changes do not change authorization behavior.
+  requirement_refs:
+  - REQ-RESPONSIVE
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-X-010
+  role: CrossRole
+  title: User-facing failure messages are actionable
+  domain: Usability
+  priority: P2
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Trigger a safe validation error.
+  - Trigger/observe a safe unavailable-dependency scenario in staging if planned.
+  - Review displayed error text.
+  expected_results:
+  - Messages explain what happened without exposing stack traces/secrets.
+  - User has a reasonable next action or retry path.
+  requirement_refs:
+  - REQ-RESPONSIVE
+  evidence:
+  - screenshot or test artifact
+  - tester notes

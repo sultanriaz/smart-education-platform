@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 
 from sqlalchemy import String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -14,7 +14,9 @@ class Permission(Base):
     code: Mapped[str] = mapped_column(String(120), unique=True, index=True)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    roles: Mapped[list["Role"]] = relationship(secondary=role_permissions, back_populates="permissions")
+    roles: Mapped[list["Role"]] = relationship(
+        secondary=role_permissions, back_populates="permissions"
+    )
 
 
 class Role(Base):

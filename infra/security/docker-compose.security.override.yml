@@ -1,0 +1,23 @@
+services:
+  clamav:
+    image: ${CLAMAV_IMAGE:-clamav/clamav:stable}
+    profiles: ["malware-scan"]
+    restart: unless-stopped
+    networks:
+      - smartedu-backend
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 1 >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+networks:
+  smartedu-backend:
+    external: true
+    name: smartedu-backend

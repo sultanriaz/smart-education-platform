@@ -1,0 +1,41 @@
+version: 1
+defaults:
+  p95_ms: 3000
+  max_error_rate: 0.01
+budgets:
+- name: attendance-write
+  match: attendance.mark
+  p95_ms: 2000
+  max_error_rate: 0.01
+- name: attendance-read
+  match: attendance.*
+  p95_ms: 2000
+  max_error_rate: 0.01
+- name: notifications
+  match: notifications.*
+  p95_ms: 5000
+  max_error_rate: 0.01
+- name: auth-login
+  match: auth.login
+  p95_ms: 3000
+  max_error_rate: 0.01
+- name: schedule
+  match: schedule.*
+  p95_ms: 3000
+  max_error_rate: 0.01
+- name: assessment
+  match: assessment.*
+  p95_ms: 3000
+  max_error_rate: 0.01
+- name: reporting
+  match: reporting.*
+  p95_ms: 3000
+  max_error_rate: 0.01
+acceptance:
+  minimum_concurrent_users: 500
+  notes:
+  - 95% of normal pages/API interactions should complete within 3 seconds.
+  - Attendance operations target <=2 seconds.
+  - Notification delivery/end-user visibility target <=5 seconds; broker-to-delivery
+    latency needs separate event timing.
+  - The platform must demonstrate at least 500 concurrent users.

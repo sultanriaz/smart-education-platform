@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator

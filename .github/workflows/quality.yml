@@ -1,0 +1,72 @@
+name: Quality Gates
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-testkit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e "libs/python/smartedu_testkit[dev]"
+      - run: pytest -q libs/python/smartedu_testkit/tests
+
+  architecture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install pytest pyyaml
+      - run: pytest -q tests/integration -m architecture
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/frontend/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+
+  browser-e2e:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests/e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+        env:
+          SMARTEDU_FRONTEND_URL: ${{ secrets.SMARTEDU_STAGING_FRONTEND_URL }}
+          SMARTEDU_E2E_STUDENT_EMAIL: ${{ secrets.SMARTEDU_E2E_STUDENT_EMAIL }}
+          SMARTEDU_E2E_STUDENT_PASSWORD: ${{ secrets.SMARTEDU_E2E_STUDENT_PASSWORD }}
+          SMARTEDU_E2E_TEACHER_EMAIL: ${{ secrets.SMARTEDU_E2E_TEACHER_EMAIL }}
+          SMARTEDU_E2E_TEACHER_PASSWORD: ${{ secrets.SMARTEDU_E2E_TEACHER_PASSWORD }}
+          SMARTEDU_E2E_ADMIN_EMAIL: ${{ secrets.SMARTEDU_E2E_ADMIN_EMAIL }}
+          SMARTEDU_E2E_ADMIN_PASSWORD: ${{ secrets.SMARTEDU_E2E_ADMIN_PASSWORD }}

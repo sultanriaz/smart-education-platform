@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, HTTPException, Response
 
 from app.api.dependencies import Admin, Limit, Offset, Service, Staff
+from app.api.v1.relationships import Actor, student_sections
 from app.domain.models import Section
 from app.schemas.academic import SectionRead, SectionRoster, SectionWrite
 
@@ -31,8 +32,14 @@ def create_section(payload: SectionWrite, service: Service, _admin: Admin) -> Se
 
 
 @router.get("/{section_id}", response_model=SectionRead)
-def get_section(section_id: UUID, service: Service, principal: Staff) -> SectionRead:
-    service.check_section_access(principal, section_id)
+def get_section(section_id: UUID, service: Service, principal: Actor) -> SectionRead:
+    if "student" in principal.roles and not principal.is_admin and "teacher" not in principal.roles:
+        if not any(
+            section.id == section_id for section in student_sections(service, principal.user_id)
+        ):
+            raise HTTPException(403, "You are not enrolled in this section.")
+    else:
+        service.check_section_access(principal, section_id)
     return SectionRead.model_validate(service.get(Section, section_id))
 
 

@@ -1,4 +1,4 @@
-﻿from sqlalchemy import select
+from sqlalchemy import select
 
 from app.core.config import settings
 from app.db.session import SessionLocal

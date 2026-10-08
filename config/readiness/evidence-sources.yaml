@@ -1,0 +1,56 @@
+version: 1
+sources:
+- sprint: 18
+  area: security
+  examples:
+  - security regression
+  - secret scan
+  - container/dependency review
+- sprint: 19
+  area: quality
+  examples:
+  - service suites
+  - contracts
+  - Student/Teacher/Admin E2E
+- sprint: 20
+  area: performance
+  examples:
+  - general p95
+  - Attendance p95
+  - Notification p95
+  - 500-user result
+- sprint: 21
+  area: observability
+  examples:
+  - targets
+  - alerts
+  - traces
+  - SLOs
+  - failure isolation
+- sprint: 22
+  area: release
+  examples:
+  - release manifest
+  - SBOM
+  - provenance
+  - Cosign
+  - checksums
+- sprint: 23
+  area: deployment architecture
+  examples:
+  - production bundle
+  - network/TLS/secrets architecture
+- sprint: 24
+  area: staging
+  examples:
+  - migrations
+  - rollouts
+  - failure drills
+  - restore drills
+- sprint: 25
+  area: UAT
+  examples:
+  - UAT run
+  - defects
+  - signoffs
+  - UAT gate/report

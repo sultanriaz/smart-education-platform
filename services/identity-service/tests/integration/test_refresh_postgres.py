@@ -62,7 +62,7 @@ def refresh_setup(postgres_engine):
             UserRegister(
                 email="postgres@example.edu",
                 full_name="Postgres Student",
-                password="StrongPass123!",
+                password="StrongPass123!",  # secret-scan: test-fixture
             )
         )
         pair = service.login(user.email, "StrongPass123!")

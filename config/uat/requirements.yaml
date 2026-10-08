@@ -1,0 +1,100 @@
+version: 1
+requirements:
+- id: REQ-IDENTITY-AUTH
+  domain: Identity
+  statement: Authorized users can authenticate and access only permitted role capabilities.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-IDENTITY-SESSION
+  domain: Identity
+  statement: Sessions support secure refresh/logout and inactivity/session controls.
+  source_reference: SRS includes 10-minute inactivity logout; reconcile exact implementation
+    and ID.
+- id: REQ-ACADEMIC-MASTER
+  domain: Academic
+  statement: Academic master data, sections, profiles, enrollments, and teacher assignments
+    are maintained consistently.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-ATTENDANCE
+  domain: Attendance
+  statement: Teachers can manage attendance and Students can view authorized attendance
+    data.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-SCHEDULING
+  domain: Scheduling
+  statement: Users can view authorized timetables and scheduling conflicts are prevented.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-NOTIFICATIONS
+  domain: Notifications
+  statement: Users receive authorized notifications and can manage notification state/preferences.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-FACILITY
+  domain: Facility
+  statement: Authorized users can browse/book facilities and conflicts are prevented.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-LEARNING
+  domain: Learning
+  statement: Teachers can publish learning resources and Students can access only
+    authorized published resources.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-ASSESSMENT
+  domain: Assessment
+  statement: Teachers can author/assign/grade assessments and Students can attempt
+    assigned assessments securely.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-REPORTING
+  domain: Reporting
+  statement: Admins can view reporting/analytics derived from authorized platform
+    data.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-PLATFORM
+  domain: Platform
+  statement: Admins can operate platform settings/support/audit/search/jobs within
+    authorization boundaries.
+  source_reference: Reconcile with final SRS functional requirement ID.
+- id: REQ-RBAC
+  domain: Security
+  statement: Student, Teacher, and Admin access is enforced server-side with least
+    privilege.
+  source_reference: Reconcile with final SRS security requirements.
+- id: REQ-PRIVACY
+  domain: Security
+  statement: Users cannot access another user's protected data without authorization.
+  source_reference: Reconcile with final SRS security/privacy requirements.
+- id: REQ-PERF-GENERAL
+  domain: Performance
+  statement: At least 95% of normal page/API interactions complete within 3 seconds
+    in the acceptance environment.
+  source_reference: Known SRS NFR target; reconcile exact SRS ID.
+- id: REQ-PERF-ATTENDANCE
+  domain: Performance
+  statement: Attendance operations complete within 2 seconds at the required percentile/acceptance
+    definition.
+  source_reference: Known SRS NFR target; reconcile exact SRS ID.
+- id: REQ-PERF-NOTIFICATION
+  domain: Performance
+  statement: Representative notification delivery/visibility completes within 5 seconds.
+  source_reference: Known SRS NFR target; reconcile exact SRS ID.
+- id: REQ-CONCURRENCY
+  domain: Performance
+  statement: The platform supports at least 500 concurrent users under the defined
+    workload mix.
+  source_reference: Known SRS NFR target; reconcile exact SRS ID.
+- id: REQ-AVAILABILITY
+  domain: Reliability
+  statement: Platform availability target is at least 99%.
+  source_reference: Known SRS NFR target; reconcile exact SRS ID.
+- id: REQ-RECOVERY
+  domain: Reliability
+  statement: Normal operation avoids data loss and recovery meets the documented recovery
+    target.
+  source_reference: Known SRS recovery requirement; reconcile exact SRS ID and realistic
+    provider implementation.
+- id: REQ-RESPONSIVE
+  domain: Usability
+  statement: Core workflows are usable on desktop and mobile/responsive layouts.
+  source_reference: Known SRS responsive requirement; reconcile exact SRS ID.
+- id: REQ-ACCESSIBILITY
+  domain: Usability
+  statement: Core workflows meet the project's agreed accessibility baseline.
+  source_reference: Project acceptance baseline; confirm whether SRS explicitly assigns
+    an accessibility standard.

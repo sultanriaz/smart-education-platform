@@ -1,0 +1,108 @@
+version: 1
+components:
+- component: identity-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: academic-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: attendance-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: scheduling-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: notification-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: facility-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: learning-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: assessment-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: reporting-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: platform-service
+  migration: true
+  migration_command:
+  - python
+  - -m
+  - alembic
+  - -c
+  - alembic.ini
+  - upgrade
+  - head
+- component: frontend
+  migration: false
+  migration_command: []
+- component: api-gateway
+  migration: false
+  migration_command: []

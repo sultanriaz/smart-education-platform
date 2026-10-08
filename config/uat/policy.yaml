@@ -1,0 +1,13 @@
+minimum_pass_rate_percent: 95.0
+require_all_p0_pass: true
+require_all_p1_pass: true
+max_open_blocker: 0
+max_open_critical: 0
+max_open_major: 0
+required_signoff_roles:
+- StudentRepresentative
+- TeacherRepresentative
+- AdminRepresentative
+- ProductOwner
+- ProjectSupervisor
+allow_blocked_with_approved_waiver: false

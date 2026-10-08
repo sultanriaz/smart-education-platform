@@ -1,0 +1,4 @@
+# Merge these into the repository .gitignore.
+.env.infrastructure
+backups/
+dist/infra/

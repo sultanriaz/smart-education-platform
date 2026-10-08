@@ -1,0 +1,64 @@
+services:
+
+  gateway-exporter:
+    image: ${NGINX_EXPORTER_IMAGE:-nginx/nginx-prometheus-exporter:1.4.0}
+    restart: unless-stopped
+    command:
+      - --nginx.scrape-uri=http://${GATEWAY_CONTAINER_NAME:-api-gateway}:8080/nginx_status
+    networks:
+      - smartedu-backend
+      - observability
+    security_opt:
+      - no-new-privileges:true
+
+  postgres-exporter:
+    image: ${POSTGRES_EXPORTER_IMAGE:-prometheuscommunity/postgres-exporter:v0.16.0}
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: ${POSTGRES_MONITOR_DSN:?POSTGRES_MONITOR_DSN is required}
+    networks:
+      - smartedu-backend
+      - observability
+    security_opt:
+      - no-new-privileges:true
+
+  redis-cache-exporter:
+    image: ${REDIS_EXPORTER_IMAGE:-oliver006/redis_exporter:v1.66.0}
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: ${REDIS_CACHE_MONITOR_URL:-redis://redis-cache:6379}
+    networks:
+      - smartedu-backend
+      - observability
+    security_opt:
+      - no-new-privileges:true
+
+  redis-durable-exporter:
+    image: ${REDIS_EXPORTER_IMAGE:-oliver006/redis_exporter:v1.66.0}
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: ${REDIS_DURABLE_MONITOR_URL:-redis://redis-durable:6379}
+    networks:
+      - smartedu-backend
+      - observability
+    security_opt:
+      - no-new-privileges:true
+
+  cadvisor:
+    image: ${CADVISOR_IMAGE:-gcr.io/cadvisor/cadvisor:v0.49.2}
+    profiles: ["host-metrics"]
+    restart: unless-stopped
+    privileged: false
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - observability
+    security_opt:
+      - no-new-privileges:true
+

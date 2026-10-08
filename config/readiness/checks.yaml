@@ -1,0 +1,625 @@
+version: 1
+checks:
+- id: PR-REL-001
+  category: Release
+  title: Exact Sprint 25 accepted release manifest identified
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - release-manifest.json
+  - Sprint 25 UAT gate/report
+  source_refs:
+  - Sprint22
+  - Sprint25
+  description: Exact Sprint 25 accepted release manifest identified
+- id: PR-REL-002
+  category: Release
+  title: All 12 images are digest-pinned and signature/attestation verified
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - 12 image digest refs
+  - Cosign/provenance verification output
+  source_refs:
+  - Sprint22
+  description: All 12 images are digest-pinned and signature/attestation verified
+- id: PR-REL-003
+  category: Release
+  title: Production deployment uses the same accepted image digests
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - rendered production bundle
+  - release identity comparison
+  source_refs:
+  - Sprint23
+  - Sprint25
+  description: Production deployment uses the same accepted image digests
+- id: PR-REL-004
+  category: Release
+  title: Migration-bearing components are explicitly identified
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - release migration component list
+  - migration plan
+  source_refs:
+  - Sprint22
+  - Sprint23
+  description: Migration-bearing components are explicitly identified
+- id: PR-UAT-001
+  category: UAT
+  title: Sprint 25 UAT promotion gate passes
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - final UAT run JSON
+  - generated UAT report
+  source_refs:
+  - Sprint25
+  description: Sprint 25 UAT promotion gate passes
+- id: PR-UAT-002
+  category: UAT
+  title: All required stakeholder UAT sign-offs are present
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - UAT sign-off evidence
+  source_refs:
+  - Sprint25
+  description: All required stakeholder UAT sign-offs are present
+- id: PR-UAT-003
+  category: UAT
+  title: No open BLOCKER, CRITICAL, or MAJOR UAT defects remain
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - UAT defect summary
+  source_refs:
+  - Sprint25
+  description: No open BLOCKER, CRITICAL, or MAJOR UAT defects remain
+- id: PR-INF-001
+  category: Infrastructure
+  title: Production Kubernetes cluster and namespace are provisioned
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - cluster/namespace evidence
+  source_refs:
+  - Sprint23
+  description: Production Kubernetes cluster and namespace are provisioned
+- id: PR-INF-002
+  category: Infrastructure
+  title: Production Ingress/load balancer is configured
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - Ingress/LB evidence
+  source_refs:
+  - Sprint23
+  description: Production Ingress/load balancer is configured
+- id: PR-INF-003
+  category: Infrastructure
+  title: Production DNS resolves to intended edge
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - DNS verification output
+  source_refs:
+  - Sprint23
+  description: Production DNS resolves to intended edge
+- id: PR-INF-004
+  category: Infrastructure
+  title: Production TLS certificate is valid and renewable
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - TLS verification
+  - certificate renewal mechanism
+  source_refs:
+  - Sprint23
+  description: Production TLS certificate is valid and renewable
+- id: PR-INF-005
+  category: Infrastructure
+  title: Only frontend and API Gateway are publicly routed
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - Ingress/service exposure audit
+  source_refs:
+  - Sprint23
+  description: Only frontend and API Gateway are publicly routed
+- id: PR-INF-006
+  category: Infrastructure
+  title: All 10 backend APIs remain private ClusterIP/internal services
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - service exposure audit
+  source_refs:
+  - Sprint23
+  description: All 10 backend APIs remain private ClusterIP/internal services
+- id: PR-INF-007
+  category: Infrastructure
+  title: Pod Security baseline is enforced for application workloads
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - pod security verification
+  source_refs:
+  - Sprint23
+  description: Pod Security baseline is enforced for application workloads
+- id: PR-INF-008
+  category: Infrastructure
+  title: HPA/PDB/probes/resource limits are reconciled and valid
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - Kubernetes validation output
+  source_refs:
+  - Sprint20
+  - Sprint23
+  description: HPA/PDB/probes/resource limits are reconciled and valid
+- id: PR-DATA-001
+  category: Data
+  title: Ten service databases exist with per-service least-privilege accounts
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - DB ownership/access audit
+  source_refs:
+  - Sprint23
+  description: Ten service databases exist with per-service least-privilege accounts
+- id: PR-DATA-002
+  category: Data
+  title: Production PostgreSQL HA/failover is configured
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - provider/cluster HA evidence
+  source_refs:
+  - Sprint23
+  - Sprint24
+  description: Production PostgreSQL HA/failover is configured
+- id: PR-DATA-003
+  category: Data
+  title: PostgreSQL PITR/backup and restore drill passed
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - latest restore drill evidence
+  - elapsed recovery time
+  source_refs:
+  - Sprint24
+  description: PostgreSQL PITR/backup and restore drill passed
+- id: PR-DATA-004
+  category: Data
+  title: Redis cache and durable tiers are isolated and authenticated
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - Redis topology/ACL audit
+  source_refs:
+  - Sprint17
+  - Sprint23
+  description: Redis cache and durable tiers are isolated and authenticated
+- id: PR-DATA-005
+  category: Data
+  title: RabbitMQ production topology is HA/private with retry/DLQ controls
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - broker topology/metrics evidence
+  source_refs:
+  - Sprint17
+  - Sprint23
+  description: RabbitMQ production topology is HA/private with retry/DLQ controls
+- id: PR-DATA-006
+  category: Data
+  title: Object storage is private, versioned, encrypted, and recoverable
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - bucket policy/versioning/encryption evidence
+  - restore drill
+  source_refs:
+  - Sprint18
+  - Sprint24
+  description: Object storage is private, versioned, encrypted, and recoverable
+- id: PR-DATA-007
+  category: Data
+  title: Production data seeding/bootstrap is defined and non-destructive
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - bootstrap plan
+  source_refs:
+  - Sprint23
+  description: Production data seeding/bootstrap is defined and non-destructive
+- id: PR-SEC-001
+  category: Security
+  title: Production secret manager integration is configured
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - secret source inventory
+  - Kubernetes secret integration
+  source_refs:
+  - Sprint18
+  - Sprint23
+  description: Production secret manager integration is configured
+- id: PR-SEC-002
+  category: Security
+  title: No production secrets are stored in Git, images, or CI artifacts
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - secret scan result
+  source_refs:
+  - Sprint18
+  - Sprint22
+  description: No production secrets are stored in Git, images, or CI artifacts
+- id: PR-SEC-003
+  category: Security
+  title: Identity JWT/JWKS production keys and rotation procedure are ready
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - key inventory/rotation runbook
+  source_refs:
+  - Sprint18
+  description: Identity JWT/JWKS production keys and rotation procedure are ready
+- id: PR-SEC-004
+  category: Security
+  title: Internal service credentials/tokens have production rotation procedures
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - rotation runbook
+  source_refs:
+  - Sprint18
+  description: Internal service credentials/tokens have production rotation procedures
+- id: PR-SEC-005
+  category: Security
+  title: Network/firewall rules keep DB/Redis/RabbitMQ/admin/metrics private
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - firewall/security-group/network-policy audit
+  source_refs:
+  - Sprint23
+  description: Network/firewall rules keep DB/Redis/RabbitMQ/admin/metrics private
+- id: PR-SEC-006
+  category: Security
+  title: Sprint 18 security regression passes for the release candidate
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - security regression report
+  source_refs:
+  - Sprint18
+  - Sprint24
+  description: Sprint 18 security regression passes for the release candidate
+- id: PR-SEC-007
+  category: Security
+  title: Container/dependency/supply-chain scans pass release policy
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - Trivy/dependency/SBOM/provenance evidence
+  source_refs:
+  - Sprint18
+  - Sprint22
+  description: Container/dependency/supply-chain scans pass release policy
+- id: PR-SEC-008
+  category: Security
+  title: Production admin/operator access uses named identities and MFA where supported
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - access-control evidence
+  source_refs:
+  - Sprint23
+  description: Production admin/operator access uses named identities and MFA where supported
+- id: PR-PERF-001
+  category: Performance
+  title: General p95 target <=3 seconds is satisfied on accepted evidence
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - Sprint 20 result
+  source_refs:
+  - Sprint20
+  description: General p95 target <=3 seconds is satisfied on accepted evidence
+- id: PR-PERF-002
+  category: Performance
+  title: Attendance p95 target <=2 seconds is satisfied
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - Sprint 20 attendance result
+  source_refs:
+  - Sprint20
+  description: Attendance p95 target <=2 seconds is satisfied
+- id: PR-PERF-003
+  category: Performance
+  title: Notification end-to-end p95 target <=5 seconds is satisfied
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - Sprint 20/21 notification result
+  source_refs:
+  - Sprint20
+  - Sprint21
+  description: Notification end-to-end p95 target <=5 seconds is satisfied
+- id: PR-PERF-004
+  category: Performance
+  title: 500 concurrent-user acceptance result is recorded and acceptable
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - Sprint 20 500-user report
+  source_refs:
+  - Sprint20
+  description: 500 concurrent-user acceptance result is recorded and acceptable
+- id: PR-PERF-005
+  category: Performance
+  title: Database connection budget remains safe at HPA maximum replicas
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - connection budget calculation
+  source_refs:
+  - Sprint20
+  - Sprint23
+  description: Database connection budget remains safe at HPA maximum replicas
+- id: PR-RELIA-001
+  category: Reliability
+  title: Availability SLO target >=99% is represented in monitoring and ownership
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - SLO dashboard/rule evidence
+  source_refs:
+  - Sprint21
+  description: Availability SLO target >=99% is represented in monitoring and ownership
+- id: PR-RELIA-002
+  category: Reliability
+  title: Pod failure and rolling-update drills pass
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - Sprint 24 drill evidence
+  source_refs:
+  - Sprint24
+  description: Pod failure and rolling-update drills pass
+- id: PR-RELIA-003
+  category: Reliability
+  title: Node failure/drain behavior is validated or formally limited by topology
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - node-drain evidence or documented limitation
+  source_refs:
+  - Sprint24
+  description: Node failure/drain behavior is validated or formally limited by topology
+- id: PR-RELIA-004
+  category: Reliability
+  title: Observability component failures do not break business APIs
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - Sprint 21 failure-isolation evidence
+  source_refs:
+  - Sprint21
+  description: Observability component failures do not break business APIs
+- id: PR-OPS-001
+  category: Operations
+  title: Prometheus/Grafana/logs/traces/alerts are production-ready or approved managed equivalents
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - observability architecture/status
+  source_refs:
+  - Sprint21
+  - Sprint23
+  description: Prometheus/Grafana/logs/traces/alerts are production-ready or approved managed equivalents
+- id: PR-OPS-002
+  category: Operations
+  title: 10/10 backend services expose expected production telemetry internally
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - target/scrape status
+  source_refs:
+  - Sprint21
+  description: 10/10 backend services expose expected production telemetry internally
+- id: PR-OPS-003
+  category: Operations
+  title: Critical alerts route to approved operators and have runbooks
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - alert delivery test
+  - runbook mapping
+  source_refs:
+  - Sprint21
+  description: Critical alerts route to approved operators and have runbooks
+- id: PR-OPS-004
+  category: Operations
+  title: Operational ownership and escalation contacts are assigned
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - ownership matrix
+  source_refs:
+  - Sprint26
+  description: Operational ownership and escalation contacts are assigned
+- id: PR-OPS-005
+  category: Operations
+  title: Go-live monitoring window and launch dashboard are prepared
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - launch monitoring plan
+  source_refs:
+  - Sprint26
+  description: Go-live monitoring window and launch dashboard are prepared
+- id: PR-OPS-006
+  category: Operations
+  title: Support/incident intake and severity/escalation process are ready
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - incident response plan
+  source_refs:
+  - Sprint21
+  - Sprint26
+  description: Support/incident intake and severity/escalation process are ready
+- id: PR-CHG-001
+  category: Change
+  title: Change freeze window and release scope are declared
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - freeze record/release scope
+  source_refs:
+  - Sprint26
+  description: Change freeze window and release scope are declared
+- id: PR-CHG-002
+  category: Change
+  title: Production migration plan has backup, ordering, ownership, and abort criteria
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - migration runbook
+  source_refs:
+  - Sprint22
+  - Sprint26
+  description: Production migration plan has backup, ordering, ownership, and abort criteria
+- id: PR-CHG-003
+  category: Change
+  title: Rollback/forward-fix criteria are documented and tested where applicable
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - rollback decision tree
+  - staging drill evidence
+  source_refs:
+  - Sprint22
+  - Sprint24
+  description: Rollback/forward-fix criteria are documented and tested where applicable
+- id: PR-CHG-004
+  category: Change
+  title: No automatic DB downgrade is required for rollback plan
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - schema compatibility/forward-fix plan
+  source_refs:
+  - Sprint22
+  description: No automatic DB downgrade is required for rollback plan
+- id: PR-CHG-005
+  category: Change
+  title: Production deployment credentials/runner permissions are least privilege
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - deployment identity/RBAC evidence
+  source_refs:
+  - Sprint22
+  - Sprint23
+  description: Production deployment credentials/runner permissions are least privilege
+- id: PR-DR-001
+  category: DisasterRecovery
+  title: Production backup retention and recovery responsibilities are assigned
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - backup policy
+  - owner
+  source_refs:
+  - Sprint23
+  description: Production backup retention and recovery responsibilities are assigned
+- id: PR-DR-002
+  category: DisasterRecovery
+  title: RTO/RPO assumptions are explicitly documented and supported by evidence
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - RTO/RPO decision record
+  - restore evidence
+  source_refs:
+  - Sprint23
+  - Sprint24
+  description: RTO/RPO assumptions are explicitly documented and supported by evidence
+- id: PR-DR-003
+  category: DisasterRecovery
+  title: Site/region disaster recovery gaps are documented with owners
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - DR gap/risk register
+  source_refs:
+  - Sprint23
+  description: Site/region disaster recovery gaps are documented with owners
+- id: PR-COM-001
+  category: Communications
+  title: Launch communication and stakeholder notification plan is prepared
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - communication plan
+  source_refs:
+  - Sprint26
+  description: Launch communication and stakeholder notification plan is prepared
+- id: PR-COM-002
+  category: Communications
+  title: Maintenance/deployment window and user impact are documented
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - deployment window plan
+  source_refs:
+  - Sprint26
+  description: Maintenance/deployment window and user impact are documented
+- id: PR-COM-003
+  category: Communications
+  title: Post-launch support coverage and escalation window are scheduled
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - support coverage plan
+  source_refs:
+  - Sprint26
+  description: Post-launch support coverage and escalation window are scheduled
+- id: PR-FIN-001
+  category: FinalGate
+  title: All required readiness evidence is archived without secrets
+  mandatory: true
+  owner_role: ProjectSupervisor
+  evidence_required:
+  - readiness evidence index
+  source_refs:
+  - Sprint26
+  description: All required readiness evidence is archived without secrets
+- id: PR-FIN-002
+  category: FinalGate
+  title: Production launch runbook has named step owners and checkpoints
+  mandatory: true
+  owner_role: ProjectSupervisor
+  evidence_required:
+  - GO_LIVE_RUNBOOK.md execution copy
+  source_refs:
+  - Sprint26
+  description: Production launch runbook has named step owners and checkpoints
+- id: PR-FIN-003
+  category: FinalGate
+  title: Five production-readiness approvals are recorded
+  mandatory: true
+  owner_role: ProjectSupervisor
+  evidence_required:
+  - approval records
+  source_refs:
+  - Sprint26
+  description: Five production-readiness approvals are recorded

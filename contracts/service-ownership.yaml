@@ -1,0 +1,139 @@
+version: 1
+
+services:
+  identity-service:
+    public_namespace: /api/v1/identity
+    owns:
+      - users
+      - authentication
+      - sessions
+      - roles
+      - permissions
+      - security audit events
+    database: identity_db
+    may_reference:
+      - no domain-service database rows directly
+
+  academic-service:
+    public_namespace: /api/v1/academic
+    owns:
+      - departments
+      - programs
+      - academic years
+      - semesters
+      - courses
+      - course offerings
+      - sections
+      - student academic profiles
+      - teacher academic profiles
+      - enrollments
+      - teaching assignments
+    database: academic_db
+    external_identity_reference: identity_user_id UUID
+
+  attendance-service:
+    public_namespace: /api/v1/attendance
+    owns:
+      - attendance sessions
+      - attendance records
+      - corrections
+      - attendance summaries
+    database: attendance_db
+    depends_on:
+      - academic-service
+
+  scheduling-service:
+    public_namespace: /api/v1/scheduling
+    owns:
+      - recurring schedules
+      - schedule overrides
+      - timetable conflict decisions
+      - schedule history
+    database: scheduling_db
+    depends_on:
+      - academic-service
+
+  notification-service:
+    public_namespace: /api/v1/notifications
+    owns:
+      - notification templates
+      - campaigns
+      - user notification inbox
+      - delivery attempts
+      - preferences
+      - notification event ingestion
+    database: notification_db
+    depends_on:
+      - identity-service
+      - academic-service
+
+  facility-service:
+    public_namespace: /api/v1/facilities
+    owns:
+      - facilities
+      - facility blocks
+      - booking requests
+      - booking decisions
+      - booking conflicts
+    database: facility_db
+    depends_on:
+      - notification-service
+
+  learning-service:
+    public_namespace: /api/v1/learning
+    owns:
+      - learning resources
+      - resource versions
+      - resource storage references
+      - recommendations
+    database: learning_db
+    depends_on:
+      - academic-service
+
+  assessment-service:
+    public_namespace: /api/v1/assessments
+    owns:
+      - question banks
+      - questions
+      - quizzes
+      - quiz assignments
+      - attempts
+      - answers
+      - grading
+    database: assessment_db
+    depends_on:
+      - academic-service
+
+  reporting-service:
+    public_namespace: /api/v1/reporting
+    owns:
+      - reporting projections
+      - reporting snapshots
+      - reporting exports
+    database: reporting_db
+    depends_on:
+      - events and supported public/internal APIs
+    forbidden:
+      - direct reads from another service database
+
+  platform-service:
+    public_namespace: /api/v1/platform
+    owns:
+      - service registry
+      - platform settings
+      - feature flags
+      - support tickets
+      - background jobs
+      - centralized audit/search projections
+    database: platform_db
+
+rules:
+  - A service never imports another service's ORM models or repositories.
+  - A service never reads or writes another service's database.
+  - Cross-service references use UUIDs and contracts, not foreign keys.
+  - Public browser traffic enters through the API Gateway only.
+  - Internal service APIs are never exposed by the public Gateway.
+  - Cross-service HTTP calls propagate request and correlation context.
+  - Mutating cross-service retries require an Idempotency-Key.
+  - Event consumers deduplicate on event_id.
+  - Event payload changes require event_version evolution.

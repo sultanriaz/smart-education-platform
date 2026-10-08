@@ -9,11 +9,17 @@ from app.api.health import router as health_router
 from app.api.v1.router import router as api_router
 from app.core.config import get_settings
 from app.core.exceptions import DomainError
+from app.sprint16 import install_sprint16
+from app.sprint18 import install_sprint18
+from app.sprint21 import install_sprint21
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title=settings.APP_NAME, version="0.2.0")
+    install_sprint21(app)
+    install_sprint16(app)
+    install_sprint18(app)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,

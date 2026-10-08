@@ -1,0 +1,17 @@
+version: 1
+max_open_issues:
+  SEV1: 0
+  SEV2: 0
+  SEV3: 0
+  SEV4: 999
+require_all_high_followups_closed: true
+required_approval_roles:
+- TechnicalLead
+- OperationsOwner
+- SecurityOwner
+- ProductOwner
+- ProjectSupervisor
+allowed_dispositions:
+- STABLE
+- STABLE_WITH_FOLLOWUPS
+mandatory_checkpoint_status: PASS

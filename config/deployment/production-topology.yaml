@@ -1,0 +1,198 @@
+version: 1
+namespace: smartedu
+public_host: smartedu.example.edu
+tls_secret_name: smartedu-tls
+ingress_class: nginx
+workloads:
+- component: identity-service
+  kind: python-service
+  port: 8000
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 5
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 100m
+    memory_request: 256Mi
+    cpu_limit: 750m
+    memory_limit: 512Mi
+- component: academic-service
+  kind: python-service
+  port: 8000
+  replicas: 3
+  min_replicas: 2
+  max_replicas: 8
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 200m
+    memory_request: 384Mi
+    cpu_limit: 1000m
+    memory_limit: 768Mi
+- component: attendance-service
+  kind: python-service
+  port: 8000
+  replicas: 3
+  min_replicas: 2
+  max_replicas: 8
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 200m
+    memory_request: 384Mi
+    cpu_limit: 1000m
+    memory_limit: 768Mi
+- component: scheduling-service
+  kind: python-service
+  port: 8000
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 6
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 150m
+    memory_request: 320Mi
+    cpu_limit: 1000m
+    memory_limit: 640Mi
+- component: notification-service
+  kind: python-service
+  port: 8000
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 6
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 150m
+    memory_request: 320Mi
+    cpu_limit: 1000m
+    memory_limit: 640Mi
+- component: facility-service
+  kind: python-service
+  port: 8000
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 6
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 150m
+    memory_request: 320Mi
+    cpu_limit: 1000m
+    memory_limit: 640Mi
+- component: learning-service
+  kind: python-service
+  port: 8000
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 6
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 150m
+    memory_request: 320Mi
+    cpu_limit: 1000m
+    memory_limit: 640Mi
+- component: assessment-service
+  kind: python-service
+  port: 8000
+  replicas: 3
+  min_replicas: 2
+  max_replicas: 8
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 200m
+    memory_request: 384Mi
+    cpu_limit: 1000m
+    memory_limit: 768Mi
+- component: reporting-service
+  kind: python-service
+  port: 8000
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 6
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 200m
+    memory_request: 384Mi
+    cpu_limit: 1000m
+    memory_limit: 768Mi
+- component: platform-service
+  kind: python-service
+  port: 8000
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 5
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 100m
+    memory_request: 256Mi
+    cpu_limit: 750m
+    memory_limit: 512Mi
+- component: frontend
+  kind: frontend
+  port: 8080
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 5
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 50m
+    memory_request: 128Mi
+    cpu_limit: 500m
+    memory_limit: 256Mi
+- component: api-gateway
+  kind: gateway
+  port: 8080
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 6
+  cpu_target_percent: 70
+  memory_target_percent: 75
+  resources:
+    cpu_request: 100m
+    memory_request: 128Mi
+    cpu_limit: 750m
+    memory_limit: 256Mi
+external_dependencies:
+- name: postgresql
+  kind: postgresql
+  highly_available: true
+  private_network_only: true
+  backup_required: true
+- name: redis-cache
+  kind: redis-cache
+  highly_available: true
+  private_network_only: true
+  backup_required: false
+- name: redis-durable
+  kind: redis-durable
+  highly_available: true
+  private_network_only: true
+  backup_required: true
+- name: rabbitmq
+  kind: rabbitmq
+  highly_available: true
+  private_network_only: true
+  backup_required: true
+- name: object-storage
+  kind: object-storage
+  highly_available: true
+  private_network_only: true
+  backup_required: true
+- name: email-provider
+  kind: email
+  highly_available: true
+  private_network_only: false
+  backup_required: false
+- name: observability
+  kind: observability
+  highly_available: true
+  private_network_only: true
+  backup_required: true

@@ -1,8 +1,8 @@
-﻿from app.security.password import hash_password, verify_password
+from app.security.password import hash_password, verify_password
 
 
 def test_password_hashing_round_trip():
-    password = "StrongPassword123!"
+    password = "StrongPassword123!"  # secret-scan: test-fixture
     encoded = hash_password(password)
     assert encoded != password
     assert verify_password(password, encoded)

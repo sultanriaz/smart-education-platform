@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-academic-service
+  namespace: smartedu-staging
+  labels:
+    smartedu.io/component: academic-service
+    smartedu.io/job: migration
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        smartedu.io/component: academic-service
+    spec:
+      restartPolicy: Never
+      serviceAccountName: academic-service
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: migration
+        image: smartedu.local/academic-service:bootstrap
+        command:
+        - python
+        - -m
+        - alembic
+        - -c
+        - alembic.ini
+        - upgrade
+        - head
+        envFrom:
+        - configMapRef:
+            name: smartedu-staging-runtime
+        - secretRef:
+            name: academic-service-secrets
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 64Mi

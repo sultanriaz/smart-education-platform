@@ -1,0 +1,13 @@
+version: 1
+roles:
+- role: TechnicalLead
+  responsibility: Application release, migrations, rollback compatibility, technical
+    acceptance.
+- role: OperationsOwner
+  responsibility: Infrastructure, availability, observability, backups, incident operations.
+- role: SecurityOwner
+  responsibility: Secrets, access, network exposure, security and supply-chain evidence.
+- role: ProductOwner
+  responsibility: UAT acceptance, launch scope, communications, user impact.
+- role: ProjectSupervisor
+  responsibility: Final evidence review and FYP production-readiness approval.

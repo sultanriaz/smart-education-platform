@@ -1,0 +1,14 @@
+version: 1
+initial_intensive_minutes: 30
+extended_monitoring_hours: 2
+watch:
+- HTTP 5xx rate
+- p95/p99 latency
+- Attendance latency
+- Notification event latency
+- PostgreSQL connections and lock waits
+- Redis health
+- RabbitMQ ready/unacked/DLQ
+- outbox backlog
+- pod restarts/OOM/throttling
+- critical alerts

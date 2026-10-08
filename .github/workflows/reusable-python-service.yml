@@ -1,0 +1,53 @@
+name: Reusable Python Service CI
+on:
+  workflow_call:
+    inputs:
+      service_name: {required: true, type: string}
+      service_path: {required: true, type: string}
+permissions: {contents: read}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.service_path }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - name: Install local libraries
+        working-directory: .
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          for dir in libs/python/*; do
+            if [ -f "$dir/pyproject.toml" ]; then python -m pip install -e "$dir"; fi
+          done
+      - name: Install service dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f requirements-dev.txt ]; then python -m pip install -r requirements-dev.txt; elif [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then python -m pip install -e ".[dev]"; fi
+          python -m pip install pytest ruff
+      - run: python -m ruff check .
+      - run: mkdir -p ../../test-results && python -m pytest -q --junitxml="../../test-results/${{ inputs.service_name }}.xml"
+        env:
+          ENVIRONMENT: test
+          TRACING_ENABLED: "false"
+          TRUSTED_HOSTS: localhost,127.0.0.1,testserver
+      - name: Alembic one-head gate
+        shell: bash
+        run: |
+          if [ -f alembic.ini ]; then
+            COUNT="$(python -m alembic -c alembic.ini heads | sed '/^[[:space:]]*$/d' | wc -l)"
+            test "$COUNT" -eq 1 || { echo "Expected one Alembic head, got $COUNT"; exit 1; }
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-${{ inputs.service_name }}
+          path: test-results/${{ inputs.service_name }}.xml
+          if-no-files-found: ignore
+          retention-days: 14

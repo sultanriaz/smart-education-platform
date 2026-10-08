@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: learning-service
+  namespace: smartedu
+  labels:
+    app.kubernetes.io/name: learning-service
+    app.kubernetes.io/part-of: smart-education-platform
+    smartedu.io/component: learning-service
+spec:
+  type: ClusterIP
+  selector:
+    smartedu.io/component: learning-service
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http

@@ -1,0 +1,6 @@
+# Build/install the repository-local smartedu-contracts wheel before this file.
+# The package itself declares FastAPI/httpx/Pydantic/PyJWT dependencies.
+smartedu-contracts==0.1.0
+
+# Required when IDEMPOTENCY_REDIS_URL is configured.
+redis>=5,<7

@@ -1,0 +1,20 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: default-log
+  group_by: ["alertname", "service", "severity"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity="critical"
+      receiver: critical-log
+      repeat_interval: 1h
+
+receivers:
+  # Safe local defaults. Replace these with approved email/Slack/PagerDuty
+  # receivers in staging/production. Alertmanager must not be exposed publicly.
+  - name: default-log
+  - name: critical-log

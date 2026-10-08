@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: reporting-service
+  namespace: smartedu-staging
+  labels:
+    smartedu.io/component: reporting-service
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      smartedu.io/component: reporting-service

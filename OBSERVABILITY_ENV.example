@@ -1,0 +1,20 @@
+# Copy relevant values into each service environment.
+
+OBSERVABILITY_ENABLED=true
+METRICS_ENABLED=true
+METRICS_PATH=/metrics
+
+JSON_LOGS=true
+LOG_LEVEL=INFO
+
+TRACING_ENABLED=true
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+TRACE_SAMPLE_RATIO=1.0
+
+ENVIRONMENT=development
+SERVICE_VERSION=dev
+
+# Production starting point:
+# TRACE_SAMPLE_RATIO=0.10
+# JSON_LOGS=true
+# LOG_LEVEL=INFO

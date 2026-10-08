@@ -1,0 +1,18 @@
+version: 1
+public_checks:
+- name: frontend
+  path: /
+  expected_status: 200
+- name: gateway-health
+  path: /api/health
+  expected_status: 200
+  note: Reconcile with the actual Sprint 11/16 public Gateway health path before launch.
+role_smoke:
+  student: Reuse the integrated Sprint 19 production-safe Student smoke flow.
+  teacher: Reuse the integrated Sprint 19 production-safe Teacher smoke flow.
+  admin: Reuse the integrated Sprint 19 production-safe Admin smoke flow.
+rules:
+- Production smoke must not create destructive academic or assessment data unless
+  explicitly designed for production-safe canaries.
+- Never use real end-user passwords in repository files.
+- Prefer dedicated production smoke accounts with least privilege.

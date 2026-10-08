@@ -109,3 +109,13 @@ docker-compose.override.yml
 Thumbs.db
 Thumbs.db:encryptable
 ehthumbs.db
+
+# Integration inputs, checkpoints and generated evidence
+/.integration/
+/sprint-zips/
+/sprint_*.zip
+artifacts/
+test-results/
+playwright-report/
+.ruff_cache/
+*.egg-info/

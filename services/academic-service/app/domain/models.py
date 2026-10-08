@@ -1,10 +1,20 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from enum import StrEnum
 from uuid import UUID
 
-from sqlalchemy import Boolean, CheckConstraint, ForeignKey, String, UniqueConstraint, text
+from smartedu_infra.runtime import RelayState
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    String,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, Record
@@ -123,3 +133,13 @@ class TeacherAssignment(Record, Base):
     )
     section_id: Mapped[UUID] = mapped_column(ForeignKey("sections.id"), index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
+
+
+class OutboxEvent(RelayState, Record, Base):
+    __tablename__ = "outbox_events"
+    event_type: Mapped[str] = mapped_column(String(160), index=True)
+    aggregate_id: Mapped[UUID] = mapped_column(index=True)
+    payload: Mapped[dict] = mapped_column(JSON)
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )

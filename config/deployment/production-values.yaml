@@ -1,0 +1,37 @@
+version: 1
+environment: production
+public_host: smartedu.example.edu
+ingress_class: nginx
+tls:
+  required: true
+  minimum_version: TLS1.2
+  certificate_source: managed-or-cert-manager
+  redirect_http_to_https: true
+networking:
+  public_ingress_ports:
+  - 80
+  - 443
+  public_application_entrypoints:
+  - frontend
+  - api-gateway
+  private_only:
+  - all-python-services
+  - postgresql
+  - redis-cache
+  - redis-durable
+  - rabbitmq
+  - object-storage-control-plane
+  - observability
+deployment:
+  strategy: RollingUpdate
+  max_unavailable: 0
+  max_surge: 1
+  image_policy: digest-pinned
+  pod_anti_affinity: preferred
+  termination_grace_period_seconds: 30
+stateful_services:
+  recommended_mode: managed-or-dedicated-ha
+  postgresql: external
+  redis: external
+  rabbitmq: external
+  object_storage: external

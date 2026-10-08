@@ -1,0 +1,24 @@
+version: 1
+environment: staging
+marker: SMARTEDU-STAGING-QA
+academic:
+  department_code: QA-CSE
+  program_code: QA-BSCS
+  course_code: QA-CS499
+  section_code: QA-A
+  student_count: 8
+  teacher_count: 2
+learning:
+  published_resources: 2
+  draft_resources: 1
+assessment:
+  question_bank_count: 1
+  quiz_count: 1
+  assigned_quiz_count: 1
+facility:
+  bookable_facilities: 2
+rules:
+- All fixture names/codes include the staging QA marker.
+- Never seed real student or employee data.
+- Seeder must be idempotent and API-driven.
+- Seeder must not write directly to another service database.

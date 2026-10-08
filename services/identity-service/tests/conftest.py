@@ -17,6 +17,10 @@ os.environ["JWT_PREVIOUS_PUBLIC_KEYS"] = "{}"
 os.environ["JWT_ACCESS_AUDIENCE"] = "smart-education-api"
 os.environ["JWT_REFRESH_AUDIENCE"] = "identity-service"
 
+from smartedu_security import LoginSecurityGuard
+from smartedu_security.lockout import MemoryLockoutStore
+
+from app.api.v1.endpoints.auth import login_guard
 from app.core.config import settings  # noqa: E402
 from app.db.base import Base  # noqa: E402
 from app.db.session import get_db
@@ -72,6 +76,13 @@ def client(db):
         yield db
 
     app.dependency_overrides[get_db] = override_get_db
+    guard = LoginSecurityGuard(MemoryLockoutStore())
+    app.dependency_overrides[login_guard] = lambda: guard
+    # The direct service URL differs from the public Gateway cookie namespace.
+    from app.sprint18 import security_settings
+
+    security_settings().refresh_cookie_path = "/api/v1/auth"
     with TestClient(app) as test_client:
+        test_client.headers["Origin"] = "http://localhost:5173"
         yield test_client
     app.dependency_overrides.clear()

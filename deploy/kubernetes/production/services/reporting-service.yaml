@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: reporting-service
+  namespace: smartedu
+  labels:
+    app.kubernetes.io/name: reporting-service
+    app.kubernetes.io/part-of: smart-education-platform
+    smartedu.io/component: reporting-service
+spec:
+  type: ClusterIP
+  selector:
+    smartedu.io/component: reporting-service
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http

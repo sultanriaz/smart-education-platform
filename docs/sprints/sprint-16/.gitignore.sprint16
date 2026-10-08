@@ -1,0 +1,4 @@
+# Merge these entries into the repository .gitignore.
+secrets-local/
+dist/contracts/
+*.private.pem

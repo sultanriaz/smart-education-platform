@@ -1,0 +1,47 @@
+services:
+  api-gateway:
+    build:
+      context: ./infra/gateway
+    environment:
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173}
+
+      IDENTITY_UPSTREAM: ${IDENTITY_UPSTREAM:-identity-service:8000}
+      ACADEMIC_UPSTREAM: ${ACADEMIC_UPSTREAM:-academic-service:8000}
+      ATTENDANCE_UPSTREAM: ${ATTENDANCE_UPSTREAM:-attendance-service:8000}
+      SCHEDULING_UPSTREAM: ${SCHEDULING_UPSTREAM:-scheduling-service:8000}
+      NOTIFICATION_UPSTREAM: ${NOTIFICATION_UPSTREAM:-notification-service:8000}
+      FACILITY_UPSTREAM: ${FACILITY_UPSTREAM:-facility-service:8000}
+      LEARNING_UPSTREAM: ${LEARNING_UPSTREAM:-learning-service:8000}
+      ASSESSMENT_UPSTREAM: ${ASSESSMENT_UPSTREAM:-assessment-service:8000}
+      REPORTING_UPSTREAM: ${REPORTING_UPSTREAM:-reporting-service:8000}
+      PLATFORM_UPSTREAM: ${PLATFORM_UPSTREAM:-platform-service:8000}
+
+      GENERAL_RATE_LIMIT: ${GENERAL_RATE_LIMIT:-30r/s}
+      GENERAL_RATE_BURST: ${GENERAL_RATE_BURST:-60}
+      AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-5r/s}
+      AUTH_RATE_BURST: ${AUTH_RATE_BURST:-10}
+      LOGIN_RATE_LIMIT: ${LOGIN_RATE_LIMIT:-10r/m}
+      LOGIN_RATE_BURST: ${LOGIN_RATE_BURST:-5}
+      REFRESH_RATE_LIMIT: ${REFRESH_RATE_LIMIT:-30r/m}
+      REFRESH_RATE_BURST: ${REFRESH_RATE_BURST:-10}
+      RECOVERY_RATE_LIMIT: ${RECOVERY_RATE_LIMIT:-5r/m}
+      RECOVERY_RATE_BURST: ${RECOVERY_RATE_BURST:-3}
+
+      MAX_CONNECTIONS_PER_IP: ${MAX_CONNECTIONS_PER_IP:-100}
+      CLIENT_MAX_BODY_SIZE: ${CLIENT_MAX_BODY_SIZE:-25m}
+
+      PROXY_CONNECT_TIMEOUT: ${PROXY_CONNECT_TIMEOUT:-3s}
+      PROXY_SEND_TIMEOUT: ${PROXY_SEND_TIMEOUT:-30s}
+      PROXY_READ_TIMEOUT: ${PROXY_READ_TIMEOUT:-30s}
+
+      TLS_SERVER_NAME: ${TLS_SERVER_NAME:-localhost}
+    ports:
+      - "${GATEWAY_HTTP_PORT:-8080}:8080"
+    networks:
+      - smart-education-edge
+    restart: unless-stopped
+
+networks:
+  smart-education-edge:
+    external: true
+    name: smart-education-edge

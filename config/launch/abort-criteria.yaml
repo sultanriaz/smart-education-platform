@@ -1,0 +1,23 @@
+version: 1
+abort_before_rollout:
+- readiness gate is not PASS
+- release digest/signature mismatch
+- production backup or PITR checkpoint unavailable
+- wrong migration target detected
+- critical stateful dependency unhealthy
+- required production secret unavailable
+- production DNS or TLS invalid
+abort_during_migration:
+- migration failure
+- unexpected destructive behavior
+- lock duration exceeds approved threshold
+- database becomes unhealthy
+- wrong database/schema target detected
+abort_during_rollout:
+- sustained critical 5xx increase
+- authorization or privacy regression
+- data corruption
+- core Student/Teacher/Admin role unavailable
+- database saturation or lock storm
+- unrecoverable multi-replica crash loop
+- unbounded RabbitMQ or outbox backlog growth

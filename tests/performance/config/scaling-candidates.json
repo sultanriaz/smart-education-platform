@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "candidate": {
+    "gateway": 2,
+    "identity-service": 2,
+    "academic-service": 3,
+    "attendance-service": 3,
+    "scheduling-service": 2,
+    "notification-api": 2,
+    "notification-worker": 2,
+    "facility-service": 2,
+    "learning-service": 2,
+    "assessment-service": 3,
+    "reporting-service": 2,
+    "platform-service": 2
+  },
+  "rule": "Treat these as a starting candidate to benchmark, not a production sizing claim."
+}

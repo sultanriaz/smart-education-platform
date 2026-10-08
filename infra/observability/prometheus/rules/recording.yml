@@ -1,0 +1,42 @@
+groups:
+  - name: smartedu-recording
+    interval: 30s
+    rules:
+      - record: smartedu:http_requests:rate5m
+        expr: sum by (service) (rate(smartedu_http_requests_total[5m]))
+
+      - record: smartedu:http_5xx:rate5m
+        expr: sum by (service) (rate(smartedu_http_requests_total{status_class="5xx"}[5m]))
+
+      - record: smartedu:http_error_ratio:5m
+        expr: |
+          smartedu:http_5xx:rate5m
+          /
+          clamp_min(smartedu:http_requests:rate5m, 0.001)
+
+      - record: smartedu:http_request_duration:p95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (service, le) (
+              rate(smartedu_http_request_duration_seconds_bucket[5m])
+            )
+          )
+
+      - record: smartedu:http_request_duration:p99
+        expr: |
+          histogram_quantile(
+            0.99,
+            sum by (service, le) (
+              rate(smartedu_http_request_duration_seconds_bucket[5m])
+            )
+          )
+
+      - record: smartedu:event_processing_lag:p95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (service, event_type, le) (
+              rate(smartedu_event_processing_lag_seconds_bucket[5m])
+            )
+          )

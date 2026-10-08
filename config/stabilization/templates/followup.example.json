@@ -1,0 +1,9 @@
+{
+  "id": "STAB-FOLLOWUP-001",
+  "title": "Example only - replace with a real follow-up",
+  "owner": "REPLACE_WITH_OWNER",
+  "target_date": null,
+  "severity": "LOW",
+  "status": "OPEN",
+  "notes": ""
+}

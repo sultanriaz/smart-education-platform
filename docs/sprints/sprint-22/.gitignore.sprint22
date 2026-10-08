@@ -1,0 +1,8 @@
+.env.staging
+.env.release
+.release/
+.deployments/
+dist/cicd/
+release-fragments/
+release-manifest.json
+SHA256SUMS

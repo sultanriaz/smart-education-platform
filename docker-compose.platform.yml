@@ -1,0 +1,73 @@
+services:
+  platform-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: platform_db
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: platform
+    ports:
+      - "${PLATFORM_DB_PORT:-5443}:5432"
+    volumes:
+      - platform_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform -d platform_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  platform-redis:
+    image: redis:7-alpine
+    ports:
+      - "${PLATFORM_REDIS_PORT:-6381}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  platform-migrate:
+    build:
+      context: ./services/platform-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://platform:platform@platform-db:5432/platform_db
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      platform-db:
+        condition: service_healthy
+
+  platform-service:
+    build:
+      context: ./services/platform-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://platform:platform@platform-db:5432/platform_db
+      REDIS_URL: redis://platform-redis:6379/0
+      JWT_JWKS_URL: ${JWT_JWKS_URL:-http://identity-service:8000/.well-known/jwks.json}
+      JWT_ISSUER: ${JWT_ISSUER:-smart-education-identity}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-smart-education-platform}
+      INTERNAL_EVENT_TOKEN: ${PLATFORM_INTERNAL_EVENT_TOKEN:-change-me}
+      SERVICE_INTERNAL_TOKEN: ${SERVICE_INTERNAL_TOKEN:-change-me}
+    ports:
+      - "8010:8000"
+    depends_on:
+      platform-migrate:
+        condition: service_completed_successfully
+      platform-redis:
+        condition: service_healthy
+
+  platform-worker:
+    build:
+      context: ./services/platform-service
+    command: ["celery", "-A", "app.workers.celery_app.celery_app", "worker", "--loglevel=INFO"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://platform:platform@platform-db:5432/platform_db
+      REDIS_URL: redis://platform-redis:6379/0
+      INTERNAL_EVENT_TOKEN: ${PLATFORM_INTERNAL_EVENT_TOKEN:-change-me}
+      SERVICE_INTERNAL_TOKEN: ${SERVICE_INTERNAL_TOKEN:-change-me}
+    depends_on:
+      platform-service:
+        condition: service_started
+      platform-redis:
+        condition: service_healthy
+
+volumes:
+  platform_postgres_data:

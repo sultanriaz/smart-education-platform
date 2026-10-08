@@ -1,0 +1,37 @@
+version: 1
+
+database_records:
+  outbox:
+    default_days: 14
+    rule: delete only terminal published records older than cutoff
+  inbox:
+    default_days: 30
+    rule: keep processed event IDs long enough to cover maximum redelivery window
+  notification_delivery_attempts:
+    default_days: 90
+    rule: retain delivery outcome needed for operational audit
+  platform_jobs:
+    default_days: 30
+    rule: retain terminal jobs; active jobs are never deleted
+  platform_audit_events:
+    default_days: 365
+    rule: archive/export before deletion when institutional policy requires it
+
+object_storage:
+  learning-resources:
+    automatic_delete: false
+    rule: resource lifecycle is owned by Learning Service/version records
+  platform-imports:
+    default_days: 7
+  platform-exports:
+    default_days: 30
+  report-exports:
+    default_days: 14
+
+rules:
+  - Retention deletes must be batched.
+  - Never delete active/in-progress rows.
+  - Never delete unprocessed outbox rows.
+  - Never delete inbox deduplication rows before the maximum broker redelivery horizon.
+  - Run retention first in dry-run/report mode when introducing a new rule.
+  - Legal/institutional retention policy overrides these engineering defaults.

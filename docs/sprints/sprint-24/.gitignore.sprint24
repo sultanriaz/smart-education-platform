@@ -1,0 +1,7 @@
+# Merge into repository .gitignore.
+deploy/kubernetes/rendered-staging.yaml
+deploy/kubernetes/rendered-staging/
+staging-release/
+staging-artifacts/
+.env.staging
+staging-recovery-artifacts/

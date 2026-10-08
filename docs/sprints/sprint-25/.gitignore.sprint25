@@ -1,0 +1,7 @@
+# Merge into repository .gitignore.
+uat/evidence/*
+!uat/evidence/.gitkeep
+uat-runs/
+uat-release/
+uat-artifacts/
+UAT_REPORT.generated.md

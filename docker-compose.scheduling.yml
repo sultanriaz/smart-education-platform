@@ -1,0 +1,50 @@
+services:
+  scheduling-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: scheduling_db
+      POSTGRES_USER: scheduling
+      POSTGRES_PASSWORD: scheduling
+    ports:
+      - "${SCHEDULING_DB_PORT:-5437}:5432"
+    volumes:
+      - scheduling_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scheduling -d scheduling_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  scheduling-migrate:
+    build:
+      context: ./services/scheduling-service
+    command: ["python", "-m", "alembic", "-c", "alembic.ini", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://scheduling:scheduling@scheduling-db:5432/scheduling_db
+    depends_on:
+      scheduling-db:
+        condition: service_healthy
+    restart: "no"
+
+  scheduling-service:
+    build:
+      context: ./services/scheduling-service
+    environment:
+      APP_NAME: Smart Education Scheduling Service
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+psycopg://scheduling:scheduling@scheduling-db:5432/scheduling_db
+      CORS_ORIGINS: '["http://localhost:5173"]'
+      JWT_JWKS_URL: ${SCHEDULING_JWKS_URL:-http://identity-service:8000/.well-known/jwks.json}
+      JWT_ISSUER: ${JWT_ISSUER:-smart-education-identity}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-smart-education-api}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-RS256}
+      ACADEMIC_SERVICE_BASE_URL: ${SCHEDULING_ACADEMIC_URL:-http://academic-service:8000}
+      DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-UTC}
+    ports:
+      - "8004:8000"
+    depends_on:
+      scheduling-migrate:
+        condition: service_completed_successfully
+
+volumes:
+  scheduling_postgres_data:

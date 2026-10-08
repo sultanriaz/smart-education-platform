@@ -1,0 +1,48 @@
+name: Teacher end-to-end
+actor: teacher
+steps:
+- id: login
+  action: sign in
+  expected: teacher workspace opens
+  services:
+  - identity
+- id: sections
+  action: view assigned sections
+  expected: only assigned teaching context appears
+  services:
+  - academic
+- id: attendance
+  action: create/finalize attendance for assigned section
+  expected: atomic records and audit
+  services:
+  - attendance
+  - academic
+- id: learning
+  action: publish course resource
+  expected: resource visible to enrolled students
+  services:
+  - learning
+  - academic
+- id: quiz
+  action: publish/assign quiz
+  expected: assigned section can attempt
+  services:
+  - assessment
+  - academic
+- id: grade
+  action: grade subjective response
+  expected: grade audit stored and student result updated
+  services:
+  - assessment
+- id: notifications
+  action: send permitted section notification
+  expected: scope restricted to assigned section
+  services:
+  - notification
+  - academic
+- id: isolation
+  action: attempt admin operation
+  expected: '403'
+  services:
+  - academic
+  - platform

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: assessment-service
+  namespace: smartedu-staging
+  labels:
+    smartedu.io/component: assessment-service
+spec:
+  type: ClusterIP
+  selector:
+    smartedu.io/component: assessment-service
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http

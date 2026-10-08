@@ -1,0 +1,7 @@
+{
+  "role": "OperationsOwner",
+  "approver": "REPLACE_WITH_APPROVER",
+  "decision": "APPROVE",
+  "approved_at": "2026-10-08T00:00:00Z",
+  "conditions": []
+}

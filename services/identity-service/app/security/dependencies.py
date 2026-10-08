@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from collections.abc import Callable
 
 import jwt
@@ -14,7 +14,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_error = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired access token.", headers={"WWW-Authenticate": "Bearer"})
+    credentials_error = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired access token.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
         payload = decode_token(token)
     except jwt.PyJWTError as exc:
@@ -37,7 +41,9 @@ def require_roles(*required_roles: str) -> Callable:
     def dependency(user=Depends(get_current_user)):
         actual = {role.name.lower() for role in user.roles}
         if required.isdisjoint(actual):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions."
+            )
         return user
 
     return dependency

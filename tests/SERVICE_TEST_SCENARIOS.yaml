@@ -1,0 +1,78 @@
+version: 1
+services:
+  identity-service:
+  - registration and duplicate-email
+  - login success/failure/lockout
+  - refresh rotation and replay rejection
+  - logout revocation
+  - password reset single-use/expiry/session revocation
+  - email verification single-use/expiry
+  - admin user/RBAC access
+  - JWKS cache/rotation/failure behavior
+  academic-service:
+  - department/program/year/semester CRUD
+  - course/section uniqueness
+  - enrollment capacity
+  - concurrent last-seat race
+  - teacher assignment authorization
+  - roster derivation
+  attendance-service:
+  - teacher section authorization
+  - student enrollment validation
+  - bulk atomic attendance
+  - finalize/cancel immutability
+  - correction audit
+  - low-attendance threshold
+  - concurrent duplicate record protection
+  scheduling-service:
+  - section conflict
+  - teacher conflict
+  - room conflict
+  - adjacent slots allowed
+  - recurrence expansion
+  - cancel/reschedule override
+  - concurrent reservation conflict
+  notification-service:
+  - in-app read/unread/archive
+  - preference/muting
+  - role/section target authorization
+  - event inbox deduplication
+  - email retry/delivery audit
+  - security-event decryption
+  facility-service:
+  - availability calculation
+  - adjacent booking allowed
+  - overlap rejected
+  - concurrent double-booking race
+  - approval/rejection/cancel policy
+  - schedule external reservation
+  learning-service:
+  - Teacher/Admin authoring
+  - Student enrollment-based read
+  - draft/publish/archive lifecycle
+  - immutable versions
+  - file type/size/magic validation
+  - private storage authorization
+  assessment-service:
+  - question validation
+  - publish non-empty quiz
+  - assignment authorization
+  - attempt limit
+  - concurrent attempt-limit race
+  - submission immutability
+  - objective auto-grading
+  - manual grading audit
+  - Student cannot read answer keys/in-progress peers
+  reporting-service:
+  - duplicate event idempotency
+  - late/out-of-order event handling
+  - projection calculations
+  - UTC/date filters
+  - CSV export
+  - Admin/Teacher/Student report authorization
+  platform-service:
+  - audit ingestion
+  - job lifecycle
+  - import/export safety
+  - support/admin authorization
+  - service health registry behavior

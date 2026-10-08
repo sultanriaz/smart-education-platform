@@ -1,0 +1,28 @@
+name: reporting-service-ci
+
+on:
+  push:
+    paths:
+      - "services/reporting-service/**"
+      - ".github/workflows/reporting-service-ci.yml"
+  pull_request:
+    paths:
+      - "services/reporting-service/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/reporting-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest -q
+      - run: python -m alembic upgrade head
+      - run: python -m alembic check

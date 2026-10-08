@@ -1,0 +1,52 @@
+services:
+  locust-master:
+    image: ${LOCUST_IMAGE:?LOCUST_IMAGE is required}
+    command:
+      - -f
+      - /mnt/locust/locustfile.py
+      - --master
+      - --headless
+      - --host
+      - ${SMARTEDU_GATEWAY_URL:?SMARTEDU_GATEWAY_URL is required}
+      - -u
+      - ${PERF_USERS:-100}
+      - -r
+      - ${PERF_SPAWN_RATE:-10}
+      - -t
+      - ${PERF_RUN_TIME:-300s}
+      - --csv
+      - /results/locust
+      - --csv-full-history
+      - --expect-workers
+      - ${PERF_WORKERS:-4}
+    env_file:
+      - .env.performance
+    volumes:
+      - ./tests/performance/locust:/mnt/locust:ro
+      - ./tests/performance/results/distributed:/results
+    ports:
+      - "${LOCUST_WEB_PORT:-8089}:8089"
+    networks:
+      - smartedu-backend
+
+  locust-worker:
+    image: ${LOCUST_IMAGE:?LOCUST_IMAGE is required}
+    command:
+      - -f
+      - /mnt/locust/locustfile.py
+      - --worker
+      - --master-host
+      - locust-master
+    env_file:
+      - .env.performance
+    volumes:
+      - ./tests/performance/locust:/mnt/locust:ro
+    depends_on:
+      - locust-master
+    networks:
+      - smartedu-backend
+
+networks:
+  smartedu-backend:
+    external: true
+    name: smartedu-backend

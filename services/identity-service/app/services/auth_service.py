@@ -14,6 +14,8 @@ from app.schemas.auth import TokenPair
 from app.schemas.user import UserRegister
 from app.security.jwt import create_access_token, create_refresh_token, decode_token
 from app.security.password import hash_password, verify_password
+from app.sprint18 import security_settings
+from app.sprint18_security.registration import enforce_registration_password
 
 
 class AuthService:
@@ -25,6 +27,12 @@ class AuthService:
         self.audit = AuditRepository(db)
 
     def register(self, payload: UserRegister, ip_address: str | None = None):
+        enforce_registration_password(
+            password=payload.password,
+            email=str(payload.email),
+            full_name=payload.full_name,
+            settings=security_settings(),
+        )
         with transaction(self.db, conflict_message="An account with this email already exists."):
             email = str(payload.email).lower()
             if self.users.get_by_email(email):
@@ -48,13 +56,14 @@ class AuthService:
             if (
                 user is None
                 or not user.is_active
+                or (security_settings().require_email_verification and not user.is_verified)
                 or not verify_password(password, user.password_hash)
             ):
                 self.audit.record(
                     action="auth.login_failed",
                     user_id=user.id if user else None,
                     ip_address=ip_address,
-                    details={"email": email.lower()},
+                    details={},
                 )
             else:
                 pair = self._issue_pair(user.id, [role.name for role in user.roles])

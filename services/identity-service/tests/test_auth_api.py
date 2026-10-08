@@ -42,40 +42,62 @@ def test_refresh_logout_and_wrong_token_types(client):
         "password": "StrongPass123!",
     }
     assert client.post("/api/v1/auth/register", json=payload).status_code == 201
-    pair = client.post("/api/v1/auth/login", json=payload).json()
+    login = client.post("/api/v1/auth/login", json=payload)
+    assert login.status_code == 200
+    assert "refresh_token" not in login.json()
+    assert "HttpOnly" in login.headers["set-cookie"]
+    assert "SameSite=strict" in login.headers["set-cookie"]
+    original = client.cookies.get("sep_refresh")
     assert (
-        client.get(
-            "/api/v1/users/me",
-            headers={
-                "Authorization": f"Bearer {pair['refresh_token']}",
-            },
-        ).status_code
+        client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {original}"}).status_code
         == 401
     )
-    assert (
-        client.post(
-            "/api/v1/auth/refresh",
-            json={
-                "refresh_token": pair["access_token"],
-            },
-        ).status_code
-        == 401
+    client.cookies.clear()
+    client.cookies.set(
+        "sep_refresh", login.json()["access_token"], domain="testserver.local", path="/api/v1/auth"
     )
-    replacement = client.post("/api/v1/auth/refresh", json={"refresh_token": pair["refresh_token"]})
+    assert client.post("/api/v1/auth/refresh").status_code == 401
+    client.cookies.clear()
+    client.cookies.set("sep_refresh", original, domain="testserver.local", path="/api/v1/auth")
+    replacement = client.post("/api/v1/auth/refresh")
     assert replacement.status_code == 200
+    current = client.cookies.get("sep_refresh")
+    assert current != original
+    client.cookies.clear()
+    client.cookies.set("sep_refresh", original, domain="testserver.local", path="/api/v1/auth")
+    assert client.post("/api/v1/auth/refresh").status_code == 401
+    client.cookies.clear()
+    client.cookies.set("sep_refresh", current, domain="testserver.local", path="/api/v1/auth")
+    assert client.post("/api/v1/auth/logout").status_code == 204
+    assert client.cookies.get("sep_refresh") is None
+    client.cookies.set("sep_refresh", current, domain="testserver.local", path="/api/v1/auth")
+    assert client.post("/api/v1/auth/refresh").status_code == 401
+
+
+def test_refresh_rejects_untrusted_and_missing_origins(client):
+    client.headers.pop("Origin")
+    assert client.post("/api/v1/auth/refresh").status_code == 403
     assert (
-        client.post(
-            "/api/v1/auth/refresh",
-            json={
-                "refresh_token": pair["refresh_token"],
-            },
-        ).status_code
-        == 401
+        client.post("/api/v1/auth/logout", headers={"Origin": "https://evil.example"}).status_code
+        == 403
     )
-    current = replacement.json()["refresh_token"]
-    assert client.post("/api/v1/auth/logout", json={"refresh_token": current}).status_code == 204
-    assert client.post("/api/v1/auth/logout", json={"refresh_token": current}).status_code == 204
-    assert client.post("/api/v1/auth/refresh", json={"refresh_token": current}).status_code == 401
+
+
+def test_login_account_lockout_applies_to_unknown_accounts(client):
+    payload = {"email": "unknown@example.edu", "password": "WrongPassword123!"}
+    for _ in range(5):
+        assert client.post("/api/v1/auth/login", json=payload).status_code == 401
+    locked = client.post("/api/v1/auth/login", json=payload)
+    assert locked.status_code == 429
+    assert int(locked.headers["retry-after"]) > 0
+
+
+def test_weak_registration_password_is_rejected(client):
+    result = client.post(
+        "/api/v1/auth/register",
+        json={"email": "weak@example.edu", "full_name": "Weak User", "password": "password123"},
+    )
+    assert result.status_code == 422
 
 
 def test_admin_user_and_role_writes_commit(client, db):

@@ -1,0 +1,58 @@
+version: 1
+dependencies:
+- name: postgresql
+  required: true
+  production_like: true
+  requirements:
+  - ten service databases
+  - one least-privilege account per service
+  - TLS/private connectivity
+  - automated backup
+  - PITR or equivalent restore capability
+- name: redis-cache
+  required: true
+  production_like: true
+  requirements:
+  - authentication/ACL
+  - isolated from durable Redis
+  - metrics enabled
+- name: redis-durable
+  required: true
+  production_like: true
+  requirements:
+  - authentication/ACL
+  - persistence enabled
+  - backup/recovery path
+  - metrics enabled
+- name: rabbitmq
+  required: true
+  production_like: true
+  requirements:
+  - durable queues
+  - DLQ/retry topology
+  - rabbitmq_prometheus
+  - private access
+- name: object-storage
+  required: true
+  production_like: true
+  requirements:
+  - private buckets
+  - versioning
+  - server-side encryption
+  - least privilege
+- name: email-provider
+  required: true
+  production_like: false
+  requirements:
+  - sandbox/test account
+  - no production recipients
+  - delivery audit visible
+- name: observability
+  required: true
+  production_like: true
+  requirements:
+  - Prometheus
+  - Grafana
+  - logs
+  - traces
+  - alerts

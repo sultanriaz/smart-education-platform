@@ -1,0 +1,197 @@
+version: 1
+scenarios:
+- id: UAT-ADM-001
+  role: Admin
+  title: Admin login and administrative workspace
+  domain: Identity
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Authenticate with Admin QA account.
+  - Open Admin dashboard/navigation.
+  expected_results:
+  - Admin workspace loads.
+  - Administrative capabilities required for UAT are available.
+  requirement_refs:
+  - REQ-IDENTITY-AUTH
+  - REQ-RBAC
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-ADM-002
+  role: Admin
+  title: Manage academic master data
+  domain: Academic
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Create or update a QA academic entity permitted by the final API.
+  - Create/update a QA course/section.
+  - Review resulting data.
+  expected_results:
+  - Valid changes persist.
+  - Uniqueness/relationship constraints are enforced.
+  - No production-like unmarked data is created.
+  requirement_refs:
+  - REQ-ACADEMIC-MASTER
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-ADM-003
+  role: Admin
+  title: Manage users and roles safely
+  domain: Identity
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open Admin user management.
+  - Inspect a QA user.
+  - Perform one allowed status/role administration action.
+  - Verify effect with the QA identity.
+  expected_results:
+  - Only Admin can perform the action.
+  - Change takes effect consistently.
+  - Audit/security controls remain intact.
+  requirement_refs:
+  - REQ-RBAC
+  - REQ-IDENTITY-AUTH
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-ADM-004
+  role: Admin
+  title: Create schedule and reject conflict
+  domain: Scheduling
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Create a valid QA schedule occurrence/recurrence.
+  - Attempt a conflicting schedule for the same protected resource/time.
+  expected_results:
+  - Valid schedule is accepted.
+  - Conflict is rejected according to backend concurrency/conflict rules.
+  requirement_refs:
+  - REQ-SCHEDULING
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-ADM-005
+  role: Admin
+  title: Facility approval lifecycle
+  domain: Facility
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open pending QA booking.
+  - Approve or reject according to test case.
+  - Inspect booking history/state.
+  expected_results:
+  - Lifecycle transition is valid and persisted.
+  - History/audit shows the administrative decision.
+  requirement_refs:
+  - REQ-FACILITY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-ADM-006
+  role: Admin
+  title: Reporting dashboard reflects staged events
+  domain: Reporting
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Generate/confirm QA attendance or assessment events.
+  - Open reporting dashboard/metrics.
+  - Compare displayed projection to known QA fixture/event.
+  expected_results:
+  - Reporting reflects the event-driven projection accurately enough for the acceptance case.
+  - No synchronous cross-service DB coupling is required for the dashboard.
+  requirement_refs:
+  - REQ-REPORTING
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-ADM-007
+  role: Admin
+  title: Export an authorized report
+  domain: Reporting
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Request a supported CSV/report export.
+  - Open downloaded output.
+  - Check expected QA rows and absence of unrelated protected data.
+  expected_results:
+  - Export completes.
+  - Columns/rows are usable.
+  - Authorization scope is preserved.
+  requirement_refs:
+  - REQ-REPORTING
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-ADM-008
+  role: Admin
+  title: Platform settings or feature flag management
+  domain: Platform
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open Platform administration.
+  - Modify an approved QA-only setting/feature flag.
+  - Verify resulting state.
+  expected_results:
+  - Admin-only change succeeds.
+  - Setting is not used to store secrets.
+  - Audit/change history is available where implemented.
+  requirement_refs:
+  - REQ-PLATFORM
+  - REQ-RBAC
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-ADM-009
+  role: Admin
+  title: Support/audit operational visibility
+  domain: Platform
+  priority: P2
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open support/audit area.
+  - Inspect a QA support ticket or operational audit entry.
+  expected_results:
+  - Expected QA operational information is visible to Admin.
+  - Sensitive secret material is not exposed.
+  requirement_refs:
+  - REQ-PLATFORM
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-ADM-010
+  role: Admin
+  title: Internal Gateway routes remain blocked
+  domain: Security
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Attempt a known namespaced `/internal/` route through the public Gateway using approved test tooling.
+  expected_results:
+  - Public Gateway blocks the internal service endpoint.
+  - Internal service token/API is not exposed to normal browser users.
+  requirement_refs:
+  - REQ-RBAC
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes

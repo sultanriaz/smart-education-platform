@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "events": {
+    "identity.password_reset.requested": {
+      "owner": "identity-service",
+      "version": 1,
+      "sensitive_fields": [
+        "data.encrypted_payload"
+      ],
+      "consumers": [
+        "notification-service"
+      ]
+    },
+    "identity.password_reset.completed": {
+      "owner": "identity-service",
+      "version": 1,
+      "consumers": [
+        "platform-service"
+      ]
+    },
+    "identity.email_verification.requested": {
+      "owner": "identity-service",
+      "version": 1,
+      "sensitive_fields": [
+        "data.encrypted_payload"
+      ],
+      "consumers": [
+        "notification-service"
+      ]
+    },
+    "identity.email.verified": {
+      "owner": "identity-service",
+      "version": 1,
+      "consumers": [
+        "platform-service"
+      ]
+    },
+    "identity.login.failed": {
+      "owner": "identity-service",
+      "version": 1,
+      "consumers": [
+        "platform-service"
+      ]
+    },
+    "identity.login.locked": {
+      "owner": "identity-service",
+      "version": 1,
+      "consumers": [
+        "platform-service"
+      ]
+    }
+  },
+  "rules": [
+    "Reset/verification email and token must be AES-GCM encrypted before the event is persisted to an outbox.",
+    "Sensitive security-event payloads must never be logged.",
+    "Notification Service decrypts only in memory for delivery and must not persist plaintext token values.",
+    "RabbitMQ transport must use TLS in staging/production.",
+    "Password-reset request responses must not reveal whether an account exists."
+  ]
+}

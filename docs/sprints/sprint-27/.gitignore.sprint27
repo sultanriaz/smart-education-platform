@@ -1,0 +1,12 @@
+# Merge into repository .gitignore.
+launch/evidence/*
+!launch/evidence/.gitkeep
+launch/current-launch.json
+launch/PRODUCTION_LAUNCH_REPORT.md
+launch/PRODUCTION_LAUNCH_EVIDENCE_INDEX.json
+production-release/
+rollback/
+deploy/kubernetes/rendered-production.yaml
+deploy/kubernetes/rendered-production/
+deploy/kubernetes/rollback-*.yaml
+deploy/kubernetes/production-launch/migrations.yaml

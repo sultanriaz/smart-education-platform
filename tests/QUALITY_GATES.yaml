@@ -1,0 +1,29 @@
+version: 1
+gates:
+  unit:
+    required: true
+    coverage_target_percent: 80
+  contract:
+    required: true
+  architecture:
+    required: true
+  migration:
+    required: true
+  postgres_concurrency:
+    required: true
+  gateway:
+    required: true
+  frontend_typecheck:
+    required: true
+  frontend_lint:
+    required: true
+  frontend_unit:
+    required: true
+  frontend_build:
+    required: true
+  security:
+    required: true
+  browser_e2e:
+    required: true
+release_rule: No production release while a required gate is red or skipped without
+  an approved exception.

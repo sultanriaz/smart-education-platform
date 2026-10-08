@@ -1,0 +1,10 @@
+{
+  "id": "UAT-D-001",
+  "scenario_id": "UAT-STU-001",
+  "severity": "MAJOR",
+  "title": "Example only - replace with actual defect",
+  "status": "OPEN",
+  "owner": "REPLACE_WITH_OWNER",
+  "notes": "Describe observed versus expected behavior.",
+  "workaround": null
+}

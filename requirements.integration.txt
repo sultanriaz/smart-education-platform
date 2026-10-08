@@ -1,0 +1,26 @@
+# Local engineering environment only. Service production images retain their own requirements.
+psutil>=6,<8
+-r services/identity-service/requirements-dev.txt
+-r services/academic-service/requirements-dev.txt
+-r services/attendance-service/requirements-dev.txt
+-r services/scheduling-service/requirements-dev.txt
+-r services/notification-service/requirements-dev.txt
+-r services/facility-service/requirements-dev.txt
+-r services/learning-service/requirements-dev.txt
+-r services/assessment-service/requirements-dev.txt
+-r services/reporting-service/requirements-dev.txt
+-r services/platform-service/requirements-dev.txt
+-r requirements.qa.txt
+-e libs/python/smartedu_contracts
+-e libs/python/smartedu_infra
+-e libs/python/smartedu_security
+-e libs/python/smartedu_testkit
+-e libs/python/smartedu_perf
+-e libs/python/smartedu_observability
+-e libs/python/smartedu_cicd
+-e libs/python/smartedu_deploy
+-e libs/python/smartedu_staging
+-e libs/python/smartedu_uat
+-e libs/python/smartedu_readiness
+-e libs/python/smartedu_launch
+-e libs/python/smartedu_stabilization

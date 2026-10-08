@@ -8,6 +8,8 @@ from app.repositories.role_repository import RoleRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import AdminUserCreate, AdminUserUpdate, UserSelfUpdate
 from app.security.password import hash_password
+from app.sprint18 import security_settings
+from app.sprint18_security.registration import enforce_registration_password
 
 
 class UserService:
@@ -17,6 +19,12 @@ class UserService:
         self.roles = RoleRepository(db)
 
     def create_by_admin(self, payload: AdminUserCreate):
+        enforce_registration_password(
+            password=payload.password,
+            email=str(payload.email),
+            full_name=payload.full_name,
+            settings=security_settings(),
+        )
         with transaction(self.db, conflict_message="An account with this email already exists."):
             email = str(payload.email).lower()
             if self.users.get_by_email(email):

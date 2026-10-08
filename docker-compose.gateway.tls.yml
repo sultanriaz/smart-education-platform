@@ -1,0 +1,13 @@
+# Optional TLS override. Use only after providing:
+#   ./infra/gateway/tls/tls.crt
+#   ./infra/gateway/tls/tls.key
+#
+# Production may instead terminate TLS at a cloud load balancer / ingress.
+
+services:
+  api-gateway:
+    ports:
+      - "${GATEWAY_HTTPS_PORT:-8443}:8443"
+    volumes:
+      - ./infra/gateway/tls:/etc/nginx/tls:ro
+      - ./infra/gateway/templates/tls.conf.template.disabled:/etc/nginx/conf.d/tls.conf:ro

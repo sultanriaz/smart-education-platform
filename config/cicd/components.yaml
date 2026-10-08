@@ -1,0 +1,106 @@
+version: 1
+global_watched_paths:
+- libs/python/**
+- contracts/**
+- config/cicd/**
+- .github/workflows/**
+- requirements*.txt
+components:
+- name: identity-service
+  kind: python-service
+  path: services/identity-service
+  dockerfile: services/identity-service/Dockerfile
+  image_suffix: identity-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: identity-service
+  watched_paths:
+  - contracts/security-events.json
+- name: academic-service
+  kind: python-service
+  path: services/academic-service
+  dockerfile: services/academic-service/Dockerfile
+  image_suffix: academic-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: academic-service
+- name: attendance-service
+  kind: python-service
+  path: services/attendance-service
+  dockerfile: services/attendance-service/Dockerfile
+  image_suffix: attendance-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: attendance-service
+- name: scheduling-service
+  kind: python-service
+  path: services/scheduling-service
+  dockerfile: services/scheduling-service/Dockerfile
+  image_suffix: scheduling-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: scheduling-service
+- name: notification-service
+  kind: python-service
+  path: services/notification-service
+  dockerfile: services/notification-service/Dockerfile
+  image_suffix: notification-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: notification-service
+  watched_paths:
+  - contracts/security-events.json
+- name: facility-service
+  kind: python-service
+  path: services/facility-service
+  dockerfile: services/facility-service/Dockerfile
+  image_suffix: facility-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: facility-service
+- name: learning-service
+  kind: python-service
+  path: services/learning-service
+  dockerfile: services/learning-service/Dockerfile
+  image_suffix: learning-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: learning-service
+- name: assessment-service
+  kind: python-service
+  path: services/assessment-service
+  dockerfile: services/assessment-service/Dockerfile
+  image_suffix: assessment-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: assessment-service
+- name: reporting-service
+  kind: python-service
+  path: services/reporting-service
+  dockerfile: services/reporting-service/Dockerfile
+  image_suffix: reporting-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: reporting-service
+- name: platform-service
+  kind: python-service
+  path: services/platform-service
+  dockerfile: services/platform-service/Dockerfile
+  image_suffix: platform-service
+  test_command: python -m pytest -q
+  migration_command: python -m alembic -c alembic.ini upgrade head
+  deploy_service: platform-service
+- name: frontend
+  kind: frontend
+  path: apps/frontend
+  dockerfile: apps/frontend/Dockerfile
+  image_suffix: frontend
+  test_command: npm run typecheck && npm run lint && npm run test && npm run build
+  deploy_service: frontend
+- name: api-gateway
+  kind: gateway
+  path: infra/gateway
+  dockerfile: infra/gateway/Dockerfile
+  image_suffix: api-gateway
+  test_command: python -m pytest -q
+  deploy_service: api-gateway

@@ -1,0 +1,52 @@
+services:
+  mock-upstream:
+    build:
+      context: ./mock
+    networks:
+      gateway-test:
+        aliases:
+          - identity-service
+          - academic-service
+          - attendance-service
+          - scheduling-service
+          - notification-service
+          - facility-service
+          - learning-service
+          - assessment-service
+          - reporting-service
+          - platform-service
+
+  gateway-under-test:
+    build:
+      context: ..
+    environment:
+      CORS_ALLOWED_ORIGIN: http://localhost:5173
+      IDENTITY_UPSTREAM: identity-service:8000
+      ACADEMIC_UPSTREAM: academic-service:8000
+      ATTENDANCE_UPSTREAM: attendance-service:8000
+      SCHEDULING_UPSTREAM: scheduling-service:8000
+      NOTIFICATION_UPSTREAM: notification-service:8000
+      FACILITY_UPSTREAM: facility-service:8000
+      LEARNING_UPSTREAM: learning-service:8000
+      ASSESSMENT_UPSTREAM: assessment-service:8000
+      REPORTING_UPSTREAM: reporting-service:8000
+      PLATFORM_UPSTREAM: platform-service:8000
+      GENERAL_RATE_LIMIT: 100r/s
+      GENERAL_RATE_BURST: 100
+      AUTH_RATE_LIMIT: 100r/s
+      AUTH_RATE_BURST: 100
+      MAX_CONNECTIONS_PER_IP: 100
+      CLIENT_MAX_BODY_SIZE: 25m
+      PROXY_CONNECT_TIMEOUT: 3s
+      PROXY_SEND_TIMEOUT: 30s
+      PROXY_READ_TIMEOUT: 30s
+      TLS_SERVER_NAME: localhost
+    ports:
+      - "18080:8080"
+    depends_on:
+      - mock-upstream
+    networks:
+      - gateway-test
+
+networks:
+  gateway-test:

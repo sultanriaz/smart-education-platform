@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://smart-education.local/contracts/http/page.schema.json",
+  "title": "Smart Education Page",
+  "type": "object",
+  "required": [
+    "items",
+    "page"
+  ],
+  "properties": {
+    "items": {
+      "type": "array"
+    },
+    "page": {
+      "type": "object",
+      "required": [
+        "offset",
+        "limit",
+        "count"
+      ],
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,100 @@
+version: 1
+principals:
+- anonymous
+- student
+- teacher
+- admin
+rules:
+- name: identity.me
+  method: GET
+  path: /api/v1/identity/users/me
+  anonymous: 401
+  student: 200
+  teacher: 200
+  admin: 200
+- name: academic.department.create
+  method: POST
+  path: /api/v1/academic/departments
+  anonymous: 401
+  student: 403
+  teacher: 403
+  admin:
+  - 200
+  - 201
+- name: attendance.session.create
+  method: POST
+  path: /api/v1/attendance/sessions
+  anonymous: 401
+  student: 403
+  teacher:
+  - 200
+  - 201
+  admin:
+  - 200
+  - 201
+- name: scheduling.mutate
+  method: POST
+  path: /api/v1/scheduling/schedules
+  anonymous: 401
+  student: 403
+  teacher:
+  - 200
+  - 201
+  - 403
+  admin:
+  - 200
+  - 201
+- name: notifications.preferences
+  method: GET
+  path: /api/v1/notifications/preferences
+  anonymous: 401
+  student: 200
+  teacher: 200
+  admin: 200
+- name: facilities.booking.list
+  method: GET
+  path: /api/v1/facilities/bookings
+  anonymous: 401
+  student: 200
+  teacher: 200
+  admin: 200
+- name: learning.resource.create
+  method: POST
+  path: /api/v1/learning/resources
+  anonymous: 401
+  student: 403
+  teacher:
+  - 200
+  - 201
+  admin:
+  - 200
+  - 201
+- name: assessment.quiz.create
+  method: POST
+  path: /api/v1/assessments/quizzes
+  anonymous: 401
+  student: 403
+  teacher:
+  - 200
+  - 201
+  admin:
+  - 200
+  - 201
+- name: reporting.admin.dashboard
+  method: GET
+  path: /api/v1/reporting/dashboard/admin
+  anonymous: 401
+  student: 403
+  teacher: 403
+  admin: 200
+- name: platform.audit
+  method: GET
+  path: /api/v1/platform/audit
+  anonymous: 401
+  student: 403
+  teacher: 403
+  admin: 200
+notes:
+- Teacher scheduling mutation can legitimately be 403 where actual Sprint 4 policy
+  is admin-only; Codex must reconcile this row against the real merged contract.
+- This matrix is a minimum regression set, not the complete authorization suite.

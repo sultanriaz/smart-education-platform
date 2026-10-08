@@ -1,0 +1,108 @@
+name: UAT
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Sprint 22 release tag accepted in Sprint 24 staging"
+        required: true
+        type: string
+      run_e2e:
+        description: "Run Sprint 19 browser regression"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smartedu-uat
+  cancel-in-progress: false
+
+jobs:
+  automated-precheck:
+    runs-on: [self-hosted, staging]
+    environment: staging
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install UAT toolkit
+        shell: pwsh
+        run: |
+          python -m pip install -e "libs/python/smartedu_uat[dev]"
+
+      - name: Download immutable release identity
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          New-Item -ItemType Directory -Force .\uat-release | Out-Null
+          gh release download "${{ inputs.release_tag }}" `
+            --pattern "release-manifest.json" `
+            --pattern "SHA256SUMS" `
+            --dir .\uat-release
+
+      - name: Verify release manifest checksum
+        shell: pwsh
+        working-directory: uat-release
+        run: |
+          $Expected = (Get-Content .\SHA256SUMS).Split(" ")[0].Trim().ToLower()
+          $Actual = (Get-FileHash .\release-manifest.json -Algorithm SHA256).Hash.ToLower()
+          if ($Expected -ne $Actual) {
+            throw "release-manifest.json checksum mismatch"
+          }
+
+      - name: UAT catalog and release preflight
+        shell: pwsh
+        env:
+          SMARTEDU_STAGING_URL: ${{ vars.SMARTEDU_STAGING_URL }}
+          STAGING_ACCEPTED_RELEASE_MANIFEST: ${{ vars.STAGING_ACCEPTED_RELEASE_MANIFEST }}
+        run: |
+          $Args = @{
+            ReleaseManifest = ".\uat-release\release-manifest.json"
+            StagingUrl = $env:SMARTEDU_STAGING_URL
+          }
+          if ($env:STAGING_ACCEPTED_RELEASE_MANIFEST) {
+            $Args["StagingReleaseManifest"] = $env:STAGING_ACCEPTED_RELEASE_MANIFEST
+          }
+          if ("${{ inputs.run_e2e }}" -eq "true") {
+            $Args["E2E"] = $true
+          }
+          .\scripts\run-uat-automated.ps1 @Args
+
+      - name: Initialize UAT run record
+        shell: pwsh
+        env:
+          SMARTEDU_STAGING_URL: ${{ vars.SMARTEDU_STAGING_URL }}
+        run: |
+          New-Item -ItemType Directory -Force .\uat-artifacts | Out-Null
+          python .\scripts\initialize-uat-run.py `
+            .\uat-release\release-manifest.json `
+            --staging-url $env:SMARTEDU_STAGING_URL `
+            --output .\uat-artifacts\uat-run.json
+
+      - name: Generate traceability report
+        shell: pwsh
+        run: |
+          python .\scripts\generate-traceability-report.py `
+            --output .\uat-artifacts\traceability.md
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uat-precheck-${{ inputs.release_tag }}
+          path: |
+            uat-artifacts
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 30

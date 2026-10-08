@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- migrations/academic-service.yaml
+- migrations/assessment-service.yaml
+- migrations/attendance-service.yaml
+- migrations/facility-service.yaml
+- migrations/identity-service.yaml
+- migrations/learning-service.yaml
+- migrations/notification-service.yaml
+- migrations/platform-service.yaml
+- migrations/reporting-service.yaml
+- migrations/scheduling-service.yaml

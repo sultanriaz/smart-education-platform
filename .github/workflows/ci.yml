@@ -1,0 +1,82 @@
+name: CI
+on:
+  pull_request:
+  push: {branches: [main, master]}
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.plan.outputs.services }}
+      all: ${{ steps.plan.outputs.all }}
+      has_services: ${{ steps.plan.outputs.has_services }}
+      frontend_changed: ${{ steps.plan.outputs.frontend_changed }}
+      gateway_changed: ${{ steps.plan.outputs.gateway_changed }}
+      changed_count: ${{ steps.plan.outputs.changed_count }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install -e libs/python/smartedu_cicd
+      - id: plan
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then BASE="${{ github.event.pull_request.base.sha }}"; else BASE="${{ github.event.before }}"; fi
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then BASE="HEAD~1"; fi
+          python scripts/ci-plan.py --base "$BASE" --head "${{ github.sha }}" --github-output "$GITHUB_OUTPUT"
+  python-services:
+    needs: plan
+    if: needs.plan.outputs.has_services == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.services) }}
+    uses: ./.github/workflows/reusable-python-service.yml
+    with:
+      service_name: ${{ matrix.name }}
+      service_path: ${{ matrix.path }}
+  frontend:
+    needs: plan
+    if: needs.plan.outputs.frontend_changed == 'true'
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: apps/frontend}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: "22", cache: npm, cache-dependency-path: apps/frontend/package-lock.json}
+      - run: npm ci --ignore-scripts
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+  gateway:
+    needs: plan
+    if: needs.plan.outputs.gateway_changed == 'true'
+    runs-on: ubuntu-latest
+    defaults: {run: {working-directory: infra/gateway}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install pytest
+      - run: python -m pytest -q
+  container-checks:
+    needs: plan
+    if: needs.plan.outputs.changed_count != '0'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.all) }}
+    uses: ./.github/workflows/reusable-container-check.yml
+    with:
+      component: ${{ matrix.name }}
+      context: ${{ matrix.context }}
+      dockerfile: ${{ matrix.dockerfile }}
+  cicd-self-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install -e "libs/python/smartedu_cicd[dev]"
+      - run: pytest -q libs/python/smartedu_cicd/tests tests/cicd

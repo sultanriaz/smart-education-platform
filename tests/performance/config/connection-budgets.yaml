@@ -1,0 +1,51 @@
+version: 1
+database_server_max_connections: 250
+reserved_connections: 30
+services:
+- service: identity-service
+  replicas: 2
+  pool_size: 5
+  max_overflow: 3
+- service: academic-service
+  replicas: 3
+  pool_size: 5
+  max_overflow: 3
+- service: attendance-service
+  replicas: 3
+  pool_size: 5
+  max_overflow: 3
+- service: scheduling-service
+  replicas: 2
+  pool_size: 5
+  max_overflow: 3
+- service: notification-service
+  replicas: 2
+  pool_size: 5
+  max_overflow: 3
+- service: facility-service
+  replicas: 2
+  pool_size: 5
+  max_overflow: 3
+- service: learning-service
+  replicas: 2
+  pool_size: 5
+  max_overflow: 3
+- service: assessment-service
+  replicas: 3
+  pool_size: 5
+  max_overflow: 3
+- service: reporting-service
+  replicas: 2
+  pool_size: 5
+  max_overflow: 3
+- service: platform-service
+  replicas: 2
+  pool_size: 4
+  max_overflow: 2
+notes:
+- This is a candidate budget for a shared 250-connection PostgreSQL server, not a
+  final deployment setting.
+- Codex must reconcile this with actual service replicas, workload, and Sprint 17
+  pool configuration.
+- If services move to separate managed clusters/poolers, recalculate per physical
+  database target.

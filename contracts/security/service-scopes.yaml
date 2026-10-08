@@ -1,0 +1,82 @@
+version: 1
+
+scopes:
+  academic.sections.read:
+    target: academic-service
+    callers:
+      - attendance-service
+      - scheduling-service
+      - learning-service
+      - assessment-service
+      - notification-service
+
+  academic.enrollments.read:
+    target: academic-service
+    callers:
+      - attendance-service
+      - scheduling-service
+      - learning-service
+      - assessment-service
+
+  academic.rosters.read:
+    target: academic-service
+    callers:
+      - attendance-service
+      - notification-service
+
+  academic.teacher_assignments.read:
+    target: academic-service
+    callers:
+      - attendance-service
+      - scheduling-service
+      - learning-service
+      - assessment-service
+      - notification-service
+
+  identity.users.read:
+    target: identity-service
+    callers:
+      - notification-service
+      - platform-service
+
+  notifications.events.write:
+    target: notification-service
+    callers:
+      - identity-service
+      - attendance-service
+      - scheduling-service
+      - facility-service
+      - learning-service
+      - assessment-service
+
+  reporting.events.write:
+    target: reporting-service
+    callers:
+      - identity-service
+      - academic-service
+      - attendance-service
+      - scheduling-service
+      - notification-service
+      - facility-service
+      - learning-service
+      - assessment-service
+
+  platform.audit.write:
+    target: platform-service
+    callers:
+      - identity-service
+      - academic-service
+      - attendance-service
+      - scheduling-service
+      - notification-service
+      - facility-service
+      - learning-service
+      - assessment-service
+      - reporting-service
+
+rules:
+  - Grant only scopes required by a concrete caller-to-target workflow.
+  - A service token audience must equal the target service.
+  - Services must reject valid signatures with the wrong audience.
+  - Admin user roles do not imply internal service scopes.
+  - Internal service scopes do not imply end-user roles.

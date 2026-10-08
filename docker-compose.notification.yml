@@ -1,0 +1,82 @@
+services:
+  notification-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: notification
+      POSTGRES_PASSWORD: notification
+    ports:
+      - "${NOTIFICATION_DB_PORT:-5438}:5432"
+    volumes:
+      - notification_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification -d notification_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  notification-redis:
+    image: redis:7-alpine
+    ports:
+      - "${NOTIFICATION_REDIS_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  notification-migrate:
+    build:
+      context: ./services/notification-service
+    environment: &notification-env
+      DATABASE_URL: postgresql+psycopg://notification:notification@notification-db:5432/notification_db
+      JWT_JWKS_URL: http://identity-service:8000/.well-known/jwks.json
+      JWT_ISSUER: smart-education-identity
+      JWT_AUDIENCE: smart-education-platform
+      JWT_ALGORITHM: RS256
+      IDENTITY_SERVICE_BASE_URL: http://identity-service:8000
+      IDENTITY_SERVICE_TOKEN: ${IDENTITY_SERVICE_TOKEN:-}
+      ACADEMIC_SERVICE_BASE_URL: http://academic-service:8000
+      ACADEMIC_SERVICE_TOKEN: ${ACADEMIC_SERVICE_TOKEN:-}
+      INTERNAL_EVENT_TOKEN: ${INTERNAL_EVENT_TOKEN:-CHANGE_ME_INTERNAL_EVENT_TOKEN}
+      TASK_MODE: celery
+      REDIS_URL: redis://notification-redis:6379/0
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-no-reply@example.edu}
+    depends_on:
+      notification-db:
+        condition: service_healthy
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+
+  notification-service:
+    build:
+      context: ./services/notification-service
+    environment: *notification-env
+    ports:
+      - "8005:8000"
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      notification-redis:
+        condition: service_healthy
+      notification-migrate:
+        condition: service_completed_successfully
+
+  notification-worker:
+    build:
+      context: ./services/notification-service
+    environment: *notification-env
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      notification-redis:
+        condition: service_healthy
+      notification-migrate:
+        condition: service_completed_successfully
+    command: ["celery", "-A", "app.queue.celery_app.celery_app", "worker", "-Q", "notifications", "--loglevel=INFO"]
+
+volumes:
+  notification_postgres_data:

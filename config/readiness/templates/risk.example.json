@@ -1,0 +1,10 @@
+{
+  "id": "PR-RISK-001",
+  "title": "Example only - replace with a real readiness risk",
+  "severity": "MEDIUM",
+  "status": "OPEN",
+  "owner": "REPLACE_WITH_OWNER",
+  "mitigation": "Describe the concrete mitigation.",
+  "due_at": null,
+  "acceptance_reason": null
+}

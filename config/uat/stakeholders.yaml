@@ -1,0 +1,21 @@
+version: 1
+roles:
+- role: StudentRepresentative
+  responsibility: Validate Student workflows, terminology, usability, and expected
+    outcomes.
+  required: true
+- role: TeacherRepresentative
+  responsibility: Validate teaching, attendance, learning-resource, and assessment
+    workflows.
+  required: true
+- role: AdminRepresentative
+  responsibility: Validate administrative, reporting, academic, scheduling, and platform
+    workflows.
+  required: true
+- role: ProductOwner
+  responsibility: Own acceptance scope, defect trade-offs, and release decision.
+  required: true
+- role: ProjectSupervisor
+  responsibility: Review evidence, requirement coverage, and final FYP acceptance
+    readiness.
+  required: true

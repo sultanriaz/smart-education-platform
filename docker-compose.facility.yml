@@ -1,0 +1,67 @@
+services:
+  facility-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: facility_db
+      POSTGRES_USER: facility
+      POSTGRES_PASSWORD: facility
+    ports:
+      - "${FACILITY_DB_PORT:-5439}:5432"
+    volumes:
+      - facility_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U facility -d facility_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  facility-migrate:
+    build:
+      context: ./services/facility-service
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://facility:facility@facility-db:5432/facility_db
+    depends_on:
+      facility-db:
+        condition: service_healthy
+    restart: "no"
+
+  facility-service:
+    build:
+      context: ./services/facility-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://facility:facility@facility-db:5432/facility_db
+      JWT_JWKS_URL: ${FACILITY_JWT_JWKS_URL:-http://identity-service:8000/.well-known/jwks.json}
+      JWT_ISSUER: ${JWT_ISSUER:-smart-education-identity}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-smart-education-platform}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-RS256}
+      INTERNAL_SERVICE_TOKEN: ${FACILITY_INTERNAL_SERVICE_TOKEN:-CHANGE_ME_INTERNAL_SERVICE_TOKEN}
+      MAX_BOOKING_DURATION_HOURS: ${MAX_BOOKING_DURATION_HOURS:-8}
+      CANCELLATION_CUTOFF_MINUTES: ${CANCELLATION_CUTOFF_MINUTES:-30}
+      PENDING_BOOKINGS_RESERVE_SLOT: ${PENDING_BOOKINGS_RESERVE_SLOT:-true}
+    ports:
+      - "8006:8000"
+    depends_on:
+      facility-db:
+        condition: service_healthy
+      facility-migrate:
+        condition: service_completed_successfully
+
+  facility-outbox-relay:
+    build:
+      context: ./services/facility-service
+    command: ["python", "-m", "app.workers.outbox_relay"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://facility:facility@facility-db:5432/facility_db
+      NOTIFICATION_SERVICE_BASE_URL: ${FACILITY_NOTIFICATION_SERVICE_BASE_URL:-http://notification-service:8000}
+      NOTIFICATION_INTERNAL_EVENT_TOKEN: ${NOTIFICATION_INTERNAL_EVENT_TOKEN:-CHANGE_ME_NOTIFICATION_INTERNAL_EVENT_TOKEN}
+      OUTBOX_RELAY_INTERVAL_SECONDS: ${OUTBOX_RELAY_INTERVAL_SECONDS:-2}
+    depends_on:
+      facility-db:
+        condition: service_healthy
+      facility-migrate:
+        condition: service_completed_successfully
+    profiles: ["integration"]
+
+volumes:
+  facility_postgres_data:

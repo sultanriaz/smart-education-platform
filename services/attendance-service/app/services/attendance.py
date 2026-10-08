@@ -73,6 +73,8 @@ class AttendanceService:
                     "version": 1,
                     "session_id": str(session.id),
                     "section_id": str(session.section_id),
+                    "course_id": str(session.course_id),
+                    "session_date": session.session_date.isoformat(),
                     "actor_user_id": str(actor.user_id),
                     "occurred_at": now.isoformat(),
                     **payload,

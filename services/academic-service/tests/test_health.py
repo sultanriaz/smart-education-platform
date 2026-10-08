@@ -21,7 +21,9 @@ def test_ready_checks_database_and_migration(client, db, monkeypatch):
     db.execute(text("INSERT INTO alembic_version VALUES ('outdated')"))
     db.commit()
     assert client.get("/ready").status_code == 503
-    db.execute(text("UPDATE alembic_version SET version_num = '0001_academic_core'"))
+    db.execute(
+        text("UPDATE alembic_version SET version_num = :head"), {"head": health.expected_revision()}
+    )
     db.commit()
     client.headers.pop("Authorization")
     assert client.get("/ready").json()["status"] == "ready"

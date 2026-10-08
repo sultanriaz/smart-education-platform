@@ -1,0 +1,112 @@
+groups:
+  - name: smartedu-platform
+    rules:
+      - alert: SmartEduServiceDown
+        expr: up{job="smartedu-services"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Smart Education service is unreachable"
+          description: "Prometheus cannot scrape {{ $labels.service }} for 2 minutes."
+          runbook: "RUNBOOKS.md#smarteduservicedown"
+
+      - alert: SmartEduHighErrorRate
+        expr: smartedu:http_error_ratio:5m > 0.02
+        for: 10m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "High 5xx rate on {{ $labels.service }}"
+          description: "5xx ratio is {{ $value | humanizePercentage }} for 10 minutes."
+          runbook: "RUNBOOKS.md#smarteduhigherrorrate"
+
+      - alert: SmartEduCriticalErrorRate
+        expr: smartedu:http_error_ratio:5m > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          category: reliability
+        annotations:
+          summary: "Critical 5xx rate on {{ $labels.service }}"
+          description: "5xx ratio is {{ $value | humanizePercentage }}."
+          runbook: "RUNBOOKS.md#smarteducriticalerrorrate"
+
+      - alert: SmartEduGeneralLatencyBudgetExceeded
+        expr: smartedu:http_request_duration:p95 > 3
+        for: 10m
+        labels:
+          severity: warning
+          category: latency
+        annotations:
+          summary: "p95 latency exceeds 3s on {{ $labels.service }}"
+          description: "Current p95 is {{ $value | humanizeDuration }}."
+          runbook: "RUNBOOKS.md#smartedugenerallatencybudgetexceeded"
+
+      - alert: SmartEduAttendanceLatencyBudgetExceeded
+        expr: smartedu:http_request_duration:p95{service="attendance-service"} > 2
+        for: 5m
+        labels:
+          severity: critical
+          category: latency
+        annotations:
+          summary: "Attendance p95 exceeds 2s"
+          description: "Attendance service p95 is {{ $value | humanizeDuration }}."
+          runbook: "RUNBOOKS.md#smarteduattendancelatencybudgetexceeded"
+
+      - alert: SmartEduNotificationLagBudgetExceeded
+        expr: smartedu:event_processing_lag:p95{service="notification-service"} > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: messaging
+        annotations:
+          summary: "Notification event p95 lag exceeds 5s"
+          description: "Notification event lag is {{ $value | humanizeDuration }}."
+          runbook: "RUNBOOKS.md#smartedunotificationlagbudgetexceeded"
+
+      - alert: SmartEduOutboxBacklog
+        expr: smartedu_outbox_pending > 100
+        for: 10m
+        labels:
+          severity: warning
+          category: messaging
+        annotations:
+          summary: "Outbox backlog on {{ $labels.service }}"
+          description: "{{ $value }} outbox events are pending."
+          runbook: "RUNBOOKS.md#smarteduoutboxbacklog"
+
+      - alert: SmartEduOutboxStale
+        expr: smartedu_outbox_oldest_age_seconds > 60
+        for: 5m
+        labels:
+          severity: critical
+          category: messaging
+        annotations:
+          summary: "Oldest outbox event is stale on {{ $labels.service }}"
+          description: "Oldest pending event age is {{ $value | humanizeDuration }}."
+          runbook: "RUNBOOKS.md#smarteduoutboxstale"
+
+      - alert: SmartEduWorkerFailures
+        expr: increase(smartedu_worker_failures_total[10m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: workers
+        annotations:
+          summary: "Repeated background worker failures"
+          description: "{{ $labels.service }}/{{ $labels.worker }} failures increased."
+          runbook: "RUNBOOKS.md#smarteduworkerfailures"
+
+      - alert: RabbitMQQueueBacklog
+        expr: rabbitmq_queue_messages_ready > 1000
+        for: 10m
+        labels:
+          severity: warning
+          category: messaging
+        annotations:
+          summary: "RabbitMQ queue backlog"
+          description: "Queue {{ $labels.queue }} has {{ $value }} ready messages."
+          runbook: "RUNBOOKS.md#rabbitmqqueuebacklog"

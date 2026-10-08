@@ -1,0 +1,162 @@
+name: Production Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Exact Sprint 26 approved release tag"
+        required: true
+        type: string
+      confirm:
+        description: "Type PRODUCTION_DEPLOY"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smartedu-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, production]
+    environment: production
+    timeout-minutes: 120
+
+    steps:
+      - name: Require explicit deployment confirmation
+        shell: pwsh
+        run: |
+          if ("${{ inputs.confirm }}" -ne "PRODUCTION_DEPLOY") {
+            throw "Deployment confirmation did not match PRODUCTION_DEPLOY."
+          }
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install launch/deployment/readiness toolkits
+        shell: pwsh
+        run: |
+          python -m pip install -e .\libs\python\smartedu_launch
+          python -m pip install -e .\libs\python\smartedu_readiness
+          python -m pip install -e .\libs\python\smartedu_deploy
+
+      - name: Download approved release and readiness evidence
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          New-Item -ItemType Directory -Force .\production-release | Out-Null
+          gh release download "${{ inputs.release_tag }}" `
+            --pattern "release-manifest.json" `
+            --pattern "production-readiness-run.json" `
+            --pattern "SHA256SUMS" `
+            --dir .\production-release
+
+      - name: Verify release manifest checksum
+        shell: pwsh
+        working-directory: production-release
+        run: |
+          $ExpectedLine = Get-Content .\SHA256SUMS |
+            Where-Object { $_ -match "release-manifest.json" } |
+            Select-Object -First 1
+
+          if (-not $ExpectedLine) {
+            throw "SHA256SUMS has no release-manifest.json entry."
+          }
+
+          $Expected = ($ExpectedLine -split "\s+")[0].Trim().ToLower()
+          $Actual = (Get-FileHash .\release-manifest.json -Algorithm SHA256).Hash.ToLower()
+
+          if ($Expected -ne $Actual) {
+            throw "release-manifest.json checksum mismatch."
+          }
+
+      - name: Verify Sprint 26 readiness gate
+        shell: pwsh
+        run: |
+          python .\scripts\verify-readiness-gate.py `
+            .\production-release\production-readiness-run.json
+
+      - name: Deploy exact approved release
+        shell: pwsh
+        env:
+          PRODUCTION_KUBE_CONTEXT: ${{ vars.PRODUCTION_KUBE_CONTEXT }}
+          SMARTEDU_PRODUCTION_URL: ${{ vars.SMARTEDU_PRODUCTION_URL }}
+          SMARTEDU_ACCEPTED_RELEASE_MANIFEST: ${{ vars.SMARTEDU_ACCEPTED_RELEASE_MANIFEST }}
+          PRODUCTION_BACKUP_SCRIPT: ${{ vars.PRODUCTION_BACKUP_SCRIPT }}
+        run: |
+          .\scripts\deploy-production-k8s.ps1 `
+            -ReleaseManifest .\production-release\release-manifest.json `
+            -ReadinessRun .\production-release\production-readiness-run.json `
+            -Confirm PRODUCTION_DEPLOY
+
+      - name: Production-safe post-deployment validation
+        shell: pwsh
+        env:
+          SMARTEDU_PRODUCTION_URL: ${{ vars.SMARTEDU_PRODUCTION_URL }}
+          PRODUCTION_ROLE_SMOKE_SCRIPT: ${{ vars.PRODUCTION_ROLE_SMOKE_SCRIPT }}
+          PRODUCTION_EVENT_SMOKE_SCRIPT: ${{ vars.PRODUCTION_EVENT_SMOKE_SCRIPT }}
+          PRODUCTION_OBSERVABILITY_CHECK_SCRIPT: ${{ vars.PRODUCTION_OBSERVABILITY_CHECK_SCRIPT }}
+        run: |
+          .\scripts\production-postdeploy-validation.ps1 `
+            -LaunchRecord .\launch\current-launch.json `
+            -Confirm PRODUCTION_SAFE_VALIDATION
+
+      - name: Capture monitoring snapshot
+        shell: pwsh
+        env:
+          PRODUCTION_KUBE_CONTEXT: ${{ vars.PRODUCTION_KUBE_CONTEXT }}
+        run: |
+          .\scripts\production-monitoring-snapshot.ps1
+
+      - name: Complete launch record
+        shell: pwsh
+        run: |
+          python .\scripts\complete-launch-record.py `
+            .\launch\current-launch.json `
+            --outcome SUCCEEDED `
+            --notes "Automated rollout and configured production-safe validation hooks passed."
+
+          python .\scripts\verify-launch-gate.py `
+            .\launch\current-launch.json
+
+          python .\scripts\generate-launch-report.py `
+            .\launch\current-launch.json `
+            --output .\launch\PRODUCTION_LAUNCH_REPORT.md
+
+          python .\scripts\generate-launch-evidence-index.py `
+            --root .\launch\evidence `
+            --output .\launch\PRODUCTION_LAUNCH_EVIDENCE_INDEX.json
+
+      - name: Capture Kubernetes state on failure
+        if: failure()
+        shell: pwsh
+        env:
+          PRODUCTION_KUBE_CONTEXT: ${{ vars.PRODUCTION_KUBE_CONTEXT }}
+        run: |
+          New-Item -ItemType Directory -Force .\launch\evidence\failure | Out-Null
+          kubectl --context $env:PRODUCTION_KUBE_CONTEXT `
+            -n smartedu `
+            get deployment,pod,job,hpa,pdb,ingress `
+            -o wide |
+            Set-Content .\launch\evidence\failure\kubernetes-state.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-launch-${{ inputs.release_tag }}
+          path: |
+            launch/current-launch.json
+            launch/PRODUCTION_LAUNCH_REPORT.md
+            launch/PRODUCTION_LAUNCH_EVIDENCE_INDEX.json
+            launch/evidence
+          if-no-files-found: ignore
+          retention-days: 90

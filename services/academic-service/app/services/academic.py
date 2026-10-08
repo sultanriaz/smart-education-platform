@@ -14,6 +14,7 @@ from app.domain.models import (
     Department,
     Enrollment,
     EnrollmentStatus,
+    OutboxEvent,
     Program,
     Section,
     Semester,
@@ -159,7 +160,24 @@ class AcademicService:
             student = self.get(StudentAcademicProfile, student_id, lock=True)
             self._validate_enrollment(student, section)
             record = self.repo.add(Enrollment(student_profile_id=student_id, section_id=section_id))
+            self._enrollment_event("academic.enrollment_created", record, student)
         return record
+
+    def _enrollment_event(self, event_type, record, student):
+        self.db.add(
+            OutboxEvent(
+                event_type=event_type,
+                aggregate_id=record.id,
+                payload={
+                    "student_user_id": str(student.external_user_id),
+                    "section_id": str(record.section_id),
+                    "program_id": str(student.program_id),
+                    "status": "ACTIVE"
+                    if record.status == EnrollmentStatus.ENROLLED
+                    else record.status.upper(),
+                },
+            )
+        )
 
     def _validate_enrollment(
         self, student: StudentAcademicProfile, section: Section, *, exclude: UUID | None = None
@@ -198,6 +216,13 @@ class AcademicService:
                     self._validate_enrollment(student, section, exclude=record_id)
                 record.status = status
                 self.db.flush()
+                self._enrollment_event(
+                    "academic.enrollment_activated"
+                    if status == EnrollmentStatus.ENROLLED
+                    else "academic.enrollment_dropped",
+                    record,
+                    student,
+                )
         return record
 
     def assign(self, teacher_id: UUID, section_id: UUID) -> TeacherAssignment:

@@ -1,0 +1,16 @@
+# Apply equivalent controls to application services after confirming each
+# service's filesystem needs.
+x-smartedu-service-security: &smartedu-service-security
+  read_only: true
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  tmpfs:
+    - /tmp:size=64m,mode=1777
+  restart: unless-stopped
+
+# Example only:
+# services:
+#   academic-service:
+#     <<: *smartedu-service-security

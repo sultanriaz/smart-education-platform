@@ -1,0 +1,140 @@
+name: Staging Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Sprint 22 release tag (vMAJOR.MINOR.PATCH)"
+        required: true
+        type: string
+      run_e2e:
+        description: "Run Student/Teacher/Admin Playwright E2E"
+        required: true
+        default: true
+        type: boolean
+      run_performance_smoke:
+        description: "Run Sprint 20 smoke load"
+        required: true
+        default: true
+        type: boolean
+      run_observability:
+        description: "Run Sprint 21 observability smoke"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smartedu-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy-and-accept:
+    runs-on: [self-hosted, staging]
+    environment: staging
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deployment/staging toolkits
+        shell: pwsh
+        run: |
+          python -m pip install -e .\libs\python\smartedu_deploy
+          python -m pip install -e .\libs\python\smartedu_staging
+
+      - name: Download immutable Sprint 22 release manifest
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          New-Item -ItemType Directory -Force .\staging-release | Out-Null
+          gh release download "${{ inputs.release_tag }}" `
+            --pattern "release-manifest.json" `
+            --pattern "SHA256SUMS" `
+            --dir .\staging-release
+
+      - name: Verify release checksum
+        shell: pwsh
+        working-directory: staging-release
+        run: |
+          $Expected = (Get-Content .\SHA256SUMS).Split(" ")[0].Trim()
+          $Actual = (Get-FileHash .\release-manifest.json -Algorithm SHA256).Hash.ToLower()
+          if ($Expected.ToLower() -ne $Actual) {
+            throw "release-manifest.json checksum mismatch"
+          }
+
+      - name: Production-like staging preflight
+        shell: pwsh
+        run: |
+          python .\scripts\staging-preflight.py `
+            --release-manifest .\staging-release\release-manifest.json `
+            --strict
+
+      - name: Deploy immutable release to staging
+        shell: pwsh
+        env:
+          STAGING_KUBE_CONTEXT: ${{ vars.STAGING_KUBE_CONTEXT }}
+          SMARTEDU_STAGING_URL: ${{ vars.SMARTEDU_STAGING_URL }}
+        run: |
+          .\scripts\deploy-staging-k8s.ps1 `
+            -ReleaseManifest .\staging-release\release-manifest.json
+
+      - name: Run staging acceptance
+        shell: pwsh
+        env:
+          STAGING_KUBE_CONTEXT: ${{ vars.STAGING_KUBE_CONTEXT }}
+          SMARTEDU_STAGING_URL: ${{ vars.SMARTEDU_STAGING_URL }}
+          SMARTEDU_E2E_STUDENT_EMAIL: ${{ secrets.SMARTEDU_E2E_STUDENT_EMAIL }}
+          SMARTEDU_E2E_STUDENT_PASSWORD: ${{ secrets.SMARTEDU_E2E_STUDENT_PASSWORD }}
+          SMARTEDU_E2E_TEACHER_EMAIL: ${{ secrets.SMARTEDU_E2E_TEACHER_EMAIL }}
+          SMARTEDU_E2E_TEACHER_PASSWORD: ${{ secrets.SMARTEDU_E2E_TEACHER_PASSWORD }}
+          SMARTEDU_E2E_ADMIN_EMAIL: ${{ secrets.SMARTEDU_E2E_ADMIN_EMAIL }}
+          SMARTEDU_E2E_ADMIN_PASSWORD: ${{ secrets.SMARTEDU_E2E_ADMIN_PASSWORD }}
+        run: |
+          $Args = @{
+            ReleaseManifest = ".\staging-release\release-manifest.json"
+          }
+          if ("${{ inputs.run_e2e }}" -eq "true") {
+            $Args["E2E"] = $true
+          }
+          if ("${{ inputs.run_performance_smoke }}" -eq "true") {
+            $Args["PerformanceSmoke"] = $true
+          }
+          if ("${{ inputs.run_observability }}" -eq "true") {
+            $Args["Observability"] = $true
+          }
+          .\scripts\run-staging-acceptance.ps1 @Args
+
+      - name: Capture staging rollout state
+        if: always()
+        shell: pwsh
+        env:
+          STAGING_KUBE_CONTEXT: ${{ vars.STAGING_KUBE_CONTEXT }}
+        run: |
+          New-Item -ItemType Directory -Force .\staging-artifacts | Out-Null
+          kubectl --context $env:STAGING_KUBE_CONTEXT `
+            -n smartedu-staging `
+            get deployment,pod,job,hpa,pdb,ingress `
+            -o wide |
+            Set-Content .\staging-artifacts\kubernetes-state.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staging-acceptance-${{ inputs.release_tag }}
+          path: |
+            staging-artifacts
+            test-results
+            playwright-report
+            tests/performance/results
+          if-no-files-found: ignore
+          retention-days: 30

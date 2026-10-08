@@ -1,0 +1,75 @@
+version: 1
+namespace: smartedu-staging
+public_host: staging.smartedu.example.edu
+tls_secret_name: smartedu-staging-tls
+ingress_class: nginx
+workload_overrides:
+- component: identity-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 4
+- component: academic-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 5
+- component: attendance-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 5
+- component: scheduling-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 4
+- component: notification-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 4
+- component: facility-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 4
+- component: learning-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 4
+- component: assessment-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 5
+- component: reporting-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 4
+- component: platform-service
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 4
+- component: frontend
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 4
+- component: api-gateway
+  replicas: 2
+  min_replicas: 2
+  max_replicas: 4
+required_secrets:
+- identity-service-secrets
+- academic-service-secrets
+- attendance-service-secrets
+- scheduling-service-secrets
+- notification-service-secrets
+- facility-service-secrets
+- learning-service-secrets
+- assessment-service-secrets
+- reporting-service-secrets
+- platform-service-secrets
+- frontend-secrets
+- api-gateway-secrets
+stateful_dependencies:
+- postgresql
+- redis-cache
+- redis-durable
+- rabbitmq
+- object-storage
+- email-provider
+- observability

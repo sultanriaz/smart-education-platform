@@ -1,0 +1,208 @@
+version: 1
+scenarios:
+- id: UAT-TCH-001
+  role: Teacher
+  title: Teacher login and assigned teaching context
+  domain: Identity
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Authenticate with Teacher QA account.
+  - Open Teacher dashboard.
+  - Inspect assigned sections/classes.
+  expected_results:
+  - Teacher workspace loads.
+  - Only authorized teaching assignments are shown.
+  - Admin-only capabilities are not available.
+  requirement_refs:
+  - REQ-IDENTITY-AUTH
+  - REQ-RBAC
+  - REQ-ACADEMIC-MASTER
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-TCH-002
+  role: Teacher
+  title: View section roster
+  domain: Academic
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open an assigned section.
+  - View roster.
+  - Attempt an unassigned section if the UI/API permits navigation.
+  expected_results:
+  - Assigned roster is correct.
+  - Unassigned section roster is denied or not exposed.
+  requirement_refs:
+  - REQ-ACADEMIC-MASTER
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-TCH-003
+  role: Teacher
+  title: Create and finalize attendance
+  domain: Attendance
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open assigned section attendance.
+  - Create/open a session.
+  - Mark roster attendance.
+  - Finalize the session.
+  expected_results:
+  - Session/records persist atomically.
+  - Finalized state is shown.
+  - Operation meets the Attendance acceptance target in the staging performance evidence.
+  requirement_refs:
+  - REQ-ATTENDANCE
+  - REQ-PERF-ATTENDANCE
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-TCH-004
+  role: Teacher
+  title: Correct attendance with audit reason
+  domain: Attendance
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open a finalized/eligible attendance record.
+  - Submit an allowed correction with reason.
+  - Inspect resulting record/history if exposed.
+  expected_results:
+  - Correction follows server rules.
+  - Reason is required when specified by contract.
+  - Audit/history reflects the correction without silently rewriting history.
+  requirement_refs:
+  - REQ-ATTENDANCE
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-TCH-005
+  role: Teacher
+  title: Publish a learning resource
+  domain: Learning
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Create a resource for an assigned course/section.
+  - Save as draft.
+  - Publish it.
+  - Verify Student visibility using authorized Student account.
+  expected_results:
+  - Teacher can author within assignment scope.
+  - Draft is not Student-visible.
+  - Published resource becomes visible only to intended audience.
+  requirement_refs:
+  - REQ-LEARNING
+  - REQ-RBAC
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-TCH-006
+  role: Teacher
+  title: Create and assign quiz
+  domain: Assessment
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Create/select a question bank.
+  - Create questions.
+  - Create quiz and add questions.
+  - Publish and assign to an authorized section.
+  expected_results:
+  - Quiz rules are validated.
+  - Assignment respects Teacher's authorized section/course scope.
+  - Published assignment becomes available to intended Students.
+  requirement_refs:
+  - REQ-ASSESSMENT
+  - REQ-ACADEMIC-MASTER
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-TCH-007
+  role: Teacher
+  title: Grade submitted assessment
+  domain: Assessment
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open submissions for an assigned assessment.
+  - Open a submitted attempt.
+  - Grade required manual answers.
+  - Save/finalize grading.
+  expected_results:
+  - Teacher can grade authorized attempts.
+  - Grade is persisted/audited.
+  - Teacher cannot grade unrelated sections.
+  requirement_refs:
+  - REQ-ASSESSMENT
+  - REQ-RBAC
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-TCH-008
+  role: Teacher
+  title: View own teaching timetable
+  domain: Scheduling
+  priority: P1
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open Teacher timetable.
+  - Inspect today's and upcoming occurrences.
+  expected_results:
+  - Only the Teacher's authorized schedule is shown.
+  - Rescheduled/cancelled occurrences are represented consistently.
+  requirement_refs:
+  - REQ-SCHEDULING
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-TCH-009
+  role: Teacher
+  title: Teacher notification workflow
+  domain: Notifications
+  priority: P2
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Open notifications.
+  - Read a targeted notification.
+  - Mark it read and review preferences.
+  expected_results:
+  - Notification state persists.
+  - Teacher receives only authorized targets.
+  requirement_refs:
+  - REQ-NOTIFICATIONS
+  evidence:
+  - screenshot or test artifact
+  - tester notes
+- id: UAT-TCH-010
+  role: Teacher
+  title: Admin action denied
+  domain: Security
+  priority: P0
+  execution: hybrid
+  preconditions: []
+  steps:
+  - Attempt an Admin-only action via UI if link can be reached.
+  - Attempt the corresponding protected API through approved test tooling.
+  expected_results:
+  - UI does not offer unauthorized Admin action.
+  - Server rejects unauthorized request regardless of client behavior.
+  requirement_refs:
+  - REQ-RBAC
+  - REQ-PRIVACY
+  evidence:
+  - screenshot or test artifact
+  - tester notes

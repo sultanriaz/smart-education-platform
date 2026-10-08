@@ -1,0 +1,478 @@
+version: 1
+checkpoints:
+- id: STAB-LAUNCH-001
+  category: Launch
+  title: Sprint 27 production launch gate passed
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - Sprint 27 launch record/report
+  source_refs:
+  - Sprint27
+- id: STAB-LAUNCH-002
+  category: Launch
+  title: Production release identity still matches launch record
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - release tag/commit/12 image digests
+  source_refs:
+  - Sprint27
+- id: STAB-LAUNCH-003
+  category: Launch
+  title: No unresolved SEV-1 launch incident remains
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - launch incident summary
+  source_refs:
+  - Sprint27
+- id: STAB-EDGE-001
+  category: Edge
+  title: Production DNS remains correct
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - DNS verification
+  source_refs:
+  - Sprint27
+- id: STAB-EDGE-002
+  category: Edge
+  title: Production TLS remains valid and renewal path is healthy
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - TLS verification
+  source_refs:
+  - Sprint26
+  - Sprint27
+- id: STAB-EDGE-003
+  category: Edge
+  title: Only frontend and API Gateway remain publicly exposed
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - public surface audit
+  source_refs:
+  - Sprint23
+  - Sprint26
+- id: STAB-SVC-001
+  category: Services
+  title: All 12 application workloads remain Available
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - Kubernetes workload snapshot
+  source_refs:
+  - Sprint27
+- id: STAB-SVC-002
+  category: Services
+  title: No sustained crash-loop or abnormal restart pattern remains
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - pod restart evidence
+  source_refs:
+  - Sprint21
+  - Sprint27
+- id: STAB-SVC-003
+  category: Services
+  title: Readiness removes unhealthy pods from service
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - readiness/service evidence
+  source_refs:
+  - Sprint23
+  - Sprint27
+- id: STAB-PERF-001
+  category: Performance
+  title: General production p95 remains within <=3 second target
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - production latency evidence
+  source_refs:
+  - Sprint20
+  - Sprint21
+- id: STAB-PERF-002
+  category: Performance
+  title: Attendance production latency remains within <=2 second target
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - attendance latency evidence
+  source_refs:
+  - Sprint20
+  - Sprint21
+- id: STAB-PERF-003
+  category: Performance
+  title: Representative notification delivery remains within <=5 second target
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - notification delivery evidence
+  source_refs:
+  - Sprint20
+  - Sprint21
+- id: STAB-PERF-004
+  category: Performance
+  title: No production saturation trend invalidates the 500-user capacity evidence
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - capacity utilization review
+  source_refs:
+  - Sprint20
+  - Sprint27
+- id: STAB-DB-001
+  category: Database
+  title: All ten service databases are reachable only by intended services
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - DB access/ownership evidence
+  source_refs:
+  - Sprint23
+  - Sprint26
+- id: STAB-DB-002
+  category: Database
+  title: PostgreSQL connection usage stays within safe budget
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - connection metrics
+  source_refs:
+  - Sprint20
+  - Sprint21
+- id: STAB-DB-003
+  category: Database
+  title: No persistent lock/deadlock/regression trend remains
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - lock/deadlock metrics
+  source_refs:
+  - Sprint20
+  - Sprint21
+- id: STAB-DB-004
+  category: Database
+  title: Production backup/PITR schedule remains healthy after launch
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - backup job/provider evidence
+  source_refs:
+  - Sprint24
+  - Sprint26
+  - Sprint27
+- id: STAB-REDIS-001
+  category: Redis
+  title: Cache Redis remains healthy without critical eviction/connection errors
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - Redis cache metrics
+  source_refs:
+  - Sprint17
+  - Sprint21
+- id: STAB-REDIS-002
+  category: Redis
+  title: Durable Redis remains healthy and persistent as designed
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - Redis durable metrics/persistence evidence
+  source_refs:
+  - Sprint17
+  - Sprint21
+- id: STAB-MQ-001
+  category: Messaging
+  title: RabbitMQ queues do not show unbounded backlog growth
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - queue depth/rate evidence
+  source_refs:
+  - Sprint17
+  - Sprint21
+- id: STAB-MQ-002
+  category: Messaging
+  title: Retry/DLQ volume is understood and within accepted bounds
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - retry/DLQ evidence
+  source_refs:
+  - Sprint17
+  - Sprint21
+- id: STAB-MQ-003
+  category: Messaging
+  title: Transactional outbox backlog drains normally
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - outbox metrics/query evidence
+  source_refs:
+  - Sprint17
+  - Sprint21
+- id: STAB-MQ-004
+  category: Messaging
+  title: Consumer/inbox deduplication shows no duplicate side-effect incident
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - consumer/inbox evidence
+  source_refs:
+  - Sprint17
+  - Sprint19
+- id: STAB-OBS-001
+  category: Observability
+  title: All expected service metric targets remain present
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - Prometheus target evidence
+  source_refs:
+  - Sprint21
+- id: STAB-OBS-002
+  category: Observability
+  title: Logs and traces remain available for incident correlation
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - log/trace evidence
+  source_refs:
+  - Sprint21
+- id: STAB-OBS-003
+  category: Observability
+  title: Critical alert routing is tested and acknowledged by owners
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - alert test evidence
+  source_refs:
+  - Sprint21
+  - Sprint26
+- id: STAB-OBS-004
+  category: Observability
+  title: No unresolved critical production alert remains
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - alert summary
+  source_refs:
+  - Sprint21
+- id: STAB-SEC-001
+  category: Security
+  title: No post-launch critical security alert or unauthorized access finding remains
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - security alert/audit review
+  source_refs:
+  - Sprint18
+  - Sprint21
+- id: STAB-SEC-002
+  category: Security
+  title: Production secrets remain absent from Git/logs/evidence
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - secret scan/evidence review
+  source_refs:
+  - Sprint18
+  - Sprint26
+- id: STAB-SEC-003
+  category: Security
+  title: Administrative/operator access remains least-privilege and attributable
+  mandatory: true
+  owner_role: SecurityOwner
+  evidence_required:
+  - access audit
+  source_refs:
+  - Sprint23
+  - Sprint26
+- id: STAB-AUTH-001
+  category: Identity
+  title: Login/refresh/logout/JWKS behavior remains healthy under real traffic
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - identity metrics/logs/safe smoke
+  source_refs:
+  - Sprint18
+  - Sprint27
+- id: STAB-ROLE-001
+  category: Roles
+  title: Student core production workflow remains usable
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - production-safe Student smoke/support evidence
+  source_refs:
+  - Sprint25
+  - Sprint27
+- id: STAB-ROLE-002
+  category: Roles
+  title: Teacher core production workflow remains usable
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - production-safe Teacher smoke/support evidence
+  source_refs:
+  - Sprint25
+  - Sprint27
+- id: STAB-ROLE-003
+  category: Roles
+  title: Admin core production workflow remains usable
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - production-safe Admin smoke/support evidence
+  source_refs:
+  - Sprint25
+  - Sprint27
+- id: STAB-DATA-001
+  category: DataIntegrity
+  title: No confirmed production data-loss/corruption incident remains
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - incident/data-integrity review
+  source_refs:
+  - Sprint24
+  - Sprint26
+- id: STAB-DATA-002
+  category: DataIntegrity
+  title: Reporting projections remain acceptably consistent with source events
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - reporting/event reconciliation evidence
+  source_refs:
+  - Sprint9
+  - Sprint17
+- id: STAB-SUP-001
+  category: Support
+  title: Production support intake is operating and owned
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - support queue/ownership evidence
+  source_refs:
+  - Sprint26
+- id: STAB-SUP-002
+  category: Support
+  title: All launch-period user reports are triaged and severity-classified
+  mandatory: true
+  owner_role: ProductOwner
+  evidence_required:
+  - support/defect summary
+  source_refs:
+  - Sprint26
+  - Sprint27
+- id: STAB-CHG-001
+  category: Change
+  title: No uncontrolled production hotfix bypassed release controls
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - release/change log
+  source_refs:
+  - Sprint22
+  - Sprint26
+- id: STAB-CHG-002
+  category: Change
+  title: Any stabilization hotfix has its own immutable release identity and regression evidence
+  mandatory: true
+  owner_role: TechnicalLead
+  evidence_required:
+  - hotfix release evidence or N/A justification
+  source_refs:
+  - Sprint22
+  - Sprint28
+- id: STAB-DR-001
+  category: Recovery
+  title: Recovery documentation still matches the deployed production architecture
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - DR/runbook review
+  source_refs:
+  - Sprint24
+  - Sprint26
+- id: STAB-DR-002
+  category: Recovery
+  title: Backup ownership and restore escalation remain assigned
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - operations ownership evidence
+  source_refs:
+  - Sprint26
+- id: STAB-OPS-001
+  category: Operations
+  title: Primary and backup operational owners have accepted ongoing ownership
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - handoff approval
+  source_refs:
+  - Sprint26
+  - Sprint28
+- id: STAB-OPS-002
+  category: Operations
+  title: Runbooks contain current production endpoints/owners without secrets
+  mandatory: true
+  owner_role: OperationsOwner
+  evidence_required:
+  - runbook review
+  source_refs:
+  - Sprint21
+  - Sprint28
+- id: STAB-OPS-003
+  category: Operations
+  title: Known MEDIUM/LOW follow-ups are assigned with target dates
+  mandatory: true
+  owner_role: ProjectSupervisor
+  evidence_required:
+  - follow-up register
+  source_refs:
+  - Sprint28
+- id: STAB-FIN-001
+  category: Closure
+  title: Production stabilization evidence index is complete and secret-free
+  mandatory: true
+  owner_role: ProjectSupervisor
+  evidence_required:
+  - evidence index/review
+  source_refs:
+  - Sprint28
+- id: STAB-FIN-002
+  category: Closure
+  title: Final stabilization report is generated and reviewed
+  mandatory: true
+  owner_role: ProjectSupervisor
+  evidence_required:
+  - stabilization report
+  source_refs:
+  - Sprint28
+- id: STAB-FIN-003
+  category: Closure
+  title: Five operational/project approvals are recorded
+  mandatory: true
+  owner_role: ProjectSupervisor
+  evidence_required:
+  - approval records
+  source_refs:
+  - Sprint28
+- id: STAB-FIN-004
+  category: Closure
+  title: Final disposition is STABLE or STABLE_WITH_FOLLOWUPS
+  mandatory: true
+  owner_role: ProjectSupervisor
+  evidence_required:
+  - structured stabilization run
+  source_refs:
+  - Sprint28

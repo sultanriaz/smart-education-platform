@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-service
+  namespace: smartedu-staging
+  labels:
+    smartedu.io/component: platform-service
+spec:
+  type: ClusterIP
+  selector:
+    smartedu.io/component: platform-service
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http

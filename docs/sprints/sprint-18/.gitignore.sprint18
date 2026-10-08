@@ -1,0 +1,7 @@
+# Merge into the repository .gitignore.
+dist/security/
+.env.security
+.env.infrastructure
+secrets-local/
+*.private.pem
+security-reports/

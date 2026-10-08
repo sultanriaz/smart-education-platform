@@ -1,0 +1,92 @@
+name: Production Stabilization Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Current production release tag"
+        required: true
+        type: string
+      observation_window:
+        description: "Observation label (for example launch-plus-24h)"
+        required: true
+        default: "launch-plus-24h"
+        type: string
+      confirm:
+        description: "Type PRODUCTION_READ_ONLY"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smartedu-production-stabilization
+  cancel-in-progress: false
+
+jobs:
+  observe:
+    runs-on: [self-hosted, production]
+    environment: production
+    timeout-minutes: 45
+
+    steps:
+      - name: Require read-only confirmation
+        shell: pwsh
+        run: |
+          if ("${{ inputs.confirm }}" -ne "PRODUCTION_READ_ONLY") {
+            throw "Confirmation must equal PRODUCTION_READ_ONLY."
+          }
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install stabilization toolkit
+        shell: pwsh
+        run: |
+          python -m pip install -e .\libs\python\smartedu_stabilization
+
+      - name: Validate stabilization catalog
+        shell: pwsh
+        run: |
+          python .\scripts\validate-stabilization-catalog.py
+
+      - name: Capture Kubernetes snapshot
+        shell: pwsh
+        env:
+          PRODUCTION_KUBE_CONTEXT: ${{ vars.PRODUCTION_KUBE_CONTEXT }}
+        run: |
+          .\scripts\production-stabilization-snapshot.ps1 `
+            -OutputDir ".\stabilization\evidence\${{ inputs.observation_window }}"
+
+      - name: Run read-only stabilization observers
+        shell: pwsh
+        env:
+          STABILIZATION_METRICS_CHECK_SCRIPT: ${{ vars.STABILIZATION_METRICS_CHECK_SCRIPT }}
+          STABILIZATION_MESSAGING_CHECK_SCRIPT: ${{ vars.STABILIZATION_MESSAGING_CHECK_SCRIPT }}
+          STABILIZATION_SECURITY_CHECK_SCRIPT: ${{ vars.STABILIZATION_SECURITY_CHECK_SCRIPT }}
+          STABILIZATION_SUPPORT_CHECK_SCRIPT: ${{ vars.STABILIZATION_SUPPORT_CHECK_SCRIPT }}
+        run: |
+          .\scripts\run-stabilization-observers.ps1 `
+            -Confirm PRODUCTION_READ_ONLY
+
+      - name: Generate evidence index
+        if: always()
+        shell: pwsh
+        run: |
+          python .\scripts\generate-stabilization-evidence-index.py `
+            --root .\stabilization\evidence `
+            --output .\stabilization\PRODUCTION_STABILIZATION_EVIDENCE_INDEX.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stabilization-${{ inputs.release_tag }}-${{ inputs.observation_window }}
+          path: |
+            stabilization/evidence
+            stabilization/PRODUCTION_STABILIZATION_EVIDENCE_INDEX.json
+          if-no-files-found: ignore
+          retention-days: 90

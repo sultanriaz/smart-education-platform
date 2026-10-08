@@ -1,0 +1,33 @@
+version: 1
+recommended_windows:
+- name: launch-plus-2h
+  purpose: Immediate post-launch verification
+  minimum_evidence:
+  - critical alerts
+  - 5xx/latency
+  - DB/broker health
+  - role smoke
+- name: launch-plus-24h
+  purpose: First full operational cycle
+  minimum_evidence:
+  - traffic/latency trends
+  - support queue
+  - backups
+  - queue/outbox trends
+- name: launch-plus-72h
+  purpose: Stabilization trend review
+  minimum_evidence:
+  - SLO trends
+  - incidents
+  - capacity
+  - security alerts
+  - follow-ups
+- name: closure
+  purpose: Formal production stabilization closure
+  minimum_evidence:
+  - all mandatory checkpoints
+  - approvals
+  - final report
+  - evidence index
+note: Actual stabilization window should be reconciled with institutional launch policy
+  and real traffic patterns.

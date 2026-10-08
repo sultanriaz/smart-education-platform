@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: smartedu-staging
+  labels:
+    app.kubernetes.io/part-of: smart-education-platform
+    smartedu.io/environment: staging

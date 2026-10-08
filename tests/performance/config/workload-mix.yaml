@@ -1,0 +1,29 @@
+version: 1
+roles:
+  student: 75
+  teacher: 20
+  admin: 5
+student_actions:
+  academic_context: 10
+  timetable: 15
+  attendance: 15
+  notifications: 10
+  learning_resources: 20
+  assessment: 15
+  facility: 5
+  reporting_summary: 10
+teacher_actions:
+  assigned_sections: 15
+  attendance: 25
+  schedule: 10
+  learning: 15
+  assessment: 20
+  notifications: 10
+  facility: 5
+admin_actions:
+  academic: 15
+  schedule: 15
+  facility: 10
+  reporting: 30
+  platform: 20
+  notifications: 10

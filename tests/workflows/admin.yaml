@@ -1,0 +1,40 @@
+name: Admin end-to-end
+actor: admin
+steps:
+- id: login
+  action: sign in
+  expected: admin workspace opens
+  services:
+  - identity
+- id: academic
+  action: create/update academic master data
+  expected: changes persist through Academic API
+  services:
+  - academic
+- id: schedule
+  action: create schedule
+  expected: conflict detection enforced
+  services:
+  - scheduling
+  - academic
+- id: facility
+  action: approve facility booking
+  expected: status/history and notification update
+  services:
+  - facility
+  - notification
+- id: reporting
+  action: open admin analytics
+  expected: aggregated projection metrics render
+  services:
+  - reporting
+- id: platform
+  action: review audit/jobs
+  expected: admin-only operational views accessible
+  services:
+  - platform
+- id: security
+  action: attempt internal Gateway namespace
+  expected: 404 from public edge
+  services:
+  - gateway

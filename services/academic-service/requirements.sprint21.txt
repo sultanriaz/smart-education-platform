@@ -1,0 +1,1 @@
+smartedu-observability==0.1.0

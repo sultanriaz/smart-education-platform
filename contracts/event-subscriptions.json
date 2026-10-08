@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "subscriptions": {
+    "notification-service": [
+      "attendance.low_detected",
+      "schedule.changed",
+      "schedule.occurrence.cancelled",
+      "schedule.occurrence.rescheduled",
+      "facility.booking.approved",
+      "facility.booking.rejected",
+      "facility.booking.cancelled",
+      "assessment.attempt.graded"
+    ],
+    "reporting-service": [
+      "#"
+    ],
+    "platform-service": [
+      "#"
+    ]
+  }
+}

@@ -1,5 +1,5 @@
-﻿import uuid
-from datetime import datetime, timezone
+import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -9,7 +9,7 @@ from app.domain.entities.associations import user_roles
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class User(Base):
@@ -22,7 +22,9 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
     roles: Mapped[list["Role"]] = relationship(
         secondary=user_roles,

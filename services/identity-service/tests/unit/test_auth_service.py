@@ -19,7 +19,7 @@ def register_and_login(db):
         UserRegister(
             email="atomic@example.edu",
             full_name="Atomic Student",
-            password="StrongPass123!",
+            password="StrongPass123!",  # secret-scan: test-fixture
         )
     )
     pair = service.login(user.email, "StrongPass123!")
@@ -38,7 +38,7 @@ def test_registration_rolls_back_if_audit_fails(db, monkeypatch):
             UserRegister(
                 email="rollback@example.edu",
                 full_name="Rollback Student",
-                password="StrongPass123!",
+                password="StrongPass123!",  # secret-scan: test-fixture
             )
         )
     assert db.scalar(select(func.count()).select_from(User)) == 0
@@ -120,7 +120,7 @@ def test_unique_registration_race_maps_to_conflict(db, monkeypatch):
             UserRegister(
                 email="atomic@example.edu",
                 full_name="Duplicate Student",
-                password="StrongPass123!",
+                password="StrongPass123!",  # secret-scan: test-fixture
             )
         )
     assert db.scalar(select(func.count()).select_from(User)) == 1

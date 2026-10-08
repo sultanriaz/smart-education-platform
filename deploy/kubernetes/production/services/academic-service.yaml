@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: academic-service
+  namespace: smartedu
+  labels:
+    app.kubernetes.io/name: academic-service
+    app.kubernetes.io/part-of: smart-education-platform
+    smartedu.io/component: academic-service
+spec:
+  type: ClusterIP
+  selector:
+    smartedu.io/component: academic-service
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http

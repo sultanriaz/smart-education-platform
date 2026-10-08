@@ -1,0 +1,13 @@
+{
+  "id": "STAB-ISSUE-001",
+  "severity": "SEV3",
+  "title": "Example only - replace with a real stabilization issue",
+  "status": "OPEN",
+  "owner": "REPLACE_WITH_OWNER",
+  "opened_at": "2026-10-08T00:00:00Z",
+  "closed_at": null,
+  "linked_incident_id": null,
+  "linked_release_tag": null,
+  "mitigation": "Describe the concrete mitigation.",
+  "notes": ""
+}

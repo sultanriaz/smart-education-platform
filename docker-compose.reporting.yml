@@ -1,0 +1,44 @@
+services:
+  reporting-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: reporting_db
+      POSTGRES_USER: reporting
+      POSTGRES_PASSWORD: reporting
+    ports:
+      - "${REPORTING_DB_PORT:-5442}:5432"
+    volumes:
+      - reporting_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reporting -d reporting_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  reporting-migrate:
+    build:
+      context: ./services/reporting-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://reporting:reporting@reporting-db:5432/reporting_db
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      reporting-db:
+        condition: service_healthy
+
+  reporting-service:
+    build:
+      context: ./services/reporting-service
+    environment:
+      DATABASE_URL: postgresql+psycopg://reporting:reporting@reporting-db:5432/reporting_db
+      JWT_JWKS_URL: ${JWT_JWKS_URL:-http://identity-service:8000/.well-known/jwks.json}
+      JWT_ISSUER: ${JWT_ISSUER:-smart-education-identity}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-smart-education-platform}
+      INTERNAL_EVENT_TOKEN: ${REPORTING_INTERNAL_EVENT_TOKEN:-change-me}
+    ports:
+      - "8009:8000"
+    depends_on:
+      reporting-migrate:
+        condition: service_completed_successfully
+
+volumes:
+  reporting_postgres_data:

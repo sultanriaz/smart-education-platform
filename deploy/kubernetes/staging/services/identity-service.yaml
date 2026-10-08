@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity-service
+  namespace: smartedu-staging
+  labels:
+    smartedu.io/component: identity-service
+spec:
+  type: ClusterIP
+  selector:
+    smartedu.io/component: identity-service
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http

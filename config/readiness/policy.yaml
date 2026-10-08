@@ -1,0 +1,13 @@
+require_all_mandatory_pass: true
+allow_mandatory_waiver: false
+max_open_blocker: 0
+max_open_critical: 0
+max_open_high: 0
+required_approval_roles:
+- TechnicalLead
+- OperationsOwner
+- SecurityOwner
+- ProductOwner
+- ProjectSupervisor
+require_uat_pass: true
+require_release_identity_match: true

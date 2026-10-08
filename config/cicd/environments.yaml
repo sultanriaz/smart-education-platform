@@ -1,0 +1,15 @@
+version: 1
+environments:
+  development:
+    automatic_deploy: false
+    requires_approval: false
+  staging:
+    automatic_deploy: false
+    requires_approval: true
+    runner_labels:
+    - self-hosted
+    - staging
+  production:
+    automatic_deploy: false
+    requires_approval: true
+    status: deferred_to_sprint_23_26

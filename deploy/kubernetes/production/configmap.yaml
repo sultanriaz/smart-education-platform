@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smartedu-runtime-config
+  namespace: smartedu
+  labels:
+    app.kubernetes.io/part-of: smart-education-platform
+data:
+  ENVIRONMENT: production
+  JSON_LOGS: 'true'
+  LOG_LEVEL: INFO
+  OBSERVABILITY_ENABLED: 'true'
+  METRICS_ENABLED: 'true'
+  TRACING_ENABLED: 'true'
+  TRACE_SAMPLE_RATIO: '0.10'
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.smartedu-observability.svc.cluster.local:4317
+  FRONTEND_ORIGIN: https://smartedu.example.edu
+  PUBLIC_BASE_URL: https://smartedu.example.edu
+  IDENTITY_SERVICE_BASE_URL: http://identity-service:8000
+  ACADEMIC_SERVICE_BASE_URL: http://academic-service:8000
+  ATTENDANCE_SERVICE_BASE_URL: http://attendance-service:8000
+  SCHEDULING_SERVICE_BASE_URL: http://scheduling-service:8000
+  NOTIFICATION_SERVICE_BASE_URL: http://notification-service:8000
+  FACILITY_SERVICE_BASE_URL: http://facility-service:8000
+  LEARNING_SERVICE_BASE_URL: http://learning-service:8000
+  ASSESSMENT_SERVICE_BASE_URL: http://assessment-service:8000
+  REPORTING_SERVICE_BASE_URL: http://reporting-service:8000
+  PLATFORM_SERVICE_BASE_URL: http://platform-service:8000

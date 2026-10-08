@@ -1,0 +1,9 @@
+# Merge into repository .gitignore.
+dist/deployment/
+deploy/kubernetes/rendered-*.yaml
+deploy/kubernetes/rendered/
+.env.production
+.env.staging
+*.kubeconfig
+kubeconfig*
+cluster-credentials/

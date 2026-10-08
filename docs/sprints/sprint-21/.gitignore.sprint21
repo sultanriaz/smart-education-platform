@@ -1,0 +1,8 @@
+# Merge into repository .gitignore.
+.env.observability
+dist/observability/
+observability-data/
+grafana-data/
+prometheus-data/
+loki-data/
+tempo-data/

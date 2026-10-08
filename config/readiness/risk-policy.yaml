@@ -1,0 +1,17 @@
+version: 1
+severities:
+  BLOCKER:
+    go_live: NO_GO
+    meaning: Launch cannot proceed safely or technically.
+  CRITICAL:
+    go_live: NO_GO
+    meaning: Severe security/data-integrity/availability risk.
+  HIGH:
+    go_live: NO_GO by default
+    meaning: Material launch risk requiring closure or explicit governance change.
+  MEDIUM:
+    go_live: May proceed only if owned and mitigated/accepted
+    meaning: Manageable launch risk.
+  LOW:
+    go_live: May proceed if recorded
+    meaning: Low operational/business impact.

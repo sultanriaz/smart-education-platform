@@ -1,0 +1,85 @@
+name: Performance
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Load profile"
+        required: true
+        default: "baseline"
+        type: choice
+        options:
+          - smoke
+          - baseline
+          - srs-500
+          - stress-750
+          - stress-1000
+          - soak-250
+  schedule:
+    - cron: "30 2 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SMARTEDU_GATEWAY_URL: ${{ secrets.SMARTEDU_STAGING_GATEWAY_URL }}
+      SMARTEDU_FRONTEND_ORIGIN: ${{ secrets.SMARTEDU_STAGING_FRONTEND_URL }}
+      SMARTEDU_PERF_STUDENT_EMAIL: ${{ secrets.SMARTEDU_E2E_STUDENT_EMAIL }}
+      SMARTEDU_PERF_STUDENT_PASSWORD: ${{ secrets.SMARTEDU_E2E_STUDENT_PASSWORD }}
+      SMARTEDU_PERF_TEACHER_EMAIL: ${{ secrets.SMARTEDU_E2E_TEACHER_EMAIL }}
+      SMARTEDU_PERF_TEACHER_PASSWORD: ${{ secrets.SMARTEDU_E2E_TEACHER_PASSWORD }}
+      SMARTEDU_PERF_ADMIN_EMAIL: ${{ secrets.SMARTEDU_E2E_ADMIN_EMAIL }}
+      SMARTEDU_PERF_ADMIN_PASSWORD: ${{ secrets.SMARTEDU_E2E_ADMIN_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install performance tooling
+        run: |
+          python -m pip install -r requirements.performance.txt
+          python -m pip install -e libs/python/smartedu_perf
+
+      - name: Resolve profile
+        id: profile
+        shell: bash
+        run: |
+          PROFILE="${{ github.event.inputs.profile }}"
+          if [ -z "$PROFILE" ]; then PROFILE="baseline"; fi
+          echo "profile=$PROFILE" >> "$GITHUB_OUTPUT"
+          echo "users=$(python scripts/load-profile.py "$PROFILE" --field users)" >> "$GITHUB_OUTPUT"
+          echo "spawn=$(python scripts/load-profile.py "$PROFILE" --field spawn_rate)" >> "$GITHUB_OUTPUT"
+          echo "duration=$(python scripts/load-profile.py "$PROFILE" --field duration_seconds)" >> "$GITHUB_OUTPUT"
+
+      - name: Run Locust
+        working-directory: tests/performance/locust
+        run: |
+          mkdir -p ../results/ci
+          locust -f locustfile.py \
+            --headless \
+            --host "$SMARTEDU_GATEWAY_URL" \
+            -u "${{ steps.profile.outputs.users }}" \
+            -r "${{ steps.profile.outputs.spawn }}" \
+            -t "${{ steps.profile.outputs.duration }}s" \
+            --csv ../results/ci/locust \
+            --csv-full-history
+
+      - name: Evaluate budgets
+        run: |
+          python scripts/evaluate-performance.py \
+            tests/performance/results/ci/locust_stats.csv \
+            --output tests/performance/results/ci/evaluation.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-${{ steps.profile.outputs.profile }}
+          path: tests/performance/results/ci
+          retention-days: 30

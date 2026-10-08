@@ -1,0 +1,26 @@
+version: 1
+required_checks:
+- namespace_exists
+- required_secrets_exist
+- migration_jobs_succeeded
+- all_deployments_available
+- ingress_tls_present
+- frontend_public_smoke
+- gateway_public_smoke
+- student_e2e
+- teacher_e2e
+- admin_e2e
+- event_flow_smoke
+- observability_targets
+- performance_smoke
+- backup_restore_rehearsal
+- pod_failure_drill
+- rolling_update_drill
+promotion_blockers:
+- any_failed_migration
+- any_unavailable_core_workload
+- security_regression
+- authorization_regression
+- data_integrity_failure
+- unresolved_critical_alert
+- backup_restore_failure

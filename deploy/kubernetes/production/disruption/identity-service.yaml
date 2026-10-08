@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: identity-service
+  namespace: smartedu
+  labels:
+    smartedu.io/component: identity-service
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      smartedu.io/component: identity-service

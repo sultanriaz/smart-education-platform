@@ -1,0 +1,52 @@
+name: Student end-to-end
+actor: student
+steps:
+- id: login
+  action: sign in
+  expected: student workspace opens
+  services:
+  - identity
+- id: profile
+  action: load current academic context
+  expected: own program/section data only
+  services:
+  - identity
+  - academic
+- id: schedule
+  action: view timetable
+  expected: own enrolled-section timetable
+  services:
+  - scheduling
+  - academic
+- id: attendance
+  action: view attendance
+  expected: own attendance only
+  services:
+  - attendance
+- id: learning
+  action: open published course resource
+  expected: enrolled published resource accessible
+  services:
+  - learning
+  - academic
+- id: assessment
+  action: start and submit assigned quiz
+  expected: attempt limit and own-attempt isolation enforced
+  services:
+  - assessment
+  - academic
+- id: notifications
+  action: read and mark notification
+  expected: own notification state updates
+  services:
+  - notification
+- id: facility
+  action: request facility booking
+  expected: own booking visible
+  services:
+  - facility
+- id: logout
+  action: log out
+  expected: refresh session revoked and protected routes redirect
+  services:
+  - identity

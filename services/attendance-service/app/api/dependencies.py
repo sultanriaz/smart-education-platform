@@ -5,8 +5,8 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-import httpx
 from fastapi import Depends, Query
+from smartedu_infra.http_pool import shared_http_client
 from sqlalchemy.orm import Session
 
 from app.clients.academic import AcademicClient, HttpAcademicClient
@@ -19,8 +19,8 @@ from app.services.attendance import AttendanceService
 
 
 def get_academic_client() -> Iterator[AcademicClient]:
-    with httpx.Client() as http:
-        yield HttpAcademicClient(get_settings(), http)
+    settings = get_settings()
+    yield HttpAcademicClient(settings, shared_http_client(settings.ACADEMIC_SERVICE_BASE_URL))
 
 
 def get_service(

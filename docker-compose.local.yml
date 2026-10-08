@@ -1,0 +1,211 @@
+name: smartedu-local
+services:
+  infra-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?POSTGRES_SUPERUSER_PASSWORD
+        is required}
+      POSTGRES_DB: postgres
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD is required}
+      ACADEMIC_DB_PASSWORD: ${ACADEMIC_DB_PASSWORD:?ACADEMIC_DB_PASSWORD is required}
+      ATTENDANCE_DB_PASSWORD: ${ATTENDANCE_DB_PASSWORD:?ATTENDANCE_DB_PASSWORD is
+        required}
+      SCHEDULING_DB_PASSWORD: ${SCHEDULING_DB_PASSWORD:?SCHEDULING_DB_PASSWORD is
+        required}
+      NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD:?NOTIFICATION_DB_PASSWORD
+        is required}
+      FACILITY_DB_PASSWORD: ${FACILITY_DB_PASSWORD:?FACILITY_DB_PASSWORD is required}
+      LEARNING_DB_PASSWORD: ${LEARNING_DB_PASSWORD:?LEARNING_DB_PASSWORD is required}
+      ASSESSMENT_DB_PASSWORD: ${ASSESSMENT_DB_PASSWORD:?ASSESSMENT_DB_PASSWORD is
+        required}
+      REPORTING_DB_PASSWORD: ${REPORTING_DB_PASSWORD:?REPORTING_DB_PASSWORD is required}
+      PLATFORM_DB_PASSWORD: ${PLATFORM_DB_PASSWORD:?PLATFORM_DB_PASSWORD is required}
+    ports:
+    - 127.0.0.1:${POSTGRES_HOST_PORT:-55432}:5432
+    volumes:
+    - smartedu-postgres-data:/var/lib/postgresql/data
+    - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    - ./infra/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command:
+    - postgres
+    - -c
+    - config_file=/etc/postgresql/postgresql.conf
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - pg_isready -U postgres -d postgres
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+    - smartedu-backend
+  redis-cache:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command:
+    - redis-server
+    - /usr/local/etc/redis/redis.conf
+    ports:
+    - 127.0.0.1:${REDIS_CACHE_HOST_PORT:-56379}:6379
+    volumes:
+    - ./.integration/runtime/redis-cache.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - PING
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+    - smartedu-backend
+    environment:
+      REDISCLI_AUTH: ${REDIS_CACHE_PASSWORD:?Redis password is required}
+  redis-durable:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command:
+    - redis-server
+    - /usr/local/etc/redis/redis.conf
+    ports:
+    - 127.0.0.1:${REDIS_DURABLE_HOST_PORT:-56380}:6379
+    volumes:
+    - smartedu-redis-durable-data:/data
+    - ./.integration/runtime/redis-durable.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test:
+      - CMD
+      - redis-cli
+      - PING
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+    - smartedu-backend
+    environment:
+      REDISCLI_AUTH: ${REDIS_DURABLE_PASSWORD:?Redis password is required}
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-smartedu}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
+      RABBITMQ_DEFAULT_VHOST: smartedu
+    ports:
+    - 127.0.0.1:${RABBITMQ_AMQP_HOST_PORT:-5672}:5672
+    - 127.0.0.1:${RABBITMQ_MANAGEMENT_HOST_PORT:-15672}:15672
+    volumes:
+    - smartedu-rabbitmq-data:/var/lib/rabbitmq
+    - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test:
+      - CMD
+      - rabbitmq-diagnostics
+      - -q
+      - ping
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+    - smartedu-backend
+  minio:
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-smartedu}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+    ports:
+    - 127.0.0.1:${MINIO_API_HOST_PORT:-59000}:9000
+    - 127.0.0.1:${MINIO_CONSOLE_HOST_PORT:-59001}:9001
+    volumes:
+    - smartedu-minio-data:/data
+    healthcheck:
+      test:
+      - CMD-SHELL
+      - curl -fsS http://localhost:9000/minio/health/live >/dev/null || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+    - smartedu-backend
+    build:
+      context: ./infra/minio
+  minio-bootstrap:
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-smartedu}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
+      LEARNING_S3_SECRET: ${LEARNING_S3_SECRET:?LEARNING_S3_SECRET is required}
+      PLATFORM_S3_SECRET: ${PLATFORM_S3_SECRET:?PLATFORM_S3_SECRET is required}
+      REPORTING_S3_SECRET: ${REPORTING_S3_SECRET:?REPORTING_S3_SECRET is required}
+    volumes:
+    - ./infra/minio/bootstrap-security.sh:/bootstrap.sh:ro
+    - ./infra/minio/policies:/policies:ro
+    entrypoint:
+    - /bin/sh
+    - /bootstrap.sh
+    restart: 'no'
+    networks:
+    - smartedu-backend
+    build:
+      context: ./infra/minio
+      dockerfile: Dockerfile.mc
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+    - 127.0.0.1:18025:8025
+    - 127.0.0.1:11025:1025
+    networks:
+    - smartedu-backend
+  api-gateway:
+    build:
+      context: ./infra/gateway
+    environment:
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:5173}
+      IDENTITY_UPSTREAM: host.docker.internal:8001
+      ACADEMIC_UPSTREAM: host.docker.internal:8002
+      ATTENDANCE_UPSTREAM: host.docker.internal:8003
+      SCHEDULING_UPSTREAM: host.docker.internal:8004
+      NOTIFICATION_UPSTREAM: host.docker.internal:8005
+      FACILITY_UPSTREAM: host.docker.internal:8006
+      LEARNING_UPSTREAM: host.docker.internal:8007
+      ASSESSMENT_UPSTREAM: host.docker.internal:8008
+      REPORTING_UPSTREAM: host.docker.internal:8009
+      PLATFORM_UPSTREAM: host.docker.internal:8010
+      GENERAL_RATE_LIMIT: ${GENERAL_RATE_LIMIT:-30r/s}
+      GENERAL_RATE_BURST: ${GENERAL_RATE_BURST:-60}
+      AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-5r/s}
+      AUTH_RATE_BURST: ${AUTH_RATE_BURST:-10}
+      LOGIN_RATE_LIMIT: ${LOGIN_RATE_LIMIT:-10r/m}
+      LOGIN_RATE_BURST: ${LOGIN_RATE_BURST:-5}
+      REFRESH_RATE_LIMIT: ${REFRESH_RATE_LIMIT:-30r/m}
+      REFRESH_RATE_BURST: ${REFRESH_RATE_BURST:-10}
+      RECOVERY_RATE_LIMIT: ${RECOVERY_RATE_LIMIT:-5r/m}
+      RECOVERY_RATE_BURST: ${RECOVERY_RATE_BURST:-3}
+      MAX_CONNECTIONS_PER_IP: ${MAX_CONNECTIONS_PER_IP:-100}
+      CLIENT_MAX_BODY_SIZE: ${CLIENT_MAX_BODY_SIZE:-25m}
+      PROXY_CONNECT_TIMEOUT: ${PROXY_CONNECT_TIMEOUT:-3s}
+      PROXY_SEND_TIMEOUT: ${PROXY_SEND_TIMEOUT:-30s}
+      PROXY_READ_TIMEOUT: ${PROXY_READ_TIMEOUT:-30s}
+      TLS_SERVER_NAME: ${TLS_SERVER_NAME:-localhost}
+      LOCAL_NATIVE_UPSTREAMS: 'true'
+    ports:
+    - 127.0.0.1:18080:8080
+    networks:
+    - smartedu-backend
+    restart: unless-stopped
+    extra_hosts:
+    - host.docker.internal:host-gateway
+volumes:
+  smartedu-postgres-data: null
+  smartedu-redis-durable-data: null
+  smartedu-rabbitmq-data: null
+  smartedu-minio-data: null
+networks:
+  smartedu-backend:
+    name: smartedu-local-backend
+    driver: bridge

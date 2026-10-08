@@ -1,0 +1,14 @@
+version: 1
+rules:
+- A hotfix is a new immutable release candidate; never mutate the running image/tag
+  in place.
+- Use the same build/sign/SBOM/provenance pipeline as normal releases.
+- Run focused regression plus all affected security/contract tests.
+- Reconcile database migrations explicitly; do not bypass migration ownership.
+- Deploy through the same protected production workflow and retain rollback guardrails.
+- Record the hotfix in the stabilization run and link the incident/issue.
+minimum_approvals:
+- TechnicalLead
+- OperationsOwner
+security_approval_required_for_security_hotfix: true
+product_approval_required_for_user_visible_behavior_change: true

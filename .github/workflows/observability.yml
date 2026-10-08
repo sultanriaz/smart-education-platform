@@ -1,0 +1,76 @@
+name: Observability
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  observability-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install observability package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e "libs/python/smartedu_observability[dev]"
+
+      - name: Package tests
+        run: pytest -q libs/python/smartedu_observability/tests
+
+      - name: Observability config tests
+        run: |
+          python -m pip install PyYAML
+          pytest -q tests/observability
+
+  prometheus-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prometheus config
+        run: |
+          docker run --rm \
+            -v "$PWD/infra/observability/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v2.55.1 \
+            promtool check config /etc/prometheus/prometheus.yml
+
+      - name: Prometheus rules
+        run: |
+          docker run --rm \
+            -v "$PWD/infra/observability/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v2.55.1 \
+            promtool check rules /etc/prometheus/rules/recording.yml \
+              /etc/prometheus/rules/alerts.yml
+
+  compose-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate base observability Compose
+        env:
+          GRAFANA_ADMIN_PASSWORD: test-only-not-a-real-secret
+        run: |
+          docker compose \
+            -f docker-compose.observability.yml \
+            config >/dev/null
+
+      - name: Validate exporter overlay
+        env:
+          GRAFANA_ADMIN_PASSWORD: test-only-not-a-real-secret
+          POSTGRES_MONITOR_DSN: postgresql://monitor:fake@postgres:5432/postgres
+        run: |
+          docker compose \
+            -f docker-compose.observability.yml \
+            -f docker-compose.observability.exporters.yml \
+            config >/dev/null

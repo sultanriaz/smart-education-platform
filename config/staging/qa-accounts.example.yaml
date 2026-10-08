@@ -1,0 +1,16 @@
+version: 1
+accounts:
+  student:
+    email: qa.student@example.invalid
+    password_secret_name: SMARTEDU_E2E_STUDENT_PASSWORD
+  teacher:
+    email: qa.teacher@example.invalid
+    password_secret_name: SMARTEDU_E2E_TEACHER_PASSWORD
+  admin:
+    email: qa.admin@example.invalid
+    password_secret_name: SMARTEDU_E2E_ADMIN_PASSWORD
+
+rules:
+  - Never use production accounts or copied production passwords.
+  - Password values live in staging secret storage, not this file.
+  - Accounts must have deterministic academic fixtures and may be reset between runs.

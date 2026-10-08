@@ -1,0 +1,16 @@
+#!/bin/sh
+# Sourced before template rendering. Docker Desktop may publish an unreachable
+# IPv6 host address alongside its usable host-gateway entry.
+if [ "${LOCAL_NATIVE_UPSTREAMS:-false}" = "true" ]; then
+  local_host_ipv4="$(awk '$1 ~ /^[0-9]+\./ {for (i=2; i<=NF; i++) if ($i == "host.docker.internal") {print $1; exit}}' /etc/hosts)"
+  if [ -z "$local_host_ipv4" ]; then
+    echo "No IPv4 host-gateway entry for local native services" >&2
+    exit 1
+  fi
+  for local_service_variable in IDENTITY_UPSTREAM ACADEMIC_UPSTREAM ATTENDANCE_UPSTREAM SCHEDULING_UPSTREAM NOTIFICATION_UPSTREAM FACILITY_UPSTREAM LEARNING_UPSTREAM ASSESSMENT_UPSTREAM REPORTING_UPSTREAM PLATFORM_UPSTREAM; do
+    local_service_upstream="$(printenv "$local_service_variable")"
+    case "$local_service_upstream" in
+      host.docker.internal:*) export "$local_service_variable=$local_host_ipv4:${local_service_upstream##*:}" ;;
+    esac
+  done
+fi

@@ -1,0 +1,32 @@
+version: 1
+profiles:
+- name: smoke
+  users: 20
+  spawn_rate: 5
+  duration_seconds: 120
+  description: Fast correctness/performance smoke before larger runs.
+- name: baseline
+  users: 100
+  spawn_rate: 10
+  duration_seconds: 300
+  description: Stable baseline for regression comparison.
+- name: srs-500
+  users: 500
+  spawn_rate: 25
+  duration_seconds: 600
+  description: Primary SRS concurrency acceptance run.
+- name: stress-750
+  users: 750
+  spawn_rate: 35
+  duration_seconds: 600
+  description: Find headroom beyond required concurrency.
+- name: stress-1000
+  users: 1000
+  spawn_rate: 50
+  duration_seconds: 600
+  description: Capacity edge exploration, not a release gate unless adopted.
+- name: soak-250
+  users: 250
+  spawn_rate: 10
+  duration_seconds: 1800
+  description: Detect leaks, pool exhaustion, queue buildup, and cache drift.
