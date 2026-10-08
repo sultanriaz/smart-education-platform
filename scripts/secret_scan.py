@@ -24,9 +24,24 @@ SKIP_DIRS = {
 }
 
 TEXT_SUFFIXES = {
-    ".py", ".ts", ".tsx", ".js", ".jsx", ".json", ".yaml", ".yml",
-    ".toml", ".ini", ".conf", ".env", ".md", ".txt", ".ps1", ".sh",
-    ".dockerfile", ".sql",
+    ".py",
+    ".ts",
+    ".tsx",
+    ".js",
+    ".jsx",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".ini",
+    ".conf",
+    ".env",
+    ".md",
+    ".txt",
+    ".ps1",
+    ".sh",
+    ".dockerfile",
+    ".sql",
 }
 
 ALLOW_PLACEHOLDER_FRAGMENTS = (
@@ -94,7 +109,9 @@ def should_scan(path: Path) -> bool:
 
 def placeholder(value: str) -> bool:
     folded = value.casefold()
-    return any(fragment.casefold() in folded for fragment in ALLOW_PLACEHOLDER_FRAGMENTS)
+    return any(
+        fragment.casefold() in folded for fragment in ALLOW_PLACEHOLDER_FRAGMENTS
+    )
 
 
 def scan_file(path: Path) -> list[tuple[int, str, str]]:
@@ -110,10 +127,18 @@ def scan_file(path: Path) -> list[tuple[int, str, str]]:
             if not match:
                 continue
 
-            value = match.group(match.lastindex or 0) if match.lastindex else match.group(0)
+            value = (
+                match.group(match.lastindex or 0) if match.lastindex else match.group(0)
+            )
             if placeholder(value):
                 continue
-            if name == "generic-secret-assignment" and "# secret-scan: test-fixture" in line and ("tests" in path.parts or path.name == "sprint_identity_service.ps1"):
+            if (
+                name == "generic-secret-assignment"
+                and "# secret-scan: test-fixture" in line
+                and (
+                    "tests" in path.parts or path.name == "sprint_identity_service.ps1"
+                )
+            ):
                 continue
             findings.append((number, name, "[redacted]"))
 
@@ -137,14 +162,28 @@ def main() -> int:
     root = Path(args.root).resolve()
     findings = []
 
-    git_files = subprocess.run(["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "-z"], capture_output=True)
-    paths = [root / name for name in git_files.stdout.decode("utf-8").split("\0") if name] if git_files.returncode == 0 else root.rglob("*")
+    git_files = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "-z",
+        ],
+        capture_output=True,
+    )
+    paths = (
+        [root / name for name in git_files.stdout.decode("utf-8").split("\0") if name]
+        if git_files.returncode == 0
+        else root.rglob("*")
+    )
     for path in paths:
         if path.is_file() and should_scan(path.relative_to(root)):
             for line, kind, excerpt in scan_file(path):
-                findings.append(
-                    (str(path.relative_to(root)), line, kind, excerpt)
-                )
+                findings.append((str(path.relative_to(root)), line, kind, excerpt))
 
     if findings:
         print("Potential secrets found:")

@@ -246,6 +246,8 @@ export function normalizeAttempt(value: unknown): AssessmentAttempt {
     id: str(r.id ?? r.attempt_id),
     assignmentId: str(r.assignment_id),
     status: str(r.status, "IN_PROGRESS"),
+    expiresAt: typeof r.expires_at === "string" ? r.expires_at : null,
+    serverTime: typeof r.server_time === "string" ? r.server_time : null,
     attemptNumber:
       typeof r.attempt_number === "number" ? r.attempt_number : undefined,
     answers: extractList(r.answers).map(value => {

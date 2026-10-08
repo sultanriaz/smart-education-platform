@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -210,7 +210,7 @@ class AssessmentService:
         current = now()
         if current < aware(assignment.opens_at):
             raise ConflictError("Assessment has not opened")
-        if current > aware(assignment.due_at):
+        if current >= aware(assignment.due_at):
             raise ConflictError("Assessment deadline has passed")
         if self.academic and not self.academic.validate_student_enrollment(
             student_id, assignment.section_id, bearer_token
@@ -221,10 +221,16 @@ class AssessmentService:
         if count >= assignment.attempt_limit:
             raise ConflictError("Attempt limit reached")
 
+        quiz = self.repo.get_quiz(assignment.quiz_id)
+        expires_at = aware(assignment.due_at)
+        if quiz.duration_minutes is not None:
+            expires_at = min(expires_at, current + timedelta(minutes=quiz.duration_minutes))
         attempt = Attempt(
             assignment_id=assignment_id,
             student_user_id=student_id,
             attempt_number=count + 1,
+            started_at=current,
+            expires_at=expires_at,
         )
         self.db.add(attempt)
         try:
@@ -249,6 +255,8 @@ class AssessmentService:
             raise ForbiddenError("Attempt belongs to another student")
         if attempt.status != AttemptStatus.IN_PROGRESS.value:
             raise ConflictError("Submitted attempts cannot be modified")
+        if self.finalize_if_expired(attempt):
+            raise ConflictError("Assessment time has expired; saved answers were submitted")
 
         assignment = self.repo.get_assignment(attempt.assignment_id)
         quiz = self.repo.get_quiz(assignment.quiz_id)
@@ -281,7 +289,32 @@ class AssessmentService:
         if attempt.student_user_id != student_id:
             raise ForbiddenError("Attempt belongs to another student")
         if attempt.status != AttemptStatus.IN_PROGRESS.value:
-            raise ConflictError("Attempt already submitted")
+            return attempt
+
+        return self._finalize_locked(attempt)
+
+    def finalize_if_expired(self, attempt: Attempt) -> bool:
+        """Caller must hold the attempt row lock; expiry never accepts new answers."""
+        if (
+            attempt.status == AttemptStatus.IN_PROGRESS.value
+            and attempt.expires_at is not None
+            and now() >= aware(attempt.expires_at)
+        ):
+            self._finalize_locked(attempt)
+            return True
+        return False
+
+    def read_student_attempt(self, attempt_id: uuid.UUID, student_id: uuid.UUID):
+        attempt = self.repo.get_attempt(attempt_id, lock=True)
+        if not attempt:
+            raise NotFoundError("Attempt not found")
+        if attempt.student_user_id != student_id:
+            raise ForbiddenError("Attempt belongs to another student")
+        self.finalize_if_expired(attempt)
+        return attempt
+
+    def _finalize_locked(self, attempt: Attempt):
+        """Grade and persist the saved answer snapshot in the owned transaction."""
 
         assignment = self.repo.get_assignment(attempt.assignment_id)
         quiz = self.repo.get_quiz(assignment.quiz_id)
@@ -311,11 +344,17 @@ class AssessmentService:
                 earned += score
             else:
                 manual_required = True
+                if answer is None:
+                    answer = AttemptAnswer(question_id=question.id, text_answer="")
+                    attempt.answers.append(answer)
 
         attempt.score = earned
         attempt.max_score = total
         attempt.percent = (earned / total * 100) if total else 0.0
-        attempt.submitted_at = now()
+        current = now()
+        attempt.submitted_at = (
+            min(current, aware(attempt.expires_at)) if attempt.expires_at else current
+        )
         attempt.status = (
             AttemptStatus.SUBMITTED.value if manual_required else AttemptStatus.GRADED.value
         )
@@ -329,7 +368,7 @@ class AssessmentService:
             attempt.id,
             {
                 "attempt_id": str(attempt.id),
-                "student_user_id": str(student_id),
+                "student_user_id": str(attempt.student_user_id),
                 "quiz_id": str(quiz.id),
                 "status": attempt.status,
             },
@@ -341,7 +380,7 @@ class AssessmentService:
                 attempt.id,
                 {
                     "attempt_id": str(attempt.id),
-                    "student_user_id": str(student_id),
+                    "student_user_id": str(attempt.student_user_id),
                     "percent": attempt.percent,
                     "passed": attempt.passed,
                 },
@@ -352,9 +391,11 @@ class AssessmentService:
         return attempt
 
     def manual_grade(self, attempt_id: uuid.UUID, payload: ManualGrade, grader_id: uuid.UUID):
-        attempt = self.repo.get_attempt(attempt_id)
+        attempt = self.repo.get_attempt(attempt_id, lock=True)
         if not attempt:
             raise NotFoundError("Attempt not found")
+        if attempt.status == AttemptStatus.IN_PROGRESS.value:
+            raise ConflictError("Attempt must be submitted before grading")
         answer = self.db.get(AttemptAnswer, payload.answer_id)
         if not answer or answer.attempt_id != attempt_id:
             raise NotFoundError("Answer not found")

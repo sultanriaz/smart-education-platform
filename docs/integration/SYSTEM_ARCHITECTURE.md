@@ -11,13 +11,15 @@ The React/TypeScript frontend calls the Nginx gateway's service namespaces. Iden
 | Notification | Inbox, recipients, preferences, campaigns, templates and delivery attempts | 8005 |
 | Facility | Facilities, equipment, bookings, blocks and external reservations | 8006 |
 | Learning | Targeted resources, versions, downloads, recommendations and private objects | 8007 |
-| Assessment | Banks, questions, quizzes, assignments, attempts, answers, grading and outbox | 8008 |
+| Assessment | Banks, questions, quizzes, assignments, timed attempts, answers, grading and outbox | 8008 |
 | Reporting | Owned event inbox/projections, snapshots and export audit | 8009 |
 | Platform | Support, registry, health checks, settings, feature flags, jobs, audit and search | 8010 |
 
 Public prefixes are `/api/v1/identity`, `/academic`, `/attendance`, `/scheduling`, `/notifications`, `/facilities`, `/learning`, `/assessments`, `/reporting` and `/platform` under the gateway. Downstream internal paths are blocked there. Each API exposes `/health` and `/ready` directly; readiness includes its own current Alembic migration revision.
 
 Eight domain outboxes publish committed events through owned worker processes. RabbitMQ uses durable queues and publisher confirmations. Notification, Reporting and Platform maintain deduplicating owned inboxes/projections. Retry attempts and backoff are persisted; exhausted messages are quarantined or moved to dead-letter queues for operator review. SMTP delivery is at least once across a crash after delivery and before acknowledgement.
+
+Assessment's owned worker also finalizes expired attempts in bounded batches with row locks and `SKIP LOCKED`. Each attempt persists the earlier of its quiz timer and assignment deadline. API writes reject expired answers, and read/submit requests can safely finalize the same saved snapshot. Blank written responses remain available for Teacher grading. Expiry proceeds while the Student browser is closed; deployment must run the worker alongside the independently deployed API.
 
 PostgreSQL provides separate service databases/roles. Redis cache and durable state are isolated and authenticated. MinIO buckets are private and credentials have owner-specific policies. Generated local secrets, keys and process records stay under ignored `.integration/runtime`. The active deployment does not use the retained empty `apps/backend` scaffold.
 

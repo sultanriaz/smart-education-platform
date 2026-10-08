@@ -17,3 +17,18 @@ test("saved assessment resumes after reload and submits through the real API", a
   await expect(page).toHaveURL(/\/app\/student\/assessments$/);
   await expect(page.getByRole("cell", { name: "100.0%", exact: true }).first()).toBeVisible();
 });
+
+test("timed assessment shows remaining time and automatically submits saved answers", async ({ page }) => {
+  test.setTimeout(100_000);
+  const assignmentId = process.env.SMARTEDU_E2E_TIMED_ASSIGNMENT_ID;
+  test.skip(!assignmentId, "Requires a disposable one-minute demo assessment");
+  await login(page, "student");
+  await page.goto(`/app/student/assessments/${assignmentId}`);
+  await page.getByRole("button", { name: "Start attempt", exact: true }).click();
+  await expect(page.getByRole("timer")).toBeVisible();
+  await page.getByLabel("Transactional outbox", { exact: true }).check();
+  await page.getByRole("button", { name: "Save progress" }).click();
+  await expect(page.getByText("Answers saved.", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/app\/student\/assessments$/, { timeout: 70_000 });
+  await expect(page.getByRole("cell", { name: "100.0%", exact: true }).first()).toBeVisible();
+});

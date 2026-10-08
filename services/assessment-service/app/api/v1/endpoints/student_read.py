@@ -27,6 +27,10 @@ def _assignment_summary(
     now = datetime.now(UTC)
 
     active = service.repo.active_attempt(assignment.id, student_id)
+    if active:
+        active = service.read_student_attempt(active.id, student_id)
+        if active.status != "IN_PROGRESS":
+            active = None
     if now < aware(assignment.opens_at):
         status = "UPCOMING"
     elif now > aware(assignment.due_at):
@@ -172,12 +176,10 @@ def get_my_attempt(
     principal: Principal = Depends(require_roles("student")),
     service: AssessmentService = Depends(get_service),
 ):
-    attempt = service.repo.get_attempt(attempt_id)
-    if not attempt:
-        raise HTTPException(status_code=404, detail="Attempt not found")
-    if attempt.student_user_id != principal.user_id:
-        raise HTTPException(status_code=403, detail="Attempt belongs to another student")
-    return _attempt_summary(attempt)
+    try:
+        return _attempt_summary(service.read_student_attempt(attempt_id, principal.user_id))
+    except DomainError as exc:
+        _fail(exc)
 
 
 def _attempt_summary(attempt):
@@ -188,6 +190,8 @@ def _attempt_summary(attempt):
         "attempt_number": attempt.attempt_number,
         "status": attempt.status,
         "started_at": attempt.started_at,
+        "expires_at": attempt.expires_at,
+        "server_time": datetime.now(UTC),
         "submitted_at": attempt.submitted_at,
         "graded_at": attempt.graded_at,
         "score": attempt.score,

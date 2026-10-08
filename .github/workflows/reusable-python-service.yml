@@ -8,6 +8,8 @@ permissions: {contents: read}
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      PIP_CONSTRAINT: ${{ github.workspace }}/requirements.constraints.txt
     defaults:
       run:
         working-directory: ${{ inputs.service_path }}

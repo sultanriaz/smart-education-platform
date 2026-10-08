@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { Button } from "../../components/ui/Button";
+import { AssessmentDeadline } from "../../components/ui/AssessmentDeadline";
 import { Card } from "../../components/ui/Card";
 import { InlineError } from "../../components/ui/InlineError";
 import { PageHeader } from "../../components/ui/PageHeader";
@@ -26,9 +27,20 @@ export function StudentAssessmentAttemptPage() {
   const start = useStartAttempt();
   const submit = useSubmitAttempt();
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [serverTime, setServerTime] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
   const [answers, setAnswers] = useState<AnswerState>({});
   const [saving, setSaving] = useState(false);
   const [starting, setStarting] = useState(false);
+  const finalizeExpired = useCallback(() => {
+    setExpired(true);
+    if (!attemptId) return;
+    void submit.mutateAsync(attemptId).then(() => {
+      toast.push("Time ended. Your saved answers were submitted.", "success");
+      navigate("/app/student/assessments", { replace: true });
+    }).catch(() => toast.push("Time ended. Saved answers will finalize on the server. Reopen your results to check.", "error"));
+  }, [attemptId, submit, toast, navigate]);
 
   const answeredCount = useMemo(
     () =>
@@ -65,6 +77,9 @@ export function StudentAssessmentAttemptPage() {
       const previous = await getActiveAttempt(assignmentId);
       const attempt = previous ?? await start.mutateAsync(assignmentId);
       setAttemptId(attempt.id);
+      setExpiresAt(attempt.expiresAt ?? null);
+      setServerTime(attempt.serverTime ?? null);
+      setExpired(false);
 
       // Create explicit blank subjective answers so a submitted SHORT_TEXT
       // question always has an AttemptAnswer row available for Teacher grading,
@@ -162,7 +177,9 @@ export function StudentAssessmentAttemptPage() {
             <span>
               Answered {answeredCount} of {assignment.questions.length}
             </span>
+            {expiresAt && <AssessmentDeadline key={attemptId} expiresAt={expiresAt} serverTime={serverTime} onExpire={finalizeExpired} />}
           </div>
+          {expiresAt && <p className="mb-4 text-sm text-muted">Save progress before time ends. The timer continues if you leave this page; saved answers are submitted automatically.</p>}
 
           <div className="space-y-5">
             {assignment.questions.map((question, index) => (
@@ -179,6 +196,7 @@ export function StudentAssessmentAttemptPage() {
                     <textarea
                       className="mt-2 min-h-32 w-full rounded-xl border border-line bg-panel px-3 py-2"
                       value={answers[question.id]?.text_answer ?? ""}
+                      disabled={expired}
                       onChange={(event) =>
                         setAnswers((current) => ({
                           ...current,
@@ -199,6 +217,7 @@ export function StudentAssessmentAttemptPage() {
                       >
                         <input
                           type="radio"
+                          disabled={expired}
                           name={`question-${question.id}`}
                           value={choice.id}
                           checked={
@@ -226,13 +245,13 @@ export function StudentAssessmentAttemptPage() {
             <Button
               variant="secondary"
               onClick={() => void persistAnswers().catch(() => undefined)}
-              disabled={saving || submit.isPending}
+              disabled={expired || saving || submit.isPending}
             >
               {saving ? "Saving…" : "Save progress"}
             </Button>
             <Button
               onClick={() => void finish()}
-              disabled={saving || submit.isPending}
+              disabled={expired || saving || submit.isPending}
             >
               {submit.isPending ? "Submitting…" : "Submit assessment"}
             </Button>

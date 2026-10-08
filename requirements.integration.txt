@@ -1,3 +1,4 @@
+-c requirements.constraints.txt
 # Local engineering environment only. Service production images retain their own requirements.
 psutil>=6,<8
 -r services/identity-service/requirements-dev.txt

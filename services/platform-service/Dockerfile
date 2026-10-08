@@ -8,7 +8,8 @@ COPY libs/python/smartedu_observability /opt/libs/smartedu_observability
 COPY libs/python/smartedu_perf /opt/libs/smartedu_perf
 COPY libs/python/smartedu_security /opt/libs/smartedu_security
 COPY services/platform-service/requirements.txt ./requirements.txt
-RUN pip install --timeout 120 --retries 5 --prefer-binary --no-cache-dir -r requirements.txt /opt/libs/smartedu_contracts /opt/libs/smartedu_infra /opt/libs/smartedu_observability /opt/libs/smartedu_perf /opt/libs/smartedu_security \
+COPY requirements.constraints.txt ./constraints.txt
+RUN pip install -c constraints.txt --timeout 120 --retries 5 --prefer-binary --no-cache-dir -r requirements.txt /opt/libs/smartedu_contracts /opt/libs/smartedu_infra /opt/libs/smartedu_observability /opt/libs/smartedu_perf /opt/libs/smartedu_security \
     && useradd --create-home --uid 10001 appuser
 COPY --chown=10001:10001 services/platform-service/app ./app
 COPY --chown=10001:10001 services/platform-service/migrations ./migrations

@@ -82,6 +82,8 @@ export type AssessmentAttempt = {
   assignmentId: string;
   status: string;
   attemptNumber?: number;
+  expiresAt?: string | null;
+  serverTime?: string | null;
   answers?: { questionId: string; selectedChoiceId?: string; textAnswer?: string }[];
 };
 

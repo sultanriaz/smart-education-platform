@@ -44,8 +44,24 @@ def main() -> int:
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
-    inventory = subprocess.run(["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "-z"], capture_output=True)
-    paths = [root / name for name in inventory.stdout.decode("utf-8").split("\0") if name] if inventory.returncode == 0 else root.rglob("*")
+    inventory = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "-z",
+        ],
+        capture_output=True,
+    )
+    paths = (
+        [root / name for name in inventory.stdout.decode("utf-8").split("\0") if name]
+        if inventory.returncode == 0
+        else root.rglob("*")
+    )
     dockerfiles = [
         path
         for path in paths

@@ -47,8 +47,15 @@ switch ($Action) {
     }
     'Test' {
         Invoke-Checked $TaskPython @('scripts/verify_local.py')
+        Push-Location 'apps/frontend'
+        try {
+            Invoke-Checked 'npm.cmd' @('run','lint')
+            Invoke-Checked 'npm.cmd' @('run','test','--','--run')
+            Invoke-Checked 'npm.cmd' @('run','build')
+        } finally { Pop-Location }
         Invoke-Checked $TaskPython @('scripts/verify_live_local.py')
         Invoke-Checked $TaskPython @('scripts/run_local_e2e.py')
+        Invoke-Checked 'node' @('apps/frontend/scripts/review-complete.cjs')
     }
     'Stop' { Invoke-Checked $TaskPython @('scripts/local_stack.py','stop'); Invoke-Compose @('down') }
 }

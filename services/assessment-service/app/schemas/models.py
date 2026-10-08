@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -93,5 +93,7 @@ class AttemptOut(ORMModel):
     percent: float | None
     passed: bool | None
     started_at: datetime
+    expires_at: datetime | None
+    server_time: datetime = Field(default_factory=lambda: datetime.now(UTC))
     submitted_at: datetime | None
     graded_at: datetime | None

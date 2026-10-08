@@ -11,7 +11,7 @@ Updated 2026-10-08. Implementation and successful verification remain distinct.
 | FR-05; NFR-04/08 | Notification, owned relay, recipient adapters | Notification/relay suites; real RabbitMQ/SMTP/duplicate/timing |
 | FR-06 | Facility | Facility suite; booking/approval/conflict |
 | FR-07; NFR-05 | Learning/upload/private storage | Learning/upload suite; storage authorization checks |
-| FR-08 | Assessment authoring/student/teacher/grading | Assessment suite; live attempt/result |
+| FR-08 | Assessment authoring/student/teacher/grading, owned expiry worker, countdown | Assessment suite; live attempt/result/real worker timer; browser progress/resume and timed submission |
 | FR-09 | Reporting event worker/projector | Reporting suite; real projections/CSV |
 | FR-10 | Platform worker/services/routes | Platform suite; support/settings/health/jobs/search |
 | FR-11; NFR-01/10/11 | Frontend shell/pages/premium CSS | Build/lint/unit; browser routes/widths/axe/screenshots |
