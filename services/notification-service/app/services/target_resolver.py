@@ -93,10 +93,21 @@ class TargetResolver:
         resolved = []
         if direct:
             resolved.extend(self.resolve(CampaignTarget(kind="DIRECT", recipients=direct)))
-        if section_raw and not direct:
+        if section_raw and (
+            not direct or str(payload.get("event_type", "")).startswith("schedule.")
+            or "schedule_id" in payload or "occurrence_date" in payload
+        ):
             resolved.extend(
                 self.resolve(CampaignTarget(kind="SECTION", section_id=uuid.UUID(str(section_raw))))
             )
+        roles = targets.get("roles", [])
+        if isinstance(roles, list):
+            for role in roles:
+                if isinstance(role, str) and role.strip():
+                    resolved.extend(
+                        ResolvedRecipient(user.id, str(user.email) if user.email else None)
+                        for user in self.identity.list_users_by_role(role)
+                    )
         for target in payload.get("targets", []):
             if isinstance(target, dict) and target.get("type") == "SECTION":
                 resolved.extend(

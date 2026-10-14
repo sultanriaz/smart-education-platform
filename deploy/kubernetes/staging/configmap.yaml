@@ -16,7 +16,12 @@ data:
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector.smartedu-observability.svc.cluster.local:4317
   FRONTEND_ORIGIN: https://staging.smartedu.example.edu
   PUBLIC_BASE_URL: https://staging.smartedu.example.edu
+  API_BASE_URL: https://staging.smartedu.example.edu
   IDENTITY_SERVICE_BASE_URL: http://identity-service:8000
+  JWT_JWKS_URL: http://identity-service:8000/.well-known/jwks.json
+  JWT_ISSUER: https://staging.smartedu.example.edu
+  JWT_ACCESS_AUDIENCE: smart-education-api
+  JWT_AUDIENCE: smart-education-api
   ACADEMIC_SERVICE_BASE_URL: http://academic-service:8000
   ATTENDANCE_SERVICE_BASE_URL: http://attendance-service:8000
   SCHEDULING_SERVICE_BASE_URL: http://scheduling-service:8000
@@ -26,3 +31,9 @@ data:
   ASSESSMENT_SERVICE_BASE_URL: http://assessment-service:8000
   REPORTING_SERVICE_BASE_URL: http://reporting-service:8000
   PLATFORM_SERVICE_BASE_URL: http://platform-service:8000
+  STORAGE_BACKEND: s3
+  S3_BUCKET: learning-resources
+  TRUSTED_FRONTEND_ORIGINS: https://staging.smartedu.example.edu
+  TRUSTED_HOSTS: staging.smartedu.example.edu,identity-service,localhost,127.0.0.1
+  REFRESH_COOKIE_SECURE: 'true'
+  CORS_ORIGINS: '["https://staging.smartedu.example.edu"]'

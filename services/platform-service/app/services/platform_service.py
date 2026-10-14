@@ -47,17 +47,42 @@ class PlatformService:
         self,
         query: str,
         roles: set[str],
+        user_id: uuid.UUID | None = None,
         document_type: str | None = None,
         source_service: str | None = None,
         limit: int = 50,
     ):
-        rows = self.repo.search_documents(query, document_type, source_service, limit)
-        return [
-            row
-            for row in rows
-            if not row.audience_roles
-            or bool(roles.intersection({str(r).lower() for r in row.audience_roles}))
-        ]
+        # Always apply object authorization BEFORE result limiting to prevent leaks
+        # and to avoid a restricted top hit masking permitted later results.
+        results = []
+        offset = 0
+        while len(results) < limit:
+            rows = self.repo.search_documents(query, document_type, source_service, 200, offset)
+            if not rows:
+                break
+            for row in rows:
+                acl = row.metadata_json if isinstance(row.metadata_json, dict) else {}
+                audience = {str(role).lower() for role in (row.audience_roles or [])}
+                if "admin" not in roles:
+                    if not audience or roles.isdisjoint(audience):
+                        continue
+                    owner = {str(acl[key]) for key in ("user_id", "owner_user_id", "student_user_id") if acl.get(key)}
+                    permitted = {str(x) for x in acl.get("allowed_user_ids", [])} if isinstance(acl.get("allowed_user_ids"), list) else set()
+                    # Generic public campus course catalogues and notices are visible
+                    # to their explicitly assigned roles. Every object containing
+                    # ownership, course or section scope is PRIVATE by default.
+                    scope_keys = ("section_id", "section_ids", "course_id", "course_ids", "enrollment_id", "owner_user_id", "student_user_id", "user_id", "allowed_user_ids")
+                    scoped = any(key in acl for key in scope_keys)
+                    public_roles = row.document_type in {"course", "announcement"} and not scoped
+                    if not public_roles and (not user_id or str(user_id) not in (owner | permitted)):
+                        continue
+                results.append(row)
+                if len(results) == limit:
+                    break
+            offset += len(rows)
+            if len(rows) < 200:
+                break
+        return results
 
     # Support
     def create_ticket(self, payload: TicketCreate, user_id: uuid.UUID):

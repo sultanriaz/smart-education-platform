@@ -3,9 +3,11 @@ from __future__ import annotations
 import uuid
 from datetime import date, datetime
 
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.domain.entities.models import (
+    AnalyticsEvent,
     AssessmentProjection,
     AttendanceProjection,
     EnrollmentProjection,
@@ -43,9 +45,100 @@ class EventProjector:
         self.db = db
         self.repo = ReportingRepository(db)
 
+    def _newer_event_exists(self, event, types: set[str], key_fields: tuple[str, ...]) -> bool:
+        """Reject late projections using the durable analytics inbox, no schema migration.
+
+        A newer recorded event for the same business object wins, independently of
+        delivery order. Event timestamps come from the owner envelope; identical
+        timestamps use the event UUID as a deterministic tie-breaker.
+        """
+        payload = event.payload or {}
+        if any(not payload.get(field) for field in key_fields):
+            return False
+        filters = [AnalyticsEvent.event_type.in_(types)]
+        for field in key_fields:
+            filters.append(AnalyticsEvent.payload[field].as_string() == str(payload[field]))
+        rows = self.db.scalars(
+            select(AnalyticsEvent)
+            .where(*filters, AnalyticsEvent.event_id != event.event_id)
+            .order_by(AnalyticsEvent.occurred_at.desc(), AnalyticsEvent.event_id.desc())
+            .limit(1)
+        )
+        for other in rows:
+            def instant(value):
+                from datetime import UTC
+                return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+            if (instant(other.occurred_at), str(other.event_id)) > (
+                instant(event.occurred_at), str(event.event_id)
+            ):
+                return True
+        return False
+
+    def _active_attendance_session(self, session_id) -> bool:
+        """Reopened and cancelled sheets must not inflate finalized reporting."""
+        events = self.db.scalars(
+            select(AnalyticsEvent).where(
+                AnalyticsEvent.event_type.in_({
+                    "attendance.session_reopened", "attendance.session_cancelled",
+                    "attendance.session_finalized",
+                }),
+                AnalyticsEvent.payload["session_id"].as_string() == str(session_id),
+            ).order_by(AnalyticsEvent.occurred_at.desc())
+        )
+        latest = next(iter(events), None)
+        return latest is None or latest.event_type == "attendance.session_finalized"
+
+    def _attendance_session_lifecycle(self, event):
+        payload = event.payload or {}
+        session_id = _uuid(payload.get("session_id") or payload.get("attendance_session_id"))
+        if not session_id:
+            return
+        if self._newer_event_exists(
+            event,
+            {"attendance.session_reopened", "attendance.session_cancelled", "attendance.session_finalized"},
+            ("session_id",),
+        ):
+            return
+        self.db.query(AttendanceProjection).filter(
+            AttendanceProjection.attendance_session_id == session_id
+        ).delete(synchronize_session=False)
+        if event.event_type != "attendance.session_finalized":
+            return
+        # Rebuild from owner-authored record events, preserving raw audit history.
+        records = self.db.scalars(
+            select(AnalyticsEvent).where(
+                AnalyticsEvent.event_type.in_({"attendance.recorded", "attendance.updated"}),
+                AnalyticsEvent.payload["session_id"].as_string() == str(session_id),
+            ).order_by(AnalyticsEvent.occurred_at.asc())
+        )
+        latest_by_student = {}
+        for record in records:
+            student = (record.payload or {}).get("student_user_id")
+            if student:
+                latest_by_student[str(student)] = record.payload
+        for data in latest_by_student.values():
+            self._attendance(data)
+
     def project(self, event):
         t = event.event_type
         p = event.payload or {}
+        if t in {"attendance.session_finalized", "attendance.session_cancelled", "attendance.session_reopened"}:
+            self._attendance_session_lifecycle(event)
+            return
+        families = (
+            ({"attendance.recorded", "attendance.updated"}, ("session_id", "student_user_id")),
+            ({"assessment.attempt_graded"}, ("attempt_id",)),
+            ({"facility.booking_requested", "facility.booking_approved", "facility.booking_rejected", "facility.booking_cancelled"}, ("booking_id",)),
+            ({"academic.enrollment_created", "academic.enrollment_activated", "academic.enrollment_dropped", "academic.enrollment_cancelled"}, ("student_user_id", "section_id")),
+            ({"notification.sent", "notification.delivered", "notification.failed", "notification.delivery_updated"}, ("delivery_id",)),
+        )
+        for types, keys in families:
+            if t in types and self._newer_event_exists(event, types, keys):
+                return
+        if t in {"attendance.recorded", "attendance.updated"} and not self._active_attendance_session(
+            p.get("session_id") or p.get("attendance_session_id")
+        ):
+            return
 
         if t in {"attendance.recorded", "attendance.updated"}:
             self._attendance(p)

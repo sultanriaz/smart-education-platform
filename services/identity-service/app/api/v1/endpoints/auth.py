@@ -5,6 +5,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.core.exceptions import AuthenticationError, ConflictError
 from app.db.session import get_db
+from app.security.dependencies import get_current_user
 from app.schemas.auth import LoginRequest
 from app.schemas.user import UserOut, UserRegister
 from app.services.auth_service import AuthService
@@ -87,3 +88,10 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     AuthService(db).logout(token)
     clear_browser_refresh_cookie(response, security_settings())
     response.headers["Cache-Control"] = "no-store"
+
+
+@router.get("/access-status")
+def access_status(user=Depends(get_current_user)):
+    """Authoritative non-cacheable access status for sibling services."""
+    return {"active": True, "user_id": str(user.id),
+            "roles": sorted(role.name.lower() for role in user.roles)}

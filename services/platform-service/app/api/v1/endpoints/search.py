@@ -22,6 +22,7 @@ def search(
     return service.search(
         query=q,
         roles=principal.roles,
+        user_id=principal.user_id,
         document_type=document_type,
         source_service=source_service,
         limit=limit,

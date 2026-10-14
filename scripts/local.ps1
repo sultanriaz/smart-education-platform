@@ -26,7 +26,7 @@ switch ($Action) {
         Push-Location 'tests/e2e'
         try { Invoke-Checked 'npm.cmd' @('ci') } finally { Pop-Location }
     }
-    'Infrastructure' { Invoke-Compose @('up','-d','--build','--wait','postgres','redis-cache','redis-durable','rabbitmq','minio','mailpit','api-gateway'); Invoke-Compose @('run','--build','--rm','minio-bootstrap') }
+    'Infrastructure' { Invoke-Compose @('up','-d','--build','--wait','infra-postgres','redis-cache','redis-durable','rabbitmq','minio','mailpit','api-gateway'); Invoke-Compose @('run','--build','--rm','minio-bootstrap') }
     'Migrate' { Invoke-Checked $TaskPython @('scripts/local_stack.py','migrate') }
     'Services' {
         Invoke-Checked $TaskPython @('scripts/local_stack.py','start')

@@ -85,7 +85,7 @@ def room_timetable(
     db: Session = Depends(get_db),
     academic: AcademicClient = Depends(get_academic_client),
 ):
-    if principal.has_role("student"):
+    if principal.has_role("student") and not principal.can_manage_schedules:
         raise HTTPException(status_code=403, detail="Room timetable is restricted")
     return _run(
         SchedulingService(db, academic),

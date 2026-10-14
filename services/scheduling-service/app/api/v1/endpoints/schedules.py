@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.clients.academic import AcademicClient, get_academic_client
+from app.clients.facility import FacilityClient, get_facility_client
 from app.core.errors import DomainError
 from app.db.session import get_db
 from app.repositories.schedule_repository import ScheduleRepository
@@ -35,9 +36,10 @@ def create_schedule(
     principal: Principal = Depends(require_roles("admin", "teacher")),
     db: Session = Depends(get_db),
     academic: AcademicClient = Depends(get_academic_client),
+    facility: FacilityClient = Depends(get_facility_client),
 ):
     try:
-        return SchedulingService(db, academic).create_schedule(payload, principal)
+        return SchedulingService(db, academic, facility).create_schedule(payload, principal)
     except DomainError as exc:
         _raise(exc)
 
@@ -53,9 +55,9 @@ def list_schedules(
     principal: Principal = Depends(get_current_principal),
     db: Session = Depends(get_db),
 ):
-    if principal.has_role("student"):
+    if principal.has_role("student") and not principal.can_manage_schedules:
         raise HTTPException(status_code=403, detail="Students use timetable endpoints")
-    if principal.has_role("teacher") and not principal.has_role("admin"):
+    if principal.has_role("teacher") and not principal.can_manage_schedules:
         if teacher_user_id and teacher_user_id != principal.user_id:
             raise HTTPException(status_code=403, detail="Teachers may only list their schedules")
         teacher_user_id = principal.user_id
@@ -78,9 +80,9 @@ def get_schedule(
     schedule = ScheduleRepository(db).get_schedule(schedule_id)
     if schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
-    if principal.has_role("student"):
+    if principal.has_role("student") and not principal.can_manage_schedules:
         raise HTTPException(status_code=403, detail="Students use timetable endpoints")
-    if principal.has_role("teacher") and not principal.has_role("admin"):
+    if principal.has_role("teacher") and not principal.can_manage_schedules:
         if schedule.teacher_user_id != principal.user_id:
             raise HTTPException(status_code=403, detail="Teacher does not own this schedule")
     return schedule
@@ -93,9 +95,24 @@ def update_schedule(
     principal: Principal = Depends(require_roles("admin", "teacher")),
     db: Session = Depends(get_db),
     academic: AcademicClient = Depends(get_academic_client),
+    facility: FacilityClient = Depends(get_facility_client),
 ):
     try:
-        return SchedulingService(db, academic).update_schedule(schedule_id, payload, principal)
+        return SchedulingService(db, academic, facility).update_schedule(schedule_id, payload, principal)
+    except DomainError as exc:
+        _raise(exc)
+
+
+@router.post("/{schedule_id}/publish", response_model=ScheduleOut)
+def publish_schedule(
+    schedule_id: uuid.UUID,
+    principal: Principal = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+    academic: AcademicClient = Depends(get_academic_client),
+    facility: FacilityClient = Depends(get_facility_client),
+):
+    try:
+        return SchedulingService(db, academic, facility).publish_schedule(schedule_id, principal)
     except DomainError as exc:
         _raise(exc)
 
@@ -107,9 +124,10 @@ def cancel_schedule(
     principal: Principal = Depends(require_roles("admin", "teacher")),
     db: Session = Depends(get_db),
     academic: AcademicClient = Depends(get_academic_client),
+    facility: FacilityClient = Depends(get_facility_client),
 ):
     try:
-        return SchedulingService(db, academic).cancel_schedule(
+        return SchedulingService(db, academic, facility).cancel_schedule(
             schedule_id, payload.reason, principal
         )
     except DomainError as exc:
@@ -127,9 +145,10 @@ def set_override(
     principal: Principal = Depends(require_roles("admin", "teacher")),
     db: Session = Depends(get_db),
     academic: AcademicClient = Depends(get_academic_client),
+    facility: FacilityClient = Depends(get_facility_client),
 ):
     try:
-        return SchedulingService(db, academic).set_override(schedule_id, payload, principal)
+        return SchedulingService(db, academic, facility).set_override(schedule_id, payload, principal)
     except DomainError as exc:
         _raise(exc)
 
@@ -143,7 +162,7 @@ def list_overrides(
     schedule = ScheduleRepository(db).get_schedule(schedule_id)
     if schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
-    if principal.has_role("teacher") and not principal.has_role("admin"):
+    if principal.has_role("teacher") and not principal.can_manage_schedules:
         if schedule.teacher_user_id != principal.user_id:
             raise HTTPException(status_code=403, detail="Teacher does not own this schedule")
     return sorted(schedule.overrides, key=lambda item: item.occurrence_date)
@@ -158,7 +177,7 @@ def schedule_history(
     schedule = ScheduleRepository(db).get_schedule(schedule_id)
     if schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
-    if principal.has_role("teacher") and not principal.has_role("admin"):
+    if principal.has_role("teacher") and not principal.can_manage_schedules:
         if schedule.teacher_user_id != principal.user_id:
             raise HTTPException(status_code=403, detail="Teacher does not own this schedule")
     return ScheduleRepository(db).list_audits(schedule_id)

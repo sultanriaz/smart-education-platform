@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     ACADEMIC_STUDENT_ENROLLMENT_PATH: str = "/api/v1/enrollments/validate"
     ACADEMIC_STUDENT_SECTIONS_PATH_TEMPLATE: str = "/api/v1/students/{student_user_id}/sections"
 
+    FACILITY_SERVICE_BASE_URL: str = "http://127.0.0.1:8006"
+    FACILITY_SERVICE_TIMEOUT_SECONDS: float = 10.0
+    INTERNAL_SERVICE_TOKEN: str = ""
+    MAX_SCHEDULE_RESERVATION_OCCURRENCES: int = 520
+
     MAX_TIMETABLE_RANGE_DAYS: int = 62
     DEFAULT_TIMEZONE: str = "UTC"
 

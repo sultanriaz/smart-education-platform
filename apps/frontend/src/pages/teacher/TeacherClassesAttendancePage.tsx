@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -28,9 +29,11 @@ const statuses: AttendanceEntry["status"][] = [
 
 export function TeacherClassesAttendancePage() {
   const toast = useToast();
+  const queryClient = useQueryClient();
   const sections = useTeacherSections();
   const [sectionId, setSectionId] = useState("");
   const [sessionId, setSessionId] = useState("");
+  const [scheduleOccurrenceId, setScheduleOccurrenceId] = useState("");
   const [sessionDate, setSessionDate] = useState(
     new Date().toISOString().slice(0, 10)
   );
@@ -53,21 +56,23 @@ export function TeacherClassesAttendancePage() {
   const finalize = useFinalizeAttendanceSession();
 
   useEffect(() => {
-    if (sessionAttendance.data?.length) {
-      setEntries(sessionAttendance.data);
+    if (!sessionId || !roster.data || !sessionAttendance.data) {
+      setEntries([]);
       return;
     }
-
-    if (roster.data?.length && sessionId) {
-      setEntries(
-        roster.data.map((member) => ({
-          studentUserId: member.userId,
-          studentName: member.name ?? member.studentId ?? member.userId,
-          status: "PRESENT",
-          notes: null
-        }))
-      );
-    }
+    // Keep every enrolled member even when only part of the sheet is persisted.
+    const marked = new Map(
+      sessionAttendance.data.map((entry) => [entry.studentUserId, entry])
+    );
+    setEntries(
+      roster.data.map((member) => ({
+        studentUserId: member.userId,
+        studentName: member.name ?? member.studentId ?? member.userId,
+        status: "PRESENT" as AttendanceEntry["status"],
+        notes: null,
+        ...(marked.get(member.userId) ?? {})
+      }))
+    );
   }, [sessionAttendance.data, roster.data, sessionId]);
 
   const selectedSection = useMemo(
@@ -104,6 +109,7 @@ export function TeacherClassesAttendancePage() {
       const created = await createSession.mutateAsync({
         section_id: sectionId,
         session_date: sessionDate,
+        schedule_occurrence_id: scheduleOccurrenceId.trim() || undefined,
         starts_at: startsAt || undefined,
         ends_at: endsAt || undefined
       });
@@ -174,6 +180,7 @@ export function TeacherClassesAttendancePage() {
       setEntries((current) =>
         current.map((item) => (item.id === entry.id ? updated : item))
       );
+      await queryClient.invalidateQueries({ queryKey: ["teacher", "attendance", "session", sessionId] });
       setCorrectionReasons((current) => ({ ...current, [entry.id!]: "" }));
       toast.push("Attendance correction recorded.", "success");
     } catch (error) {
@@ -252,7 +259,7 @@ export function TeacherClassesAttendancePage() {
               ) : roster.error ? (
                 <InlineError message="The section roster could not be loaded." />
               ) : roster.data?.length ? (
-                <div className="max-h-[34rem] overflow-auto">
+                <div className="max-h-[34rem] overflow-auto focus-visible:outline-2 focus-visible:outline-offset-2" role="region" aria-label="Student roster" tabIndex={0}>
                   <table className="w-full min-w-[440px] text-left text-sm">
                     <thead>
                       <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
@@ -291,7 +298,8 @@ export function TeacherClassesAttendancePage() {
                 className="grid gap-3 sm:grid-cols-2"
                 onSubmit={(event) => void createNewSession(event)}
               >
-                <Input
+                <Input label="Scheduling occurrence UUID (optional)" hint="Link the session to a published timetable occurrence; the server validates the owner/date." value={scheduleOccurrenceId} onChange={e => setScheduleOccurrenceId(e.target.value)} />
+            <Input
                   label="Session date"
                   type="date"
                   value={sessionDate}
@@ -341,7 +349,7 @@ export function TeacherClassesAttendancePage() {
                 <SectionLoader label="Loading attendance sheet…" />
               ) : (
                 <>
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2" role="region" aria-label="Attendance sheet" tabIndex={0}>
                     <table className="w-full min-w-[900px] text-left text-sm">
                       <thead>
                         <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">

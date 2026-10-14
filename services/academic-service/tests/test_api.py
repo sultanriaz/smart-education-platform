@@ -110,8 +110,18 @@ def test_full_admin_workflow(client):
     ]:
         assert client.get(f"/api/v1/{path}/{record['id']}").status_code == 200
         assert len(client.get(f"/api/v1/{path}").json()) == 1
-        assert client.delete(f"/api/v1/{path}/{record['id']}").status_code == 204
-        assert client.get(f"/api/v1/{path}/{record['id']}").status_code == 404
+        if path == "enrollments":
+            assert client.delete(f"/api/v1/{path}/{record['id']}").status_code == 204
+            historical = client.get(f"/api/v1/{path}/{record['id']}")
+            assert historical.status_code == 200
+            assert historical.json()["status"] == "dropped"
+            assert client.get(f"/api/v1/sections/{section['id']}/roster").json()["total"] == 0
+        elif path in ("teacher-assignments", "teacher-profiles"):
+            assert client.delete(f"/api/v1/{path}/{record['id']}").status_code == 204
+            assert client.get(f"/api/v1/{path}/{record['id']}").status_code == 404
+        else:
+            # Preserve parents referenced by retained enrollment history.
+            assert client.get(f"/api/v1/{path}/{record['id']}").status_code == 200
 
 
 @pytest.mark.parametrize(

@@ -11,7 +11,9 @@ def require_roles(*allowed: str) -> Callable:
     allowed_set = {value.lower() for value in allowed}
 
     def dependency(principal: Principal = Depends(get_current_principal)) -> Principal:
-        if allowed_set.isdisjoint(principal.roles):
+        if allowed_set.isdisjoint(principal.roles) and not (
+            "admin" in allowed_set and principal.has_permission("scheduling.schedules.manage")
+        ):
             raise HTTPException(status_code=403, detail="Insufficient permissions")
         return principal
 

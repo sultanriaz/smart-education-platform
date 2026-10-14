@@ -1,3 +1,4 @@
+import { zonedInstant } from "../../lib/zoned-iso";
 import type {
   AssessmentAssignment,
   AssessmentAssignmentDetail,
@@ -79,7 +80,11 @@ export function normalizeAttendanceRecord(value: unknown): AttendanceRecord {
 export function normalizeTimetableItem(value: unknown): TimetableItem {
   const r = asRecord(value);
   const date = str(r.occurrence_date ?? r.date);
-  const at = (value: unknown) => { const time = str(value); return date && time && !time.includes("T") ? `${date}T${time}` : time; };
+  const at = (value: unknown) => {
+    const time = str(value);
+    return date && time && !time.includes("T")
+      ? zonedInstant(date, time, str(r.timezone_name) || "UTC") : time;
+  };
   return {
     id: str(r.id ?? r.occurrence_id ?? r.schedule_id ?? `${r.section_id}:${r.starts_at}`),
     title: str(r.title ?? r.course_name ?? r.course_code ?? r.section_name, "Scheduled class"),

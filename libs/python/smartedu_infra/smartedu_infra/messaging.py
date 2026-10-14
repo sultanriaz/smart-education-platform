@@ -171,19 +171,22 @@ class RabbitEventBus:
             routing_key=plan.dead_letter_queue_name,
         )
 
-        retry_queue = await self._channel.declare_queue(
-            plan.retry_queue_name,
-            durable=True,
-            arguments={
-                "x-message-ttl": self.settings.retry_delay_ms,
-                "x-dead-letter-exchange": self.settings.event_exchange,
-                "x-dead-letter-routing-key": plan.retry_routing_key,
-            },
-        )
-        await retry_queue.bind(
-            self._retry_exchange,
-            routing_key=plan.retry_routing_key,
-        )
+        # Preserve the original retry queue declaration for rolling upgrades.
+        # Extra durable queues use progressively longer TTLs. The original
+        # delivery is acknowledged only after publish confirmation succeeds.
+        for stage, factor in ((1, 1), (2, 4), (3, 16)):
+            queue_name = plan.retry_queue_name + (f".stage{stage}" if stage > 1 else "")
+            route = plan.retry_routing_key + (f".stage{stage}" if stage > 1 else "")
+            retry_queue = await self._channel.declare_queue(
+                queue_name,
+                durable=True,
+                arguments={
+                    "x-message-ttl": min(86_400_000, self.settings.retry_delay_ms * factor),
+                    "x-dead-letter-exchange": self.settings.event_exchange,
+                    "x-dead-letter-routing-key": plan.retry_routing_key,
+                },
+            )
+            await retry_queue.bind(self._retry_exchange, routing_key=route)
 
         queue = await self._channel.declare_queue(
             plan.queue_name,
@@ -248,10 +251,14 @@ class RabbitEventBus:
 
         headers["x-smartedu-attempt"] = attempt + 1
         retry = self._copy_message(message, headers=headers)
+        # No sleep in a consumer; RabbitMQ owns the durable delay. Avoid a
+        # hot retry loop when a dependent service is unavailable.
+        stage = min(3, attempt)
+        routing_key = self._plan.retry_routing_key + (f".stage{stage}" if stage > 1 else "")
         await asyncio.wait_for(
             self._retry_exchange.publish(
                 retry,
-                routing_key=self._plan.retry_routing_key,
+                routing_key=routing_key,
                 mandatory=True,
             ),
             timeout=self.settings.publish_timeout_seconds,

@@ -468,6 +468,25 @@ def main():
             key: booking[key]
             for key in ("facility_id", "starts_at", "ends_at", "attendees", "purpose")
         }
+        # The seeded booking may have expired between setup and verification.
+        # Use a new future approved booking to verify a genuine overlap.
+        booking_start = datetime.fromisoformat(payload["starts_at"].replace("Z", "+00:00"))
+        if booking_start.tzinfo is None:
+            booking_start = booking_start.replace(tzinfo=UTC)
+        if booking_start <= datetime.now(UTC) + timedelta(minutes=5):
+            fresh_start = datetime.now(UTC) + timedelta(
+                days=30, minutes=random_secrets.randbelow(1440)
+            )
+            payload["starts_at"] = fresh_start.isoformat()
+            payload["ends_at"] = (fresh_start + timedelta(hours=1)).isoformat()
+            fresh = request(
+                "student", "POST", "/api/v1/facilities/bookings", payload, expected=(201,)
+            ).json()
+            fresh = request(
+                "admin", "POST", f"/api/v1/facilities/bookings/{fresh['id']}/approve",
+                {"note": "Future-time overlap verification"}, expected=(200,),
+            ).json()
+            assert fresh["status"] == "APPROVED"
         request(
             "student", "POST", "/api/v1/facilities/bookings", payload, expected=(409,)
         )

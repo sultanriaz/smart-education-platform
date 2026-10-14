@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-service-worker
+  namespace: smartedu-staging
+  labels:
+    app.kubernetes.io/name: identity-service-worker
+    smartedu.io/component: identity-service-worker
+    smartedu.io/tier: worker
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      smartedu.io/component: identity-service-worker
+  template:
+    metadata:
+      labels:
+        smartedu.io/component: identity-service-worker
+        smartedu.io/tier: worker
+    spec:
+      serviceAccountName: identity-service
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: worker
+        image: smartedu.local/identity-service:bootstrap
+        imagePullPolicy: IfNotPresent
+        command:
+        - python
+        - -m
+        - app.event_worker
+        envFrom:
+        - configMapRef:
+            name: smartedu-staging-runtime
+        - secretRef:
+            name: identity-service-secrets
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: jwt-signing-key
+          mountPath: /run/secrets/identity
+          readOnly: true
+        env:
+        - name: JWT_PRIVATE_KEY_FILE
+          value: /run/secrets/identity/private.pem
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 128Mi
+      - name: jwt-signing-key
+        secret:
+          secretName: identity-service-signing-key
+          items:
+          - key: private.pem
+            path: private.pem

@@ -39,6 +39,7 @@ class PlatformRepository:
         document_type: str | None = None,
         source_service: str | None = None,
         limit: int = 50,
+        offset: int = 0,
     ):
         stmt = select(SearchDocument).where(SearchDocument.is_active.is_(True))
         if query:
@@ -53,7 +54,7 @@ class PlatformRepository:
             stmt = stmt.where(SearchDocument.document_type == document_type)
         if source_service:
             stmt = stmt.where(SearchDocument.source_service == source_service)
-        stmt = stmt.order_by(SearchDocument.updated_at.desc()).limit(limit)
+        stmt = stmt.order_by(SearchDocument.updated_at.desc(), SearchDocument.id).limit(limit).offset(offset)
         return list(self.db.scalars(stmt).all())
 
     def get_ticket(self, ticket_id: uuid.UUID):

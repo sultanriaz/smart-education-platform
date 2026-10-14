@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from smartedu_security.live_access import LiveAccessMiddleware
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -17,6 +18,7 @@ from app.sprint21 import install_sprint21
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title=settings.APP_NAME, version="0.2.0")
+    app.add_middleware(LiveAccessMiddleware)
     install_sprint21(app)
     install_sprint16(app)
     install_sprint18(app)

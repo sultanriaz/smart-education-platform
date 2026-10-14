@@ -1,9 +1,22 @@
+"""Staging Kubernetes contracts for API deployments and dedicated event workers.
+
+Wave 08 adds ten single-replica, Recreate-strategy queue consumers. Only
+HTTP-serving API/gateway/frontend deployments require two replicas and HTTP
+readiness/liveness probes. All pods remain subject to the security baseline.
+"""
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 STAGING = ROOT / "deploy" / "kubernetes" / "staging"
+WORKER_NAMES = {
+    f"{name}-service-worker"
+    for name in (
+        "identity", "academic", "attendance", "scheduling", "notification",
+        "facility", "learning", "assessment", "reporting", "platform",
+    )
+}
 
 
 def documents():
@@ -31,8 +44,16 @@ def test_resource_counts():
     for doc in docs:
         counts[doc["kind"]] = counts.get(doc["kind"], 0) + 1
 
-    assert counts["Deployment"] == 12
-    assert counts["Service"] == 12
+    deployments = [doc for doc in docs if doc["kind"] == "Deployment"]
+    workers = {
+        doc["metadata"]["name"]
+        for doc in deployments
+        if doc["metadata"]["name"].endswith("-worker")
+    }
+    assert workers == WORKER_NAMES
+    assert len(deployments) - len(workers) == 12
+    assert counts["Deployment"] == 22  # 12 HTTP services + 10 event workers
+    assert counts["Service"] == 12       # workers are private queue consumers
     assert counts["HorizontalPodAutoscaler"] == 12
     assert counts["PodDisruptionBudget"] == 12
     assert counts["Job"] == 10
@@ -45,21 +66,34 @@ def test_staging_services_are_private_clusterip():
             assert doc["spec"]["type"] == "ClusterIP"
 
 
-def test_all_staging_deployments_are_multi_replica_and_hardened():
+def test_staging_api_and_worker_deployments_are_hardened():
     for doc in documents():
         if doc.get("kind") != "Deployment":
             continue
-        assert doc["spec"]["replicas"] >= 2
+        name = doc["metadata"]["name"]
+        is_worker = name in WORKER_NAMES
         pod = doc["spec"]["template"]["spec"]
         container = pod["containers"][0]
-        assert pod["securityContext"]["runAsNonRoot"] is True
-        assert pod["securityContext"]["seccompProfile"]["type"] == "RuntimeDefault"
-        assert pod["automountServiceAccountToken"] is False
-        assert container["securityContext"]["allowPrivilegeEscalation"] is False
-        assert container["securityContext"]["readOnlyRootFilesystem"] is True
-        assert "ALL" in container["securityContext"]["capabilities"]["drop"]
-        assert container["readinessProbe"]
-        assert container["livenessProbe"]
+        if is_worker:
+            # A single consumer avoids duplicate message processing in the
+            # existing event-worker design; it has no HTTP health endpoint.
+            assert doc["spec"]["replicas"] == 1, name
+            assert doc["spec"]["strategy"]["type"] == "Recreate", name
+            assert container["command"] == ["python", "-m", "app.event_worker"], name
+            assert pod["terminationGracePeriodSeconds"] >= 30, name
+        else:
+            assert not name.endswith("-worker"), name
+            assert doc["spec"]["replicas"] >= 2, name
+            assert container["readinessProbe"], name
+            assert container["livenessProbe"], name
+        assert pod["securityContext"]["runAsNonRoot"] is True, name
+        assert pod["securityContext"]["seccompProfile"]["type"] == "RuntimeDefault", name
+        assert pod["automountServiceAccountToken"] is False, name
+        assert container["securityContext"]["allowPrivilegeEscalation"] is False, name
+        assert container["securityContext"]["readOnlyRootFilesystem"] is True, name
+        assert "ALL" in container["securityContext"]["capabilities"]["drop"], name
+        assert container["resources"]["requests"], name
+        assert container["resources"]["limits"], name
 
 
 def test_public_ingress_only_routes_frontend_and_gateway():

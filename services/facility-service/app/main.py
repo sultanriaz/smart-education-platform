@@ -1,4 +1,5 @@
 from __future__ import annotations
+from smartedu_security.live_access import LiveAccessMiddleware
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -12,6 +13,8 @@ from app.sprint18 import install_sprint18
 from app.sprint21 import install_sprint21
 
 app = FastAPI(title=settings.APP_NAME, version="0.1.0")
+
+app.add_middleware(LiveAccessMiddleware)
 
 install_sprint21(app)
 

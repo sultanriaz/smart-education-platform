@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.clients.academic import AcademicSection, get_academic_client
+from app.clients.facility import get_facility_client
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
@@ -68,8 +69,36 @@ def principal_state():
     return {"principal": Principal(ADMIN_ID, frozenset({"admin"}), "test-token")}
 
 
+class FakeFacilityClient:
+    def __init__(self):
+        self.reservations = {}
+        self.fail = False
+        self.calls = []
+
+    def replace_schedule(self, schedule_id, occurrences):
+        from app.core.errors import ConflictError, DependencyUnavailableError
+        if self.fail:
+            raise DependencyUnavailableError("Facility is unavailable")
+        # Simulate the Facility Service authoritative conflict check.
+        for o in occurrences:
+            for other_id, other_occurrences in self.reservations.items():
+                if other_id == str(schedule_id):
+                    continue
+                for other in other_occurrences:
+                    if (o["facility_id"] == other["facility_id"] and
+                            o["starts_at"] < other["ends_at"] and other["starts_at"] < o["ends_at"]):
+                        raise ConflictError("Classroom is occupied")
+        self.reservations[str(schedule_id)] = [dict(o) for o in occurrences]
+        self.calls.append((str(schedule_id), [dict(o) for o in occurrences]))
+
+
 @pytest.fixture()
-def client(db, principal_state):
+def fake_facility():
+    return FakeFacilityClient()
+
+
+@pytest.fixture()
+def client(db, principal_state, fake_facility):
     def override_db():
         yield db
 
@@ -79,6 +108,7 @@ def client(db, principal_state):
     app.dependency_overrides[get_db] = override_db
     app.dependency_overrides[get_current_principal] = override_principal
     app.dependency_overrides[get_academic_client] = lambda: FakeAcademicClient()
+    app.dependency_overrides[get_facility_client] = lambda: fake_facility
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

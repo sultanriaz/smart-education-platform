@@ -11,6 +11,10 @@ PERMISSIONS = {
     "identity.users.write": "Create and update user accounts",
     "identity.roles.read": "Read roles and permissions",
     "identity.roles.write": "Manage roles and permissions",
+    "scheduling.schedules.manage": "Manage all schedules and publish timetables",
+    "facility.facilities.manage": "Manage facilities and equipment",
+    "facility.bookings.review": "Review and list facility bookings",
+    "facility.blocks.manage": "Manage facility availability blocks",
 }
 
 ROLE_PERMISSIONS = {

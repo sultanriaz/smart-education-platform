@@ -13,7 +13,7 @@ from app.services.assessment_service import AssessmentService
 
 class FakeAcademic:
     def get_section(self, section_id, token=None):
-        return {"id": str(section_id)}
+        return {"id": str(section_id), "course_id": str(self.course_id)}
 
     def validate_teacher_assignment(self, teacher_user_id, section_id, token=None):
         return True
@@ -40,8 +40,10 @@ def db():
 
 
 @pytest.fixture()
-def service(db):
-    return AssessmentService(db, FakeAcademic())
+def service(db, ids):
+    academic = FakeAcademic()
+    academic.course_id = ids["course"]
+    return AssessmentService(db, academic)
 
 
 @pytest.fixture()

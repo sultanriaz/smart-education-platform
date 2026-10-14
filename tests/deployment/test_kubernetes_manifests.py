@@ -27,7 +27,7 @@ def test_kubernetes_resource_counts():
     for doc in docs:
         kinds[doc["kind"]] = kinds.get(doc["kind"], 0) + 1
 
-    assert kinds["Deployment"] == 12
+    assert kinds["Deployment"] == 22
     assert kinds["Service"] == 12
     assert kinds["HorizontalPodAutoscaler"] == 12
     assert kinds["PodDisruptionBudget"] == 12
@@ -57,8 +57,12 @@ def test_deployments_have_security_resources_and_probes():
         assert "ALL" in container["securityContext"]["capabilities"]["drop"], name
         assert container["resources"]["requests"], name
         assert container["resources"]["limits"], name
-        assert container["readinessProbe"], name
-        assert container["livenessProbe"], name
+        if name.endswith("-worker"):
+            assert container["command"] == ["python", "-m", "app.event_worker"]
+            assert pod["terminationGracePeriodSeconds"] >= 30
+        else:
+            assert container["readinessProbe"], name
+            assert container["livenessProbe"], name
 
 
 def test_ingress_only_routes_to_frontend_and_gateway_and_uses_tls():

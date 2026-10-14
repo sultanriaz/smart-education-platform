@@ -19,9 +19,7 @@ case "$API_BASE_URL_VALUE" in
     ;;
 esac
 
-mkdir -p /etc/nginx/security
-
-cat > /etc/nginx/security/security-headers.conf <<EOF
+cat > /tmp/security-headers.conf <<EOF
 add_header X-Content-Type-Options "nosniff" always;
 add_header X-Frame-Options "DENY" always;
 add_header Referrer-Policy "strict-origin-when-cross-origin" always;
@@ -33,7 +31,7 @@ add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-a
 EOF
 
 if [ "$ENABLE_HSTS_VALUE" = "true" ]; then
-  cat >> /etc/nginx/security/security-headers.conf <<EOF
+  cat >> /tmp/security-headers.conf <<EOF
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 EOF
 fi

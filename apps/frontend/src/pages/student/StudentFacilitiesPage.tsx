@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { apiRequest } from "../../lib/api-client";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -22,6 +23,22 @@ export function StudentFacilitiesPage() {
   const toast = useToast();
 
   const [facilityId, setFacilityId] = useState("");
+  const [facilitySearch, setFacilitySearch] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [availability, setAvailability] = useState<string | null>(null);
+  async function checkAvailability() {
+    if (!facilityId || !startsAt || !endsAt) { toast.push("Select a facility and both times.", "error"); return; }
+    const from = new Date(startsAt); const to = new Date(endsAt);
+    if (!(to > from)) { toast.push("End must be after start.", "error"); return; }
+    try {
+      setChecking(true);
+      const params = new URLSearchParams({ starts_at: from.toISOString(), ends_at: to.toISOString() });
+      const result = await apiRequest<{ available: boolean; conflicts: unknown[] }>(`/api/v1/facilities/facilities/${encodeURIComponent(facilityId)}/availability?${params}`);
+      setAvailability(result.available ? "Available for this time window" : `Not available: ${result.conflicts.length} conflicting reservations`);
+    } catch (error) { setAvailability(null); toast.push(error instanceof Error ? error.message : "Availability check failed", "error"); }
+    finally { setChecking(false); }
+  }
+
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [purpose, setPurpose] = useState("");
@@ -91,6 +108,12 @@ export function StudentFacilitiesPage() {
         title="Facility bookings"
         description="Browse bookable campus facilities and request an available time slot."
       />
+
+      <div className="my-4 space-y-3">
+        <Input label="Search facilities" value={facilitySearch} onChange={e => setFacilitySearch(e.target.value)} placeholder="Name, code, building, or type" />
+        <Button variant="secondary" onClick={() => void checkAvailability()} disabled={checking || !facilityId || !startsAt || !endsAt}>{checking ? "Checking…" : "Check slot availability"}</Button>
+        {availability && <p className="text-sm" role="status">{availability}</p>}
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_1.25fr]">
         <Card title="Request a booking">

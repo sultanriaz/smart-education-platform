@@ -12,8 +12,12 @@ describe("merged service response contracts", () => {
     ] }, score: 90 });
     expect(resource).toMatchObject({ id: "r1", title: "Notes", textContent: "Current notes", score: 90 });
   });
-  it("combines scheduling occurrence dates with time fields", () => {
-    expect(normalizeTimetableItem({ occurrence_date: "2026-10-08", starts_at: "09:00:00", ends_at: "10:00:00" }))
-      .toMatchObject({ startsAt: "2026-10-08T09:00:00", endsAt: "2026-10-08T10:00:00" });
+  it("normalizes UTC scheduling occurrence times", () => {
+    expect(normalizeTimetableItem({ occurrence_id: "occ-utc", occurrence_date: "2026-10-08", timezone_name: "UTC", starts_at: "09:00:00", ends_at: "10:00:00" }))
+      .toMatchObject({ id: "occ-utc", startsAt: "2026-10-08T09:00:00.000Z", endsAt: "2026-10-08T10:00:00.000Z" });
+  });
+  it("uses the scheduling IANA timezone rather than the browser timezone", () => {
+    expect(normalizeTimetableItem({ occurrence_id: "occ-pk", occurrence_date: "2026-10-08", timezone_name: "Asia/Karachi", starts_at: "09:00:00", ends_at: "10:00:00" }))
+      .toMatchObject({ id: "occ-pk", startsAt: "2026-10-08T04:00:00.000Z", endsAt: "2026-10-08T05:00:00.000Z" });
   });
 });

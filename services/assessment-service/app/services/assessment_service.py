@@ -110,8 +110,12 @@ class AssessmentService:
             raise NotFoundError("Quiz not found")
         if quiz.status != QuizStatus.DRAFT.value:
             raise ConflictError("Only draft quizzes can be modified")
-        if not self.repo.get_question(payload.question_id):
+        question = self.repo.get_question(payload.question_id)
+        if not question:
             raise NotFoundError("Question not found")
+        bank = self.repo.get_bank(question.bank_id)
+        if bank and bank.course_id is not None and bank.course_id != quiz.course_id:
+            raise ConflictError("Question bank belongs to another course")
         self.db.add(
             QuizQuestion(
                 quiz_id=quiz_id,
@@ -163,7 +167,12 @@ class AssessmentService:
         if quiz.status != QuizStatus.PUBLISHED.value:
             raise ConflictError("Quiz must be published before assignment")
         if self.academic:
-            self.academic.get_section(payload.section_id, bearer_token)
+            section = self.academic.get_section(payload.section_id, bearer_token)
+            section_course = section.get("course_id") if isinstance(section, dict) else getattr(section, "course_id", None)
+            if section_course is None:
+                raise ConflictError("Academic section response must identify its course")
+            if uuid.UUID(str(section_course)) != quiz.course_id:
+                raise ConflictError("Assessment course does not match the assigned section")
             if "teacher" in actor_roles and "admin" not in actor_roles:
                 if not self.academic.validate_teacher_assignment(
                     actor_id, payload.section_id, bearer_token
@@ -383,6 +392,10 @@ class AssessmentService:
                     "student_user_id": str(attempt.student_user_id),
                     "percent": attempt.percent,
                     "passed": attempt.passed,
+                    "quiz_id": str(quiz.id),
+                    "section_id": str(assignment.section_id),
+                    "course_id": str(quiz.course_id),
+                    "graded_at": attempt.graded_at.isoformat() if attempt.graded_at else None,
                 },
             )
 
@@ -454,6 +467,10 @@ class AssessmentService:
                     "student_user_id": str(attempt.student_user_id),
                     "percent": attempt.percent,
                     "passed": attempt.passed,
+                    "quiz_id": str(quiz.id),
+                    "section_id": str(assignment.section_id),
+                    "course_id": str(quiz.course_id),
+                    "graded_at": attempt.graded_at.isoformat() if attempt.graded_at else None,
                 },
             )
 

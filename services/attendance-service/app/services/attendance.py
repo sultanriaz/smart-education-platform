@@ -101,6 +101,15 @@ class AttendanceService:
         self._section_access(actor, payload.section_id)
         if not section.is_active:
             raise ConflictError("Attendance sessions require an active academic section.")
+        if payload.schedule_occurrence_id and (
+            self.settings.ENVIRONMENT.lower() in {"production", "prod", "staging"}
+            or self.settings.VERIFY_SCHEDULE_OCCURRENCES
+        ):
+            from app.clients.scheduling import verify_schedule_occurrence
+            verify_schedule_occurrence(
+                self.settings, payload.section_id, payload.session_date,
+                payload.schedule_occurrence_id, actor.access_token,
+            )
         with transaction(self.db):
             session = self.repo.add(
                 AttendanceSession(

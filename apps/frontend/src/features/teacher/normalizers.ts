@@ -1,3 +1,4 @@
+import { zonedInstant } from "../../lib/zoned-iso";
 import type {
   AttendanceEntry,
   AttendanceSession,
@@ -119,8 +120,8 @@ export function normalizeTimetable(value: unknown): TeacherTimetableItem {
     courseId: str(r.course_id) || undefined,
     roomId: nullableStr(r.room_id),
     date,
-    startsAt: date && startTime && !startTime.includes("T") ? `${date}T${startTime}` : startTime,
-    endsAt: date && endTime && !endTime.includes("T") ? `${date}T${endTime}` : endTime,
+    startsAt: date && startTime && !startTime.includes("T") ? zonedInstant(date, startTime, str(r.timezone_name) || "UTC") : startTime,
+    endsAt: date && endTime && !endTime.includes("T") ? zonedInstant(date, endTime, str(r.timezone_name) || "UTC") : endTime,
     title: str(r.course_title ?? r.course_code ?? r.title, "Scheduled class"),
     source: str(r.source) || undefined
   };

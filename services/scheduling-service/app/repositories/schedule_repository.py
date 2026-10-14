@@ -89,25 +89,44 @@ class ScheduleRepository:
         effective_to: date,
         exclude_schedule_id: uuid.UUID | None = None,
     ) -> list[ScheduleEntry]:
-        resource_conflict = or_(
-            ScheduleEntry.section_id == section_id,
-            ScheduleEntry.teacher_user_id == teacher_user_id,
-        )
-        if room_id is not None:
-            resource_conflict = or_(resource_conflict, ScheduleEntry.room_id == room_id)
-
-        stmt = select(ScheduleEntry).where(
-            ScheduleEntry.status == "ACTIVE",
-            ScheduleEntry.weekday == weekday,
-            ScheduleEntry.effective_from <= effective_to,
-            ScheduleEntry.effective_to >= effective_from,
-            ScheduleEntry.starts_at < ends_at,
-            ScheduleEntry.ends_at > starts_at,
-            resource_conflict,
+        stmt = (
+            select(ScheduleEntry)
+            .options(selectinload(ScheduleEntry.overrides))
+            .where(
+                ScheduleEntry.status == "ACTIVE",
+                ScheduleEntry.effective_from <= effective_to,
+                ScheduleEntry.effective_to >= effective_from,
+                ScheduleEntry.weekday == weekday,
+            )
         )
         if exclude_schedule_id:
             stmt = stmt.where(ScheduleEntry.id != exclude_schedule_id)
-        return list(self.db.scalars(stmt).all())
+        # The effective occurrence may use an overridden time or room.
+        candidates = list(self.db.scalars(stmt).unique().all())
+        from datetime import timedelta
+        day_offset = (weekday - effective_from.weekday()) % 7
+        current = effective_from + timedelta(days=day_offset)
+        conflicts = []
+        while current <= effective_to:
+            for candidate in candidates:
+                if not (candidate.effective_from <= current <= candidate.effective_to):
+                    continue
+                override = next((o for o in candidate.overrides if o.occurrence_date == current), None)
+                if override and override.kind == "CANCELLED":
+                    continue
+                old_start = override.starts_at if override and override.kind == "RESCHEDULED" else candidate.starts_at
+                old_end = override.ends_at if override and override.kind == "RESCHEDULED" else candidate.ends_at
+                old_room = (override.room_id if override and override.kind == "RESCHEDULED" and override.room_id is not None else candidate.room_id)
+                if old_start < ends_at and old_end > starts_at and (
+                    candidate.section_id == section_id
+                    or candidate.teacher_user_id == teacher_user_id
+                    or (room_id is not None and old_room == room_id)
+                ):
+                    conflicts.append(candidate)
+            if conflicts:
+                break
+            current += timedelta(days=7)
+        return conflicts
 
     def acquire_conflict_locks(
         self,

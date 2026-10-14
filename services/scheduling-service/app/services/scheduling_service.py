@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.clients.academic import AcademicClient
+from app.clients.facility import FacilityClient, get_facility_client
 from app.core.config import settings
 from app.core.errors import ConflictError, ForbiddenError, NotFoundError
 from app.domain.models import OutboxEvent, ScheduleAudit, ScheduleEntry, ScheduleOverride
@@ -36,16 +38,66 @@ def _schedule_dict(schedule: ScheduleEntry) -> dict:
 
 
 class SchedulingService:
-    def __init__(self, db: Session, academic: AcademicClient):
+    def __init__(self, db: Session, academic: AcademicClient, facility: FacilityClient | None = None):
         self.db = db
         self.repo = ScheduleRepository(db)
         self.outbox = OutboxRepository(db)
         self.academic = academic
+        self.facility = facility if facility is not None else get_facility_client()
+
+    def _desired_reservations(self, schedule: ScheduleEntry) -> list[dict]:
+        if schedule.status != "ACTIVE" or schedule.room_id is None:
+            return []
+        overrides = {o.occurrence_date: o for o in schedule.overrides}
+        current = schedule.effective_from
+        while current.weekday() != schedule.weekday:
+            current += timedelta(days=1)
+        slots = []
+        timezone = ZoneInfo(schedule.timezone_name)
+        while current <= schedule.effective_to:
+            override = overrides.get(current)
+            if not override or override.kind != "CANCELLED":
+                room = (override.room_id if override and override.kind == "RESCHEDULED"
+                        and override.room_id is not None else schedule.room_id)
+                start = override.starts_at if override and override.kind == "RESCHEDULED" else schedule.starts_at
+                end = override.ends_at if override and override.kind == "RESCHEDULED" else schedule.ends_at
+                if room is not None:
+                    slots.append({
+                        "occurrence_date": current.isoformat(), "facility_id": str(room),
+                        "starts_at": datetime.combine(current, start, tzinfo=timezone).astimezone(UTC).isoformat(),
+                        "ends_at": datetime.combine(current, end, tzinfo=timezone).astimezone(UTC).isoformat(),
+                    })
+            current += timedelta(days=7)
+            if len(slots) > settings.MAX_SCHEDULE_RESERVATION_OCCURRENCES:
+                raise ConflictError("Schedule has too many classroom occurrences")
+        return slots
+
+    def _sync_reservations(self, schedule: ScheduleEntry) -> None:
+        self.facility.replace_schedule(schedule.id, self._desired_reservations(schedule))
+
+    def _commit_with_reservations(self, schedule: ScheduleEntry, previous: list[dict] | None = None) -> None:
+        # The Facility authoritative conflict check must precede the schedule commit.
+        # All failures must roll back the uncommitted local schedule transaction.
+        synced = False
+        try:
+            self._sync_reservations(schedule)
+            synced = True
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            # A failed local commit can leave reservations held in Facility.
+            # Restore the previous state when possible (no distributed atomicity).
+            if synced and previous is not None:
+                try:
+                    self.facility.replace_schedule(schedule.id, previous)
+                except Exception:
+                    pass
+            raise
 
     def _require_teacher_assignment(
         self, principal: Principal, teacher_user_id: uuid.UUID, section_id: uuid.UUID
     ) -> None:
-        if principal.has_role("admin"):
+        if principal.can_manage_schedules:
             if not self.academic.validate_teacher_assignment(
                 teacher_user_id, section_id, principal.raw_token
             ):
@@ -97,7 +149,8 @@ class SchedulingService:
         section = self.academic.get_section(payload.section_id, principal.raw_token)
         teacher_user_id = payload.teacher_user_id or principal.user_id
         self._require_teacher_assignment(principal, teacher_user_id, payload.section_id)
-        self._validate_conflicts(
+        if payload.publish:
+            self._validate_conflicts(
             section_id=payload.section_id,
             teacher_user_id=teacher_user_id,
             room_id=payload.room_id,
@@ -120,13 +173,15 @@ class SchedulingService:
             effective_to=payload.effective_to,
             timezone_name=payload.timezone_name or settings.DEFAULT_TIMEZONE,
             created_by_user_id=principal.user_id,
+            status="ACTIVE" if payload.publish else "DRAFT",
         )
         try:
             self.repo.add_schedule(schedule)
+            self.db.flush()
             self.repo.add_audit(
                 ScheduleAudit(
                     schedule_id=schedule.id,
-                    action="schedule.created",
+                    action="schedule.created" if payload.publish else "schedule.drafted",
                     actor_user_id=principal.user_id,
                     before_data=None,
                     after_data=_schedule_dict(schedule),
@@ -136,11 +191,14 @@ class SchedulingService:
                 OutboxEvent(
                     aggregate_type="schedule",
                     aggregate_id=schedule.id,
-                    event_type="schedule.created",
+                    event_type="schedule.created" if payload.publish else "schedule.drafted",
                     payload=_schedule_dict(schedule),
                 )
             )
-            self.db.commit()
+            if payload.publish:
+                self._commit_with_reservations(schedule, [])
+            else:
+                self.db.commit()
         except IntegrityError as exc:
             self.db.rollback()
             raise ConflictError(
@@ -155,12 +213,13 @@ class SchedulingService:
         schedule = self.repo.get_schedule(schedule_id, for_update=True)
         if not schedule:
             raise NotFoundError("Schedule not found")
-        if schedule.status != "ACTIVE":
-            raise ConflictError("Only active schedules can be updated")
-        if not principal.has_role("admin") and schedule.teacher_user_id != principal.user_id:
+        if schedule.status not in {"ACTIVE", "DRAFT"}:
+            raise ConflictError("Only draft or active schedules can be updated")
+        if not principal.can_manage_schedules and schedule.teacher_user_id != principal.user_id:
             raise ForbiddenError("Teacher does not own this schedule")
 
         before = _schedule_dict(schedule)
+        previous_reservations = self._desired_reservations(schedule) if schedule.status == "ACTIVE" else []
         teacher_user_id = payload.teacher_user_id or schedule.teacher_user_id
         weekday = payload.weekday if payload.weekday is not None else schedule.weekday
         starts_at = payload.starts_at or schedule.starts_at
@@ -214,7 +273,48 @@ class SchedulingService:
                 payload=after,
             )
         )
-        self.db.commit()
+        if schedule.status == "ACTIVE":
+            self._commit_with_reservations(schedule, previous_reservations)
+        else:
+            self.db.commit()
+        self.db.refresh(schedule)
+        return schedule
+
+    def publish_schedule(self, schedule_id: uuid.UUID, principal: Principal) -> ScheduleEntry:
+        if not principal.can_manage_schedules:
+            raise ForbiddenError("Administrator role required to publish schedules")
+        schedule = self.repo.get_schedule(schedule_id, for_update=True)
+        if schedule is None:
+            raise NotFoundError("Schedule not found")
+        if schedule.status == "ACTIVE":
+            return schedule  # Repeat publishes do not double-emit.
+        if schedule.status != "DRAFT":
+            raise ConflictError("Only draft schedules can be published")
+        self._require_teacher_assignment(principal, schedule.teacher_user_id, schedule.section_id)
+        self._validate_conflicts(
+            section_id=schedule.section_id,
+            teacher_user_id=schedule.teacher_user_id,
+            room_id=schedule.room_id,
+            weekday=schedule.weekday,
+            starts_at=schedule.starts_at,
+            ends_at=schedule.ends_at,
+            effective_from=schedule.effective_from,
+            effective_to=schedule.effective_to,
+            exclude_schedule_id=schedule.id,
+        )
+        before = _schedule_dict(schedule)
+        schedule.status = "ACTIVE"
+        schedule.version += 1
+        after = _schedule_dict(schedule)
+        self.repo.add_audit(ScheduleAudit(
+            schedule_id=schedule.id, action="schedule.published",
+            actor_user_id=principal.user_id, before_data=before, after_data=after,
+        ))
+        self.outbox.add_event(OutboxEvent(
+            aggregate_type="schedule", aggregate_id=schedule.id,
+            event_type="schedule.published", payload=after,
+        ))
+        self._commit_with_reservations(schedule, [])
         self.db.refresh(schedule)
         return schedule
 
@@ -222,11 +322,12 @@ class SchedulingService:
         schedule = self.repo.get_schedule(schedule_id, for_update=True)
         if not schedule:
             raise NotFoundError("Schedule not found")
-        if not principal.has_role("admin") and schedule.teacher_user_id != principal.user_id:
+        if not principal.can_manage_schedules and schedule.teacher_user_id != principal.user_id:
             raise ForbiddenError("Teacher does not own this schedule")
         if schedule.status == "CANCELLED":
             return schedule
         before = _schedule_dict(schedule)
+        previous_reservations = self._desired_reservations(schedule)
         schedule.status = "CANCELLED"
         schedule.version += 1
         after = _schedule_dict(schedule)
@@ -247,7 +348,7 @@ class SchedulingService:
                 payload={**after, "reason": reason},
             )
         )
-        self.db.commit()
+        self._commit_with_reservations(schedule, previous_reservations)
         self.db.refresh(schedule)
         return schedule
 
@@ -259,13 +360,14 @@ class SchedulingService:
             raise NotFoundError("Schedule not found")
         if schedule.status != "ACTIVE":
             raise ConflictError("Cannot override a cancelled schedule")
-        if not principal.has_role("admin") and schedule.teacher_user_id != principal.user_id:
+        if not principal.can_manage_schedules and schedule.teacher_user_id != principal.user_id:
             raise ForbiddenError("Teacher does not own this schedule")
         if not (schedule.effective_from <= payload.occurrence_date <= schedule.effective_to):
             raise ConflictError("Occurrence date is outside the schedule effective range")
         if payload.occurrence_date.weekday() != schedule.weekday:
             raise ConflictError("Occurrence date does not match schedule weekday")
 
+        previous_reservations = self._desired_reservations(schedule)
         override = self.repo.get_override(schedule_id, payload.occurrence_date)
         if override is None:
             override = ScheduleOverride(
@@ -325,12 +427,16 @@ class SchedulingService:
                 event_type="schedule.occurrence_changed",
                 payload={
                     "schedule_id": str(schedule.id),
+                    "section_id": str(schedule.section_id),
+                    "teacher_user_id": str(schedule.teacher_user_id),
                     "occurrence_date": payload.occurrence_date.isoformat(),
                     "kind": payload.kind,
                 },
             )
         )
-        self.db.commit()
+        self.db.flush()
+        self.db.expire(schedule, ["overrides"])
+        self._commit_with_reservations(schedule, previous_reservations)
         self.db.refresh(override)
         return override
 
@@ -395,20 +501,20 @@ class SchedulingService:
                 section_ids = self.academic.list_student_section_ids(
                     principal.user_id, principal.raw_token
                 )
-            elif principal.has_role("teacher") and not principal.has_role("admin"):
+            elif principal.has_role("teacher") and not principal.can_manage_schedules:
                 teacher_filter = principal.user_id
         elif section_id:
             if principal.has_role("student") and not self.academic.validate_student_enrollment(
                 principal.user_id, section_id, principal.raw_token
             ):
                 raise ForbiddenError("Student is not enrolled in this section")
-            if principal.has_role("teacher") and not principal.has_role("admin"):
+            if principal.has_role("teacher") and not principal.can_manage_schedules:
                 if not self.academic.validate_teacher_assignment(
                     principal.user_id, section_id, principal.raw_token
                 ):
                     raise ForbiddenError("Teacher is not assigned to this section")
             section_ids = [section_id]
-        elif teacher_filter and not principal.has_role("admin"):
+        elif teacher_filter and not principal.can_manage_schedules:
             if principal.user_id != teacher_filter:
                 raise ForbiddenError("Teachers may only view their own timetable")
 

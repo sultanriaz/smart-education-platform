@@ -3,6 +3,9 @@ import { login } from "../helpers/auth";
 
 test("saved assessment resumes after reload and submits through the real API", async ({ page }) => {
   const assignmentId = process.env.SMARTEDU_E2E_ASSIGNMENT_ID;
+  if (process.env.CI && !assignmentId) {
+    throw new Error("CI must provision SMARTEDU_E2E_ASSIGNMENT_ID; skipping assessment coverage is forbidden");
+  }
   test.skip(!assignmentId, "Requires a disposable assigned demo assessment");
   await login(page, "student");
   await page.goto(`/app/student/assessments/${assignmentId}`);
@@ -21,6 +24,9 @@ test("saved assessment resumes after reload and submits through the real API", a
 test("timed assessment shows remaining time and automatically submits saved answers", async ({ page }) => {
   test.setTimeout(100_000);
   const assignmentId = process.env.SMARTEDU_E2E_TIMED_ASSIGNMENT_ID;
+  if (process.env.CI && !assignmentId) {
+    throw new Error("CI must provision SMARTEDU_E2E_TIMED_ASSIGNMENT_ID; skipping timer coverage is forbidden");
+  }
   test.skip(!assignmentId, "Requires a disposable one-minute demo assessment");
   await login(page, "student");
   await page.goto(`/app/student/assessments/${assignmentId}`);

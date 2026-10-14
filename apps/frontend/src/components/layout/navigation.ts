@@ -24,6 +24,7 @@ export const navigation: NavItem[] = [
 
   { label: "Users & RBAC", path: "/app/admin/users", roles: ["admin"] },
   { label: "Academic setup", path: "/app/admin/academic", roles: ["admin"] },
+  { label: "Attendance management", path: "/app/admin/attendance", roles: ["admin"] },
   { label: "Scheduling", path: "/app/admin/scheduling", roles: ["admin"] },
   { label: "Facilities", path: "/app/admin/facilities", roles: ["admin"] },
   { label: "Announcements", path: "/app/admin/notifications", roles: ["admin"] },

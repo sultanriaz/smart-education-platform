@@ -115,3 +115,38 @@ def test_audit_projection(ingestion, platform):
     assert len(rows) == 1
     assert rows[0].actor_user_id == actor
     assert rows[0].action == "user.updated"
+
+
+def test_public_course_and_notice_search_remain_available(ingestion, platform):
+    ingestion.ingest(event("platform.search.upsert", {
+        "document_type": "course", "document_id": "public-c1", "title": "Open Course Catalog",
+        "audience_roles": ["student", "teacher", "admin"],
+    }))
+    ingestion.ingest(event("platform.search.upsert", {
+        "document_type": "announcement", "document_id": "public-a1", "title": "Open Campus Notice",
+    }))
+    assert len(platform.search("Open Course", {"student"})) == 1
+    assert len(platform.search("Open Campus", {"teacher"})) == 1
+
+
+def test_restricted_section_search_is_hidden_and_pagination_does_not_mask_public(ingestion, platform):
+    for k in range(8):
+        ingestion.ingest(event("platform.search.upsert", {
+            "document_type": "learning_resource", "document_id": f"private-{k}",
+            "title": "Resourced Topic", "audience_roles": ["student"],
+            "metadata": {"section_id": "restricted-section", "allowed_user_ids": [str(uuid.uuid4())]},
+        }))
+    ingestion.ingest(event("platform.search.upsert", {
+        "document_type": "course", "document_id": "public-course", "title": "Resourced Topic Catalog",
+        "audience_roles": ["student"],
+    }))
+    results=platform.search("Resourced Topic", {"student"}, user_id=uuid.uuid4(), limit=1)
+    assert [result.document_id for result in results] == ["public-course"]
+
+
+def test_unscoped_resource_does_not_default_public(ingestion, platform):
+    ingestion.ingest(event("platform.search.upsert", {
+        "document_type": "learning_resource", "document_id": "resource-r1", "title": "Unscoped Private Lecture",
+        "audience_roles": ["student"],
+    }))
+    assert platform.search("Unscoped Private", {"student"}, user_id=uuid.uuid4()) == []

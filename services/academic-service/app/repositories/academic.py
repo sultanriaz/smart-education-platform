@@ -77,6 +77,36 @@ class AcademicRepository:
             query = query.where(Enrollment.id != exclude)
         return self.db.scalar(query)
 
+    def student_profile_any(self, user_id: UUID, *, lock: bool = False) -> StudentAcademicProfile | None:
+        query = select(StudentAcademicProfile).where(StudentAcademicProfile.external_user_id == user_id)
+        if lock:
+            query = query.with_for_update()
+        return self.db.scalar(query)
+
+    def teacher_profile_any(self, user_id: UUID, *, lock: bool = False) -> TeacherAcademicProfile | None:
+        query = select(TeacherAcademicProfile).where(TeacherAcademicProfile.external_user_id == user_id)
+        if lock:
+            query = query.with_for_update()
+        return self.db.scalar(query)
+
+    def active_enrollments_for_student(self, profile_id: UUID, *, lock: bool = False) -> list[Enrollment]:
+        query = select(Enrollment).where(
+            Enrollment.student_profile_id == profile_id,
+            Enrollment.status == EnrollmentStatus.ENROLLED,
+        ).order_by(Enrollment.id)
+        if lock:
+            query = query.with_for_update()
+        return list(self.db.scalars(query))
+
+    def active_assignments_for_teacher(self, profile_id: UUID, *, lock: bool = False) -> list[TeacherAssignment]:
+        query = select(TeacherAssignment).where(
+            TeacherAssignment.teacher_profile_id == profile_id,
+            TeacherAssignment.is_active.is_(True),
+        ).order_by(TeacherAssignment.id)
+        if lock:
+            query = query.with_for_update()
+        return list(self.db.scalars(query))
+
     def teacher_profile(self, user_id: UUID) -> TeacherAcademicProfile | None:
         return self.db.scalar(
             select(TeacherAcademicProfile).where(

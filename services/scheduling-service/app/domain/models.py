@@ -32,7 +32,7 @@ class ScheduleEntry(Base):
         CheckConstraint("weekday >= 0 AND weekday <= 6", name="ck_schedule_weekday"),
         CheckConstraint("starts_at < ends_at", name="ck_schedule_time_order"),
         CheckConstraint("effective_from <= effective_to", name="ck_schedule_date_order"),
-        CheckConstraint("status IN ('ACTIVE', 'CANCELLED')", name="ck_schedule_status"),
+        CheckConstraint("status IN ('DRAFT', 'ACTIVE', 'CANCELLED')", name="ck_schedule_status"),
         Index(
             "ix_schedule_section_window", "section_id", "weekday", "effective_from", "effective_to"
         ),

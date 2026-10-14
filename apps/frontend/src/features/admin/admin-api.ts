@@ -153,6 +153,7 @@ export async function createProgram(input: {
   code: string;
   name: string;
   department_id: string;
+  duration_semesters: number;
 }): Promise<Program> {
   return program(
     await apiRequest<unknown>("/api/v1/academic/programs", {
@@ -167,6 +168,7 @@ export async function listAcademicYears(): Promise<AcademicYear[]> {
 }
 
 export async function createAcademicYear(input: {
+  code: string;
   name: string;
   starts_on: string;
   ends_on: string;
@@ -186,6 +188,7 @@ export async function listSemesters(): Promise<Semester[]> {
 export async function createSemester(input: {
   name: string;
   academic_year_id: string;
+  number: number;
   starts_on: string;
   ends_on: string;
 }): Promise<Semester> {
@@ -204,8 +207,9 @@ export async function listCourses(): Promise<Course[]> {
 export async function createCourse(input: {
   code: string;
   title: string;
-  department_id?: string;
-  credit_hours?: number;
+  program_id: string;
+  credits: number;
+  semester_number: number;
 }): Promise<Course> {
   return course(
     await apiRequest<unknown>("/api/v1/academic/courses", {
@@ -220,10 +224,9 @@ export async function listSections(): Promise<Section[]> {
 }
 
 export async function createSection(input: {
-  name: string;
+  code: string;
   course_id: string;
   semester_id: string;
-  program_id?: string;
   capacity: number;
 }): Promise<Section> {
   return section(
@@ -239,10 +242,11 @@ export async function listStudentProfiles(): Promise<StudentProfile[]> {
 }
 
 export async function createStudentProfile(input: {
-  identity_user_id: string;
-  student_id: string;
-  program_id?: string;
-  batch?: string;
+  external_user_id: string;
+  student_number: string;
+  program_id: string;
+  admission_year_id: string;
+  current_semester: number;
 }): Promise<StudentProfile> {
   return studentProfile(
     await apiRequest<unknown>("/api/v1/academic/student-profiles", {
@@ -257,9 +261,10 @@ export async function listTeacherProfiles(): Promise<TeacherProfile[]> {
 }
 
 export async function createTeacherProfile(input: {
-  identity_user_id: string;
-  employee_id: string;
-  department_id?: string;
+  external_user_id: string;
+  employee_number: string;
+  department_id: string;
+  designation: string;
 }): Promise<TeacherProfile> {
   return teacherProfile(
     await apiRequest<unknown>("/api/v1/academic/teacher-profiles", {
@@ -274,7 +279,7 @@ export async function listEnrollments(): Promise<Enrollment[]> {
 }
 
 export async function createEnrollment(input: {
-  student_user_id: string;
+  student_profile_id: string;
   section_id: string;
 }): Promise<Enrollment> {
   return enrollment(
@@ -290,7 +295,7 @@ export async function listTeachingAssignments(): Promise<TeachingAssignment[]> {
 }
 
 export async function createTeachingAssignment(input: {
-  teacher_user_id: string;
+  teacher_profile_id: string;
   section_id: string;
 }): Promise<TeachingAssignment> {
   return teachingAssignment(
@@ -316,6 +321,7 @@ export async function createSchedule(input: {
   effective_from: string;
   effective_to: string;
   timezone_name?: string;
+  publish?: boolean;
 }): Promise<Schedule> {
   return schedule(
     await apiRequest<unknown>("/api/v1/scheduling/schedules", {
@@ -352,6 +358,32 @@ export async function createScheduleOverride(
     method: "POST",
     body: JSON.stringify(input)
   });
+}
+
+export async function updateSchedule(id: string, changes: Partial<{
+  weekday: number;
+  starts_at: string;
+  ends_at: string;
+  effective_from: string;
+  effective_to: string;
+  room_id: string | null;
+  teacher_user_id: string | null;
+  timezone_name: string;
+}>): Promise<Schedule> {
+  return schedule(await apiRequest<unknown>(`/api/v1/scheduling/schedules/${encodeURIComponent(id)}`, {
+    method: "PATCH", body: JSON.stringify(changes)
+  }));
+}
+
+export async function publishSchedule(id: string): Promise<Schedule> {
+  return schedule(await apiRequest<unknown>(`/api/v1/scheduling/schedules/${encodeURIComponent(id)}/publish`, {
+    method: "POST"
+  }));
+}
+
+export async function getScheduleHistory(id: string): Promise<Array<Record<string, unknown>>> {
+  const result = await apiRequest<unknown>(`/api/v1/scheduling/schedules/${encodeURIComponent(id)}/history`);
+  return list(result).map((entry) => entry as Record<string, unknown>);
 }
 
 // Facility

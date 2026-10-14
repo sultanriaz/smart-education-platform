@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reporting-service-worker
+  namespace: smartedu-staging
+  labels:
+    app.kubernetes.io/name: reporting-service-worker
+    smartedu.io/component: reporting-service-worker
+    smartedu.io/tier: worker
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      smartedu.io/component: reporting-service-worker
+  template:
+    metadata:
+      labels:
+        smartedu.io/component: reporting-service-worker
+        smartedu.io/tier: worker
+    spec:
+      serviceAccountName: reporting-service
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: worker
+        image: smartedu.local/reporting-service:bootstrap
+        imagePullPolicy: IfNotPresent
+        command:
+        - python
+        - -m
+        - app.event_worker
+        envFrom:
+        - configMapRef:
+            name: smartedu-staging-runtime
+        - secretRef:
+            name: reporting-service-secrets
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 128Mi

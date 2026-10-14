@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError
+from app.core.exceptions import ConflictError, DomainError, ForbiddenError, NotFoundError
 from app.db.base import Base
 from app.domain.models import (
     AcademicYear,
@@ -39,9 +39,16 @@ IMMUTABLE_FIELDS: dict[type[Base], tuple[str, ...]] = {
 
 
 class AcademicService:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, *, identity_accounts=None) -> None:
         self.db = db
         self.repo = AcademicRepository(db)
+        # The HTTP application always injects this checker. Standalone domain tests
+        # may omit it to exercise academic-only invariants without network access.
+        self.identity_accounts = identity_accounts
+
+    def _require_identity(self, user_id: UUID, role: str) -> None:
+        if self.identity_accounts is not None:
+            self.identity_accounts.require_eligible(user_id, role)
 
     def get(self, model: type[Model], record_id: UUID, *, lock: bool = False) -> Model:
         record = self.repo.get(model, record_id, lock=lock)
@@ -75,6 +82,11 @@ class AcademicService:
         return record
 
     def delete(self, model: type[Base], record_id: UUID) -> None:
+        # Preserve enrollment history and notify downstream projections.
+        # The DELETE API remains backward-compatible (204), but enrollment is dropped.
+        if model is Enrollment:
+            self.set_enrollment_status(record_id, EnrollmentStatus.DROPPED)
+            return
         with transaction(self.db):
             # All enrollment mutations acquire the section lock before the student lock.
             if model is Enrollment:
@@ -122,6 +134,8 @@ class AcademicService:
             if record_id and values["capacity"] < self.repo.enrollment_count(record_id):
                 raise ConflictError("Section capacity cannot be below its active enrollment count.")
         elif model is StudentAcademicProfile:
+            if record_id is None or values["is_active"]:
+                self._require_identity(values["external_user_id"], "student")
             program = self.get(Program, values["program_id"], lock=True)
             self.get(AcademicYear, values["admission_year_id"])
             if values["current_semester"] > program.duration_semesters:
@@ -140,6 +154,8 @@ class AcademicService:
                         "Resolve active enrollments before advancing or deactivating."
                     )
         elif model is TeacherAcademicProfile:
+            if record_id is None or values["is_active"]:
+                self._require_identity(values["external_user_id"], "teacher")
             self.get(Department, values["department_id"])
             if (
                 record_id
@@ -179,12 +195,48 @@ class AcademicService:
             )
         )
 
+    def reconcile_identity(self, user_id: UUID) -> dict[str, int]:
+        """Admin-triggered, idempotent repair after Identity role/deactivation changes.
+
+        Historical enrollments are never deleted. Ineligible active enrollments
+        become DROPPED with owner outbox events; teacher assignments are disabled.
+        Recovery/reactivation remains a deliberate academic administration action.
+        """
+        if self.identity_accounts is None:
+            raise DomainError(503, "Identity reconciliation requires an owner account checker.")
+        account = self.identity_accounts.lookup(user_id)
+        roles = {name.lower() for name in account.roles} if account and account.is_active else set()
+        result = {"student_profiles_disabled": 0, "teacher_profiles_disabled": 0,
+                  "enrollments_dropped": 0, "assignments_disabled": 0}
+        with transaction(self.db):
+            student = self.repo.student_profile_any(user_id, lock=True)
+            teacher = self.repo.teacher_profile_any(user_id, lock=True)
+            if student is not None and "student" not in roles:
+                if student.is_active:
+                    student.is_active = False
+                    result["student_profiles_disabled"] += 1
+                for enrollment in self.repo.active_enrollments_for_student(student.id, lock=True):
+                    enrollment.status = EnrollmentStatus.DROPPED
+                    self.db.flush()
+                    self._enrollment_event("academic.enrollment_dropped", enrollment, student)
+                    result["enrollments_dropped"] += 1
+            if teacher is not None and "teacher" not in roles:
+                if teacher.is_active:
+                    teacher.is_active = False
+                    result["teacher_profiles_disabled"] += 1
+                for assignment in self.repo.active_assignments_for_teacher(teacher.id, lock=True):
+                    assignment.is_active = False
+                    result["assignments_disabled"] += 1
+            self.db.flush()
+        return result
+
     def _validate_enrollment(
         self, student: StudentAcademicProfile, section: Section, *, exclude: UUID | None = None
     ) -> None:
         course = self.get(Course, section.course_id)
         if not student.is_active or not section.is_active:
             raise ConflictError("Only active students can enroll in active sections.")
+        self._require_identity(student.external_user_id, "student")
         if student.program_id != course.program_id:
             raise ConflictError("Student and course must belong to the same program.")
         if student.current_semester != course.semester_number:
@@ -243,6 +295,7 @@ class AcademicService:
         program = self.get(Program, course.program_id)
         if not teacher.is_active or not section.is_active:
             raise ConflictError("Only active teachers can be assigned to active sections.")
+        self._require_identity(teacher.external_user_id, "teacher")
         if teacher.department_id != program.department_id:
             raise ConflictError("Teacher and course must belong to the same department.")
 

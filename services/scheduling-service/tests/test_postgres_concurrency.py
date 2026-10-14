@@ -15,6 +15,7 @@ from app.db.base import Base
 from app.schemas.schedule import ScheduleCreate
 from app.security.auth import Principal
 from app.services.scheduling_service import SchedulingService
+from tests.conftest import FakeFacilityClient
 
 POSTGRES_TEST_URL = os.getenv("POSTGRES_TEST_URL")
 pytestmark = pytest.mark.skipif(
@@ -65,13 +66,14 @@ def test_concurrent_conflicting_schedule_has_single_winner(pg_session_factory):
     barrier = threading.Barrier(2)
     outcomes: list[str] = []
     lock = threading.Lock()
+    facility = FakeFacilityClient()
 
     def worker():
         db = pg_session_factory()
         try:
             barrier.wait()
             try:
-                SchedulingService(db, AcademicStub()).create_schedule(payload, principal)
+                SchedulingService(db, AcademicStub(), facility).create_schedule(payload, principal)
                 result = "created"
             except ConflictError:
                 result = "conflict"

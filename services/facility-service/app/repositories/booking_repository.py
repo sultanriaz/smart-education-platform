@@ -25,8 +25,11 @@ class BookingRepository:
         self.db.add(booking)
         self.db.flush()
 
-    def get_booking(self, booking_id: uuid.UUID) -> Booking | None:
-        return self.db.get(Booking, booking_id)
+    def get_booking(self, booking_id: uuid.UUID, *, for_update: bool = False) -> Booking | None:
+        stmt = select(Booking).where(Booking.id == booking_id)
+        if for_update:
+            stmt = stmt.with_for_update(of=Booking)
+        return self.db.scalar(stmt)
 
     def list_bookings(
         self,

@@ -15,6 +15,7 @@ const ProfilePage = lazy(() => import("../pages/ProfilePage").then(module => ({ 
 const RegisterPage = lazy(() => import("../pages/RegisterPage").then(module => ({ default: module.RegisterPage })));
 const RoleHomeRedirect = lazy(() => import("../pages/RoleHomeRedirect").then(module => ({ default: module.RoleHomeRedirect })));
 
+const AdminAttendancePage = lazy(() => import("../pages/admin/AdminAttendancePage").then(module => ({ default: module.AdminAttendancePage })));
 const AdminAcademicPage = lazy(() => import("../pages/admin/AdminAcademicPage").then(module => ({ default: module.AdminAcademicPage })));
 const AdminDashboardPage = lazy(() => import("../pages/admin/AdminDashboardPage").then(module => ({ default: module.AdminDashboardPage })));
 const AdminFacilitiesPage = lazy(() => import("../pages/admin/AdminFacilitiesPage").then(module => ({ default: module.AdminFacilitiesPage })));
@@ -92,6 +93,7 @@ export function AppRouter() {
             <Route path="admin" element={<AdminDashboardPage />} />
             <Route path="admin/users" element={<AdminUsersPage />} />
             <Route path="admin/academic" element={<AdminAcademicPage />} />
+            <Route path="admin/attendance" element={<AdminAttendancePage />} />
             <Route path="admin/scheduling" element={<AdminSchedulingPage />} />
             <Route path="admin/facilities" element={<AdminFacilitiesPage />} />
             <Route path="admin/notifications" element={<AdminNotificationsPage />} />

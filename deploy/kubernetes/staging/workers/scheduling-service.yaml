@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduling-service-worker
+  namespace: smartedu-staging
+  labels:
+    app.kubernetes.io/name: scheduling-service-worker
+    smartedu.io/component: scheduling-service-worker
+    smartedu.io/tier: worker
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      smartedu.io/component: scheduling-service-worker
+  template:
+    metadata:
+      labels:
+        smartedu.io/component: scheduling-service-worker
+        smartedu.io/tier: worker
+    spec:
+      serviceAccountName: scheduling-service
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: worker
+        image: smartedu.local/scheduling-service:bootstrap
+        imagePullPolicy: IfNotPresent
+        command:
+        - python
+        - -m
+        - app.event_worker
+        envFrom:
+        - configMapRef:
+            name: smartedu-staging-runtime
+        - secretRef:
+            name: scheduling-service-secrets
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir:
+          sizeLimit: 128Mi

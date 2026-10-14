@@ -16,7 +16,7 @@ from app.schemas.booking import (
     BookingOut,
 )
 from app.security.auth import Principal, get_current_principal
-from app.security.authorization import require_roles
+from app.security.authorization import require_roles, require_permission
 from app.services.booking_service import BookingService
 
 router = APIRouter(prefix="/bookings", tags=["Bookings"])
@@ -40,7 +40,7 @@ def list_bookings(
     actor: Principal = Depends(get_current_principal),
     db: Session = Depends(get_db),
 ):
-    requester = None if actor.has_role("admin") else actor.user_id
+    requester = None if actor.can_review_bookings else actor.user_id
     return BookingRepository(db).list_bookings(
         offset=offset,
         limit=limit,
@@ -63,7 +63,7 @@ def get_booking(
 def approve_booking(
     booking_id: uuid.UUID,
     payload: BookingDecision,
-    actor: Principal = Depends(require_roles("admin")),
+    actor: Principal = Depends(require_permission("facility.bookings.review")),
     service: BookingService = Depends(booking_service),
 ):
     return service.approve(booking_id, payload, actor)
@@ -73,7 +73,7 @@ def approve_booking(
 def reject_booking(
     booking_id: uuid.UUID,
     payload: BookingDecision,
-    actor: Principal = Depends(require_roles("admin")),
+    actor: Principal = Depends(require_permission("facility.bookings.review")),
     service: BookingService = Depends(booking_service),
 ):
     return service.reject(booking_id, payload, actor)

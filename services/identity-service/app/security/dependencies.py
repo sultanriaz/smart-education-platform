@@ -32,6 +32,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = UserRepository(db).get_by_id(user_id)
     if user is None or not user.is_active:
         raise credentials_error
+    if int(payload.get("auth_version", 0)) != user.auth_version:
+        raise credentials_error
+    if set(str(role).lower() for role in payload.get("roles", [])) != {
+        role.name.lower() for role in user.roles
+    } or set(payload.get("permissions", [])) != {
+        permission.code for role in user.roles for permission in role.permissions
+    }:
+        raise credentials_error
     return user
 
 
@@ -46,4 +54,19 @@ def require_roles(*required_roles: str) -> Callable:
             )
         return user
 
+    return dependency
+
+
+def require_permission(code: str) -> Callable:
+    """Enforce a concrete permission, allowing the built-in admin role for compatibility.
+
+    Custom roles receive ONLY their explicitly assigned permission codes.
+    """
+    def dependency(user=Depends(get_current_user)):
+        if any(role.name.lower() == "admin" for role in user.roles):
+            return user
+        granted = {permission.code for role in user.roles for permission in role.permissions}
+        if code not in granted:
+            raise HTTPException(status_code=403, detail="Insufficient permissions.")
+        return user
     return dependency

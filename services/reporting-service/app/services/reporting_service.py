@@ -45,6 +45,56 @@ class ReportingService:
                 return "duplicate"
             raise
 
+    def academic_report(
+        self, *, student_user_id: uuid.UUID | None = None,
+        section_id: uuid.UUID | None = None,
+        course_id: uuid.UUID | None = None,
+    ) -> dict:
+        """Owner-fed projection view. Caller MUST enforce audience before invocation.
+
+        Never fetch an unscoped report from a Student/Teacher endpoint; this
+        function is an aggregation layer, not an authorization policy.
+        """
+        if not any([student_user_id, section_id, course_id]):
+            raise DomainError("Academic report requires a student, section or course scope")
+        attendance = self._attendance_dicts()
+        assessment = self._assessment_dicts()
+        enrollments = self._enrollment_dicts()
+
+        def allowed(row):
+            if student_user_id is not None and row.get("student_user_id") != str(student_user_id):
+                return False
+            if section_id is not None and row.get("section_id") != str(section_id):
+                return False
+            if course_id is not None and row.get("course_id") != str(course_id):
+                return False
+            return True
+
+        attendance = [r for r in attendance if allowed(r)]
+        assessment = [r for r in assessment if allowed(r)]
+        # Enrollment projection doesn't carry a course_id. Do not count
+        # program members as course members, as that would inflate reports.
+        enrollments = [r for r in enrollments if allowed(r)] if course_id is None else []
+        marked = [r for r in attendance if r["status"] in {"PRESENT", "ABSENT", "LATE"}]
+        present = sum(r["status"] in {"PRESENT", "LATE"} for r in marked)
+        grades = [r["percent"] for r in assessment if r["percent"] is not None]
+        return {
+            "scope": {
+                "student_user_id": str(student_user_id) if student_user_id else None,
+                "section_id": str(section_id) if section_id else None,
+                "course_id": str(course_id) if course_id else None,
+            },
+            "source": "asynchronous_reporting_projections",
+            "active_enrollments": sum(row["status"] == "ACTIVE" for row in enrollments),
+            "attendance_marked": len(marked),
+            "attendance_percent": round(present * 100 / len(marked), 2) if marked else None,
+            "graded_attempts": len(grades),
+            "assessment_average_percent": round(sum(grades) / len(grades), 2) if grades else None,
+            "attendance": attendance,
+            "assessment": assessment,
+            "enrollments": enrollments,
+        }
+
     def overview(self) -> dict:
         return self.repo.overview()
 

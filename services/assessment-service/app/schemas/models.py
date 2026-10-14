@@ -13,7 +13,7 @@ class ChoiceCreate(BaseModel):
 
 class QuestionCreate(BaseModel):
     bank_id: uuid.UUID
-    question_type: str
+    question_type: str = Field(pattern=r"^(MCQ_SINGLE|TRUE_FALSE|SHORT_TEXT)$")
     prompt: str = Field(min_length=1)
     points: float = Field(default=1.0, gt=0)
     correct_text: str | None = None
@@ -27,6 +27,8 @@ class QuestionCreate(BaseModel):
                 raise ValueError("Objective questions require at least two choices.")
             if sum(1 for c in self.choices if c.is_correct) != 1:
                 raise ValueError("Objective questions require exactly one correct choice.")
+        if self.question_type == "SHORT_TEXT" and self.choices:
+            raise ValueError("Written questions cannot have objective choices.")
         return self
 
 
@@ -57,6 +59,10 @@ class AssignmentCreate(BaseModel):
 
     @model_validator(mode="after")
     def dates(self):
+        if self.opens_at.tzinfo is None or self.opens_at.utcoffset() is None:
+            raise ValueError("opens_at must include a timezone offset")
+        if self.due_at.tzinfo is None or self.due_at.utcoffset() is None:
+            raise ValueError("due_at must include a timezone offset")
         if self.due_at <= self.opens_at:
             raise ValueError("due_at must be after opens_at")
         return self

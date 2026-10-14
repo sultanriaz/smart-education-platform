@@ -4,7 +4,18 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
-class UserRegister(BaseModel):
+class NonEmptyName(BaseModel):
+    @field_validator("full_name", check_fields=False)
+    @classmethod
+    def trimmed_name(cls, value: str | None) -> str | None:
+        if value is not None:
+            value = value.strip()
+            if len(value) < 2:
+                raise ValueError("Full name must contain at least two non-whitespace characters")
+        return value
+
+
+class UserRegister(NonEmptyName):
     email: EmailStr
     full_name: str = Field(min_length=2, max_length=160)
     password: str = Field(min_length=8, max_length=128)
@@ -14,11 +25,11 @@ class AdminUserCreate(UserRegister):
     role: str = "student"
 
 
-class UserSelfUpdate(BaseModel):
+class UserSelfUpdate(NonEmptyName):
     full_name: str | None = Field(default=None, min_length=2, max_length=160)
 
 
-class AdminUserUpdate(BaseModel):
+class AdminUserUpdate(NonEmptyName):
     full_name: str | None = Field(default=None, min_length=2, max_length=160)
     is_active: bool | None = None
     is_verified: bool | None = None

@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     API_V1_PREFIX: str = "/api/v1"
     DATABASE_URL: str = "postgresql+psycopg://attendance:attendance@localhost:5436/attendance_db"
+    SCHEDULING_SERVICE_BASE_URL: str = "http://localhost:8004"
+    SCHEDULING_SERVICE_TIMEOUT_SECONDS: float = Field(default=4, gt=0, le=30)
+    VERIFY_SCHEDULE_OCCURRENCES: bool = False
     ACADEMIC_SERVICE_BASE_URL: str = "http://localhost:8002"
     ACADEMIC_SERVICE_TIMEOUT_SECONDS: float = Field(default=5, gt=0, le=30)
     ACADEMIC_SERVICE_MAX_PAGES: int = Field(default=100, ge=1, le=1000)

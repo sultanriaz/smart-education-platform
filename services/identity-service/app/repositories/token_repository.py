@@ -17,6 +17,15 @@ class TokenRepository:
         self.db.flush()
         return token
 
+    def revoke_user(self, user_id: uuid.UUID) -> None:
+        now = datetime.now(UTC)
+        self.db.execute(
+            update(RefreshToken)
+            .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
+            .values(revoked_at=now)
+            .execution_options(synchronize_session=False)
+        )
+
     def consume(self, *, jti: str, user_id: uuid.UUID) -> bool:
         """Only one transaction may consume a live token belonging to this subject."""
         now = datetime.now(UTC)

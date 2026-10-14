@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     JWKS_CACHE_SECONDS: int = 300
 
     INTERNAL_EVENT_TOKEN: str = "change-me"
+    ACADEMIC_SERVICE_BASE_URL: str = "http://localhost:8002"
+    ACADEMIC_SERVICE_TIMEOUT_SECONDS: float = 5.0
 
     REPORTING_TIMEZONE: str = "UTC"
     DEFAULT_PAGE_SIZE: int = 50

@@ -21,7 +21,7 @@ from app.schemas.facility import (
     FacilityUpdate,
 )
 from app.security.auth import Principal, get_current_principal
-from app.security.authorization import require_roles
+from app.security.authorization import require_permission
 from app.services.availability_service import AvailabilityService
 from app.services.facility_service import FacilityService
 
@@ -55,7 +55,7 @@ def list_facilities(
 @router.post("", response_model=FacilityOut, status_code=status.HTTP_201_CREATED)
 def create_facility(
     payload: FacilityCreate,
-    actor: Principal = Depends(require_roles("admin")),
+    actor: Principal = Depends(require_permission("facility.facilities.manage")),
     service: FacilityService = Depends(facility_service),
 ):
     return service.create_facility(payload, actor)
@@ -74,7 +74,7 @@ def get_facility(
 def update_facility(
     facility_id: uuid.UUID,
     payload: FacilityUpdate,
-    actor: Principal = Depends(require_roles("admin")),
+    actor: Principal = Depends(require_permission("facility.facilities.manage")),
     service: FacilityService = Depends(facility_service),
 ):
     return service.update_facility(facility_id, payload, actor)
@@ -95,7 +95,7 @@ def availability(
 def assign_equipment(
     facility_id: uuid.UUID,
     payload: FacilityEquipmentAssign,
-    _actor: Principal = Depends(require_roles("admin")),
+    _actor: Principal = Depends(require_permission("facility.facilities.manage")),
     service: FacilityService = Depends(facility_service),
     db: Session = Depends(get_db),
 ):
@@ -122,7 +122,7 @@ def list_equipment(
 @equipment_router.post("", response_model=EquipmentOut, status_code=status.HTTP_201_CREATED)
 def create_equipment(
     payload: EquipmentCreate,
-    _actor: Principal = Depends(require_roles("admin")),
+    _actor: Principal = Depends(require_permission("facility.facilities.manage")),
     service: FacilityService = Depends(facility_service),
 ):
     return service.create_equipment(payload)

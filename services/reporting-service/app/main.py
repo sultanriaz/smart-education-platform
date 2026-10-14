@@ -1,4 +1,5 @@
 from __future__ import annotations
+from smartedu_security.live_access import LiveAccessMiddleware
 
 from fastapi import FastAPI
 
@@ -11,5 +12,7 @@ app = FastAPI(
     version="0.1.0",
     description="Cross-service reporting projections and administrative analytics.",
 )
+
+app.add_middleware(LiveAccessMiddleware)
 app.include_router(health_router)
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)

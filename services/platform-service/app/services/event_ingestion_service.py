@@ -10,6 +10,22 @@ from app.repositories.platform_repository import PlatformRepository
 from app.schemas.events import InternalEventIn
 
 
+_SENSITIVE_FIELDS = {"password", "password_hash", "token", "access_token", "refresh_token", "secret", "api_key", "authorization", "cookie", "private_key", "credential", "credentials"}
+
+def redact_audit_metadata(value, *, depth: int = 0):
+    """Fail-closed bounded redaction before persisting central audit metadata."""
+    if depth > 12:
+        return "[REDACTED: nested data]"
+    if isinstance(value, dict):
+        return {str(k): ("[REDACTED]" if any(part in str(k).lower() for part in _SENSITIVE_FIELDS)
+            else redact_audit_metadata(v, depth=depth + 1)) for k, v in value.items()}
+    if isinstance(value, list):
+        return [redact_audit_metadata(v, depth=depth + 1) for v in value[:500]]
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    return "[REDACTED: unsupported type]"
+
+
 class EventIngestionService:
     def __init__(self, db: Session):
         self.db = db
@@ -23,7 +39,7 @@ class EventIngestionService:
             event_id=payload.event_id,
             source_service=payload.source_service,
             event_type=payload.event_type,
-            payload=payload.payload,
+            payload=redact_audit_metadata(payload.payload),
             occurred_at=payload.effective_occurred_at(),
         )
         self.db.add(event)
@@ -58,7 +74,7 @@ class EventIngestionService:
                 entity_type=data.get("entity_type"),
                 entity_id=str(data["entity_id"]) if data.get("entity_id") is not None else None,
                 correlation_id=data.get("correlation_id"),
-                metadata_json=data.get("metadata", {}),
+                metadata_json=redact_audit_metadata(data.get("metadata", {})),
                 occurred_at=event.effective_occurred_at(),
             )
         )
@@ -95,8 +111,8 @@ class EventIngestionService:
             "title": title,
             "body": str(data.get("body") or ""),
             "url_path": data.get("url_path"),
-            "metadata_json": data.get("metadata", {}),
-            "audience_roles": data.get("audience_roles", ["admin", "teacher", "student"]),
+            "metadata_json": redact_audit_metadata(data.get("metadata", {})),
+            "audience_roles": data.get("audience_roles") or (["student", "teacher", "admin"] if document_type == "announcement" and not data.get("metadata") else ["admin"]),
             "is_active": bool(data.get("is_active", True)),
         }
 

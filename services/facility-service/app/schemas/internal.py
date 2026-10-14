@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -33,3 +33,33 @@ class ExternalReservationOut(BaseModel):
     metadata: dict = Field(alias="metadata_json")
     created_at: datetime
     cancelled_at: datetime | None
+
+
+class ScheduleOccurrenceReservation(BaseModel):
+    occurrence_date: date
+    facility_id: uuid.UUID
+    starts_at: datetime
+    ends_at: datetime
+
+    @model_validator(mode="after")
+    def valid_interval(self):
+        if self.ends_at <= self.starts_at or self.starts_at.utcoffset() is None or self.ends_at.utcoffset() is None:
+            raise ValueError("Schedule reservation must have an aware, positive interval")
+        return self
+
+
+class ScheduleReservationsReplace(BaseModel):
+    occurrences: list[ScheduleOccurrenceReservation] = Field(max_length=520)
+
+    @model_validator(mode="after")
+    def unique_dates(self):
+        dates = [item.occurrence_date for item in self.occurrences]
+        if len(dates) != len(set(dates)):
+            raise ValueError("Duplicate occurrence dates")
+        return self
+
+
+class ScheduleReservationsResult(BaseModel):
+    schedule_id: uuid.UUID
+    active_count: int
+    cancelled_count: int

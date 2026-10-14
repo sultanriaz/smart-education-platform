@@ -95,12 +95,12 @@ class BookingService:
         booking = self.bookings.get_booking(booking_id)
         if not booking:
             raise NotFoundError("Booking not found", code="booking_not_found")
-        if not actor.has_role("admin") and booking.requester_user_id != actor.user_id:
+        if not actor.can_review_bookings and booking.requester_user_id != actor.user_id:
             raise ForbiddenError("You cannot access this booking", code="booking_forbidden")
         return booking
 
     def approve(self, booking_id: uuid.UUID, payload: BookingDecision, actor: Principal) -> Booking:
-        booking = self.bookings.get_booking(booking_id)
+        booking = self.bookings.get_booking(booking_id, for_update=True)
         if not booking:
             raise NotFoundError("Booking not found", code="booking_not_found")
         if booking.status != "PENDING":
@@ -144,7 +144,7 @@ class BookingService:
             raise
 
     def reject(self, booking_id: uuid.UUID, payload: BookingDecision, actor: Principal) -> Booking:
-        booking = self.bookings.get_booking(booking_id)
+        booking = self.bookings.get_booking(booking_id, for_update=True)
         if not booking:
             raise NotFoundError("Booking not found", code="booking_not_found")
         if booking.status != "PENDING":
@@ -171,10 +171,10 @@ class BookingService:
             raise
 
     def cancel(self, booking_id: uuid.UUID, payload: BookingCancel, actor: Principal) -> Booking:
-        booking = self.bookings.get_booking(booking_id)
+        booking = self.bookings.get_booking(booking_id, for_update=True)
         if not booking:
             raise NotFoundError("Booking not found", code="booking_not_found")
-        if not actor.has_role("admin") and booking.requester_user_id != actor.user_id:
+        if not actor.can_review_bookings and booking.requester_user_id != actor.user_id:
             raise ForbiddenError("You cannot cancel this booking", code="booking_forbidden")
         if booking.status not in {"PENDING", "APPROVED"}:
             raise ConflictError(

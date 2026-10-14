@@ -1,0 +1,12 @@
+# EXAMPLE ONLY. Do not commit actual private keys. Provision this Secret with an external
+# secret manager before deployment. It is referenced as a read-only volume by Identity API and worker.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: identity-service-signing-key
+  namespace: smartedu
+  annotations:
+    smartedu.io/example-only: 'true'
+type: Opaque
+stringData:
+  private.pem: REPLACE_WITH_PEM_FROM_SECRET_MANAGER

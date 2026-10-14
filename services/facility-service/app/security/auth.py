@@ -19,6 +19,14 @@ class Principal:
     user_id: uuid.UUID
     roles: frozenset[str]
     raw_token: str = ""
+    permissions: frozenset[str] = frozenset()
+
+    def has_permission(self, code: str) -> bool:
+        return code in self.permissions
+
+    @property
+    def can_review_bookings(self) -> bool:
+        return self.has_role("admin") or self.has_permission("facility.bookings.review")
 
     def has_role(self, *roles: str) -> bool:
         wanted = {r.lower() for r in roles}
@@ -96,6 +104,12 @@ def get_current_principal(token: str = Depends(oauth2_scheme)) -> Principal:
     if not isinstance(roles_raw, list):
         raise HTTPException(status_code=401, detail="Invalid roles claim")
     roles = frozenset(str(role).lower() for role in roles_raw)
-    if not roles.intersection({"admin", "teacher", "student"}):
+    permissions_raw = claims.get("permissions", [])
+    if not isinstance(permissions_raw, list) or any(not isinstance(p, str) for p in permissions_raw):
+        raise HTTPException(status_code=401, detail="Invalid permissions claim")
+    permissions = frozenset(permissions_raw)
+    facility_grants = {"facility.facilities.manage", "facility.bookings.review", "facility.blocks.manage"}
+    if not roles or not (roles.intersection({"admin", "teacher", "student"}) or
+                         permissions.intersection(facility_grants)):
         raise HTTPException(status_code=403, detail="No supported role in token")
-    return Principal(user_id=user_id, roles=roles, raw_token=token)
+    return Principal(user_id=user_id, roles=roles, raw_token=token, permissions=permissions)

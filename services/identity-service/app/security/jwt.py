@@ -56,6 +56,8 @@ def _create_token(
     roles: list[str],
     token_type: TokenType,
     duration: timedelta,
+    auth_version: int = 0,
+    permissions: list[str] | None = None,
 ) -> tuple[str, str, datetime]:
     now = datetime.now(UTC)
     expires_at = now + duration
@@ -67,6 +69,7 @@ def _create_token(
         "sub": str(user_id),
         "type": token_type,
         "roles": roles,
+        "auth_version": auth_version,
         "jti": jti,
         "iss": settings.JWT_ISSUER,
         "aud": audience,
@@ -74,6 +77,8 @@ def _create_token(
         "nbf": now,
         "exp": expires_at,
     }
+    if token_type == "access":
+        payload["permissions"] = sorted(set(permissions or []))
     token = jwt.encode(
         payload,
         get_signing_keys().private_key,
@@ -86,18 +91,23 @@ def _create_token(
     return token, jti, expires_at
 
 
-def create_access_token(user_id: uuid.UUID, roles: list[str]) -> tuple[str, datetime]:
+def create_access_token(
+    user_id: uuid.UUID, roles: list[str], auth_version: int = 0,
+    permissions: list[str] | None = None,
+) -> tuple[str, datetime]:
     token, _, expires_at = _create_token(
         user_id,
         roles,
         "access",
         timedelta(minutes=settings.ACCESS_TOKEN_MINUTES),
+        auth_version,
+        permissions,
     )
     return token, expires_at
 
 
-def create_refresh_token(user_id: uuid.UUID, roles: list[str]) -> tuple[str, str, datetime]:
-    return _create_token(user_id, roles, "refresh", timedelta(days=settings.REFRESH_TOKEN_DAYS))
+def create_refresh_token(user_id: uuid.UUID, roles: list[str], auth_version: int = 0) -> tuple[str, str, datetime]:
+    return _create_token(user_id, roles, "refresh", timedelta(days=settings.REFRESH_TOKEN_DAYS), auth_version)
 
 
 def decode_token(token: str, *, token_type: TokenType = "access") -> dict:
@@ -123,6 +133,19 @@ def decode_token(token: str, *, token_type: TokenType = "access") -> dict:
         leeway=settings.JWT_LEEWAY_SECONDS,
         options={"require": ["sub", "iss", "aud", "iat", "nbf", "exp", "jti", "type", "roles"]},
     )
+    if token_type == "access":
+        # Tokens issued before B01 have no permissions claim. Accept their
+        # cryptographic identity, but grant no scoped permissions by default.
+        # Identity's request guard still checks the live role grants, so an
+        # older token cannot bypass permission changes or revocations.
+        if "permissions" not in payload:
+            payload["permissions"] = []
+        elif (
+            not isinstance(payload["permissions"], list)
+            or any(not isinstance(code, str) for code in payload["permissions"])
+            or len(payload["permissions"]) != len(set(payload["permissions"]))
+        ):
+            raise jwt.InvalidTokenError("Invalid permissions claim.")
     if payload["type"] != token_type or not isinstance(payload["sub"], str):
         raise jwt.InvalidTokenError("Invalid token type or subject.")
     try:

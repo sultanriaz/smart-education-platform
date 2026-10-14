@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+import os
+
+# TestClient uses the host "testserver"; production host validation stays enabled.
+# Set the test environment before the application and security settings are imported.
+os.environ["ENVIRONMENT"] = "test"
+
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -14,6 +20,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.core.config import get_settings
+from app.api.dependencies import get_identity_accounts
 from app.db.base import Base
 from app.db.session import get_db
 from app.domain.models import (
@@ -113,9 +120,16 @@ def client(db, token):
         yield db
 
     app.dependency_overrides[get_db] = test_db
+    # The existing API tests create arbitrary external UUIDs. Keep their
+    # academic-only scenarios isolated from Identity; B04-specific tests use
+    # a signed HTTP transport and explicit owner-state fixtures below.
+    app.dependency_overrides[get_identity_accounts] = lambda: type(
+        "EligibleAccounts", (), {"require_eligible": lambda self, user_id, role: None}
+    )()
     with TestClient(app) as http:
         http.headers["Authorization"] = f"Bearer {token()}"
         yield http
+    app.dependency_overrides.clear()
 
 
 def seed_academic(db: Session, *, capacity: int = 2) -> SimpleNamespace:

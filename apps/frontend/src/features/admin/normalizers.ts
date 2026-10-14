@@ -140,7 +140,7 @@ export function course(value: unknown): Course {
     code: s(r.code),
     title: s(r.title ?? r.name),
     departmentId: s(r.department_id) || undefined,
-    creditHours: typeof r.credit_hours === "number" ? r.credit_hours : null,
+    creditHours: typeof (r.credits ?? r.credit_hours) === "number" ? Number(r.credits ?? r.credit_hours) : null,
     status: s(r.status) || undefined
   };
 }
@@ -162,8 +162,8 @@ export function studentProfile(value: unknown): StudentProfile {
   const r = record(value);
   return {
     id: s(r.id),
-    identityUserId: s(r.identity_user_id ?? r.user_id),
-    studentId: s(r.student_id ?? r.registration_number),
+    identityUserId: s(r.external_user_id ?? r.identity_user_id ?? r.user_id),
+    studentId: s(r.student_number ?? r.student_id ?? r.registration_number),
     programId: s(r.program_id) || undefined,
     batch: s(r.batch ?? r.cohort) || undefined,
     status: s(r.status) || undefined
@@ -174,8 +174,8 @@ export function teacherProfile(value: unknown): TeacherProfile {
   const r = record(value);
   return {
     id: s(r.id),
-    identityUserId: s(r.identity_user_id ?? r.user_id),
-    employeeId: s(r.employee_id ?? r.staff_id),
+    identityUserId: s(r.external_user_id ?? r.identity_user_id ?? r.user_id),
+    employeeId: s(r.employee_number ?? r.employee_id ?? r.staff_id),
     departmentId: s(r.department_id) || undefined,
     status: s(r.status) || undefined
   };
@@ -185,7 +185,7 @@ export function enrollment(value: unknown): Enrollment {
   const r = record(value);
   return {
     id: s(r.id),
-    studentUserId: s(r.student_user_id ?? r.identity_user_id ?? r.user_id),
+    studentUserId: s(r.student_profile_id ?? r.student_user_id ?? r.external_user_id ?? r.identity_user_id ?? r.user_id),
     sectionId: s(r.section_id),
     status: s(r.status, "ACTIVE")
   };
@@ -195,7 +195,7 @@ export function teachingAssignment(value: unknown): TeachingAssignment {
   const r = record(value);
   return {
     id: s(r.id),
-    teacherUserId: s(r.teacher_user_id ?? r.identity_user_id ?? r.user_id),
+    teacherUserId: s(r.teacher_profile_id ?? r.teacher_user_id ?? r.external_user_id ?? r.identity_user_id ?? r.user_id),
     sectionId: s(r.section_id),
     status: s(r.status) || undefined
   };

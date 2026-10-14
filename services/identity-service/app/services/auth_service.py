@@ -66,7 +66,7 @@ class AuthService:
                     details={},
                 )
             else:
-                pair = self._issue_pair(user.id, [role.name for role in user.roles])
+                pair = self._issue_pair(user.id, [role.name for role in user.roles], user.auth_version)
                 self.audit.record(
                     action="auth.login_succeeded",
                     user_id=user.id,
@@ -84,9 +84,11 @@ class AuthService:
             user = self.users.get_by_id(user_id)
             if user is None or not user.is_active:
                 raise AuthenticationError("User account is unavailable.")
+            if int(payload.get("auth_version", 0)) != user.auth_version:
+                raise AuthenticationError("Refresh token was invalidated by an account change.")
             if not self.tokens.consume(jti=payload["jti"], user_id=user_id):
                 raise AuthenticationError("Refresh token is expired or revoked.")
-            pair = self._issue_pair(user.id, [role.name for role in user.roles])
+            pair = self._issue_pair(user.id, [role.name for role in user.roles], user.auth_version)
             self.audit.record(action="auth.refreshed", user_id=user.id)
         return pair
 
@@ -107,9 +109,11 @@ class AuthService:
         except jwt.PyJWTError as exc:
             raise AuthenticationError("Invalid refresh token.") from exc
 
-    def _issue_pair(self, user_id: uuid.UUID, roles: list[str]) -> TokenPair:
-        access_token, _ = create_access_token(user_id, roles)
-        refresh_token, jti, refresh_expires_at = create_refresh_token(user_id, roles)
+    def _issue_pair(self, user_id: uuid.UUID, roles: list[str], auth_version: int = 0) -> TokenPair:
+        current = self.users.get_by_id(user_id)
+        granted = sorted({permission.code for role in current.roles for permission in role.permissions})
+        access_token, _ = create_access_token(user_id, roles, auth_version, granted)
+        refresh_token, jti, refresh_expires_at = create_refresh_token(user_id, roles, auth_version)
         self.tokens.create(user_id=user_id, jti=jti, expires_at=refresh_expires_at)
         return TokenPair(
             access_token=access_token,

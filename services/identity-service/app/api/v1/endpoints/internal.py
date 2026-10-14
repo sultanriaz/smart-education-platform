@@ -60,3 +60,34 @@ def recipient(user_id: UUID, principal: Internal, db: Annotated[Session, Depends
     if user is None:
         raise HTTPException(404, "Active recipient not found.")
     return user
+
+
+@router.get("/academic-accounts/{user_id}")
+def academic_account(
+    user_id: UUID,
+    principal: Annotated[
+        object,
+        Depends(
+            internal_auth_dependency(
+                internal_token_verifier(),
+                audience="identity-service",
+                required_scopes=("identity:academic:read",),
+            )
+        ),
+    ],
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Minimal authoritative Identity status for Academic; no PII or credentials."""
+    if principal.service_name != "academic-service":
+        raise HTTPException(403, "This account contract is reserved for Academic.")
+    user = db.scalar(
+        select(User).options(selectinload(User.roles)).where(User.id == user_id)
+    )
+    if user is None:
+        raise HTTPException(404, "Identity account not found.")
+    return {
+        "id": str(user.id),
+        "is_active": user.is_active,
+        "roles": sorted({role.name.lower() for role in user.roles}),
+        "auth_version": user.auth_version,
+    }

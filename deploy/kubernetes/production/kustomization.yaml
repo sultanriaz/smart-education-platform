@@ -54,3 +54,13 @@ resources:
 - services/api-gateway.yaml
 - autoscaling/api-gateway.yaml
 - disruption/api-gateway.yaml
+- workers/identity-service.yaml
+- workers/academic-service.yaml
+- workers/attendance-service.yaml
+- workers/scheduling-service.yaml
+- workers/notification-service.yaml
+- workers/facility-service.yaml
+- workers/learning-service.yaml
+- workers/assessment-service.yaml
+- workers/reporting-service.yaml
+- workers/platform-service.yaml

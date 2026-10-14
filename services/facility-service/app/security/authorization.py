@@ -14,3 +14,11 @@ def require_roles(*roles: str) -> Callable:
         return principal
 
     return dependency
+
+
+def require_permission(code: str):
+    def dependency(principal: Principal = Depends(get_current_principal)) -> Principal:
+        if not principal.has_role("admin") and not principal.has_permission(code):
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
+        return principal
+    return dependency

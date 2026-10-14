@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import ConflictError, NotFoundError
 from app.db.transaction import transaction
 from app.repositories.role_repository import RoleRepository
+from app.repositories.token_repository import TokenRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import AdminUserCreate, AdminUserUpdate, UserSelfUpdate
 from app.security.password import hash_password
@@ -17,6 +18,7 @@ class UserService:
         self.db = db
         self.users = UserRepository(db)
         self.roles = RoleRepository(db)
+        self.tokens = TokenRepository(db)
 
     def create_by_admin(self, payload: AdminUserCreate):
         enforce_registration_password(
@@ -56,6 +58,8 @@ class UserService:
             raise NotFoundError("User not found.")
         if payload.full_name is not None:
             user.full_name = payload.full_name.strip()
+        before_active = user.is_active
+        before_roles = {role.name.lower() for role in user.roles}
         if payload.is_active is not None:
             user.is_active = payload.is_active
         if payload.is_verified is not None:
@@ -68,6 +72,9 @@ class UserService:
                     raise NotFoundError(f"Role '{role_name}' does not exist.")
                 roles.append(role)
             user.roles = roles
+        if user.is_active != before_active or {role.name.lower() for role in user.roles} != before_roles:
+            user.auth_version += 1
+            self.tokens.revoke_user(user.id)
         return self.users.save(user)
 
     def deactivate(self, user_id: uuid.UUID):
@@ -75,5 +82,8 @@ class UserService:
             user = self.users.get_by_id(user_id)
             if user is None:
                 raise NotFoundError("User not found.")
-            user.is_active = False
+            if user.is_active:
+                user.is_active = False
+                user.auth_version += 1
+                self.tokens.revoke_user(user.id)
             return self.users.save(user)

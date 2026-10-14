@@ -1,4 +1,5 @@
 from __future__ import annotations
+from smartedu_security.live_access import LiveAccessMiddleware
 
 from fastapi import FastAPI
 
@@ -17,6 +18,8 @@ app = FastAPI(
         "settings, feature flags, health aggregation and background job orchestration."
     ),
 )
+
+app.add_middleware(LiveAccessMiddleware)
 install_sprint21(app)
 install_sprint16(app)
 install_sprint18(app)

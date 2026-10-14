@@ -86,10 +86,22 @@ spec:
         volumeMounts:
         - name: tmp
           mountPath: /tmp
+        - name: jwt-signing-key
+          mountPath: /run/secrets/identity
+          readOnly: true
+        env:
+        - name: JWT_PRIVATE_KEY_FILE
+          value: /run/secrets/identity/private.pem
       volumes:
       - name: tmp
         emptyDir:
           sizeLimit: 128Mi
+      - name: jwt-signing-key
+        secret:
+          secretName: identity-service-signing-key
+          items:
+          - key: private.pem
+            path: private.pem
       topologySpreadConstraints:
       - maxSkew: 1
         topologyKey: kubernetes.io/hostname

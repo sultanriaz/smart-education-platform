@@ -8,7 +8,7 @@ from app.core.exceptions import ConflictError, NotFoundError
 from app.db.session import get_db
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import AdminUserCreate, AdminUserUpdate, UserOut, UserSelfUpdate
-from app.security.dependencies import get_current_user, require_roles
+from app.security.dependencies import get_current_user, require_permission
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -30,7 +30,7 @@ def update_me(
 def list_users(
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=200),
-    _admin=Depends(require_roles("admin")),
+    _admin=Depends(require_permission("identity.users.read")),
     db: Session = Depends(get_db),
 ):
     return UserRepository(db).list_users(offset=offset, limit=limit)
@@ -38,7 +38,7 @@ def list_users(
 
 @router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def create_user(
-    payload: AdminUserCreate, _admin=Depends(require_roles("admin")), db: Session = Depends(get_db)
+    payload: AdminUserCreate, _admin=Depends(require_permission("identity.users.write")), db: Session = Depends(get_db)
 ):
     try:
         return UserService(db).create_by_admin(payload)
@@ -54,7 +54,7 @@ def create_user(
 
 @router.get("/{user_id}", response_model=UserOut)
 def get_user(
-    user_id: uuid.UUID, _admin=Depends(require_roles("admin")), db: Session = Depends(get_db)
+    user_id: uuid.UUID, _admin=Depends(require_permission("identity.users.read")), db: Session = Depends(get_db)
 ):
     user = UserRepository(db).get_by_id(user_id)
     if user is None:
@@ -66,7 +66,7 @@ def get_user(
 def update_user(
     user_id: uuid.UUID,
     payload: AdminUserUpdate,
-    _admin=Depends(require_roles("admin")),
+    _admin=Depends(require_permission("identity.users.write")),
     db: Session = Depends(get_db),
 ):
     try:
@@ -77,7 +77,7 @@ def update_user(
 
 @router.delete("/{user_id}", response_model=UserOut)
 def deactivate_user(
-    user_id: uuid.UUID, _admin=Depends(require_roles("admin")), db: Session = Depends(get_db)
+    user_id: uuid.UUID, _admin=Depends(require_permission("identity.users.write")), db: Session = Depends(get_db)
 ):
     try:
         return UserService(db).deactivate(user_id)

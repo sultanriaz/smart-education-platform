@@ -97,3 +97,9 @@ def replace_teacher_profiles(
 def delete_teacher_profiles(record_id: UUID, service: Service, _admin: Admin) -> Response:
     service.delete(TeacherAcademicProfile, record_id)
     return Response(status_code=204)
+
+
+@router.post("/identity-reconciliation/{user_id}")
+def reconcile_identity_account(user_id: UUID, service: Service, _admin: Admin) -> dict[str, int]:
+    """Idempotent repair; never deletes academic history or Identity state."""
+    return service.reconcile_identity(user_id)

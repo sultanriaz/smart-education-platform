@@ -2,11 +2,24 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime, time
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-class ScheduleCreate(BaseModel):
+class ZoneValidated(BaseModel):
+    @field_validator("timezone_name", check_fields=False)
+    @classmethod
+    def validated_timezone(cls, value: str | None) -> str | None:
+        if value is not None:
+            try:
+                ZoneInfo(value)
+            except (ZoneInfoNotFoundError, ValueError) as exc:
+                raise ValueError("Unknown IANA timezone") from exc
+        return value
+
+
+class ScheduleCreate(ZoneValidated):
     section_id: uuid.UUID
     teacher_user_id: uuid.UUID | None = None
     room_id: uuid.UUID | None = None
@@ -16,6 +29,7 @@ class ScheduleCreate(BaseModel):
     effective_from: date
     effective_to: date
     timezone_name: str | None = Field(default=None, min_length=1, max_length=64)
+    publish: bool = True
 
     @model_validator(mode="after")
     def validate_window(self):
@@ -26,7 +40,7 @@ class ScheduleCreate(BaseModel):
         return self
 
 
-class ScheduleUpdate(BaseModel):
+class ScheduleUpdate(ZoneValidated):
     teacher_user_id: uuid.UUID | None = None
     room_id: uuid.UUID | None = None
     weekday: int | None = Field(default=None, ge=0, le=6)

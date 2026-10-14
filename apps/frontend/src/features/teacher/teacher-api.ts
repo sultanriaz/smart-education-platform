@@ -62,10 +62,17 @@ export async function getTeacherSections(): Promise<TeacherSection[]> {
 }
 
 export async function getSectionRoster(sectionId: string): Promise<RosterMember[]> {
-  const response = await apiRequest<unknown>(
-    `/api/v1/academic/sections/${sectionId}/roster`
-  );
-  return extractList(response).map(normalizeRosterMember);
+  const members: RosterMember[] = [];
+  for (let offset = 0; ; offset += 100) {
+    const response = await apiRequest<unknown>(
+      `/api/v1/academic/sections/${encodeURIComponent(sectionId)}/roster?limit=100&offset=${offset}`
+    );
+    const batch = extractList(response).map(normalizeRosterMember);
+    members.push(...batch);
+    if (batch.length < 100) break;
+    if (offset >= 10000) throw new Error("Roster exceeds the configured safe pagination limit.");
+  }
+  return members;
 }
 
 // Attendance
@@ -81,6 +88,7 @@ export async function getSectionAttendanceSessions(
 export async function createAttendanceSession(input: {
   section_id: string;
   session_date: string;
+  schedule_occurrence_id?: string;
   starts_at?: string;
   ends_at?: string;
 }): Promise<AttendanceSession> {
@@ -94,10 +102,17 @@ export async function createAttendanceSession(input: {
 export async function getSessionAttendance(
   sessionId: string
 ): Promise<AttendanceEntry[]> {
-  const response = await apiRequest<unknown>(
-    `/api/v1/attendance/sessions/${sessionId}/records`
-  );
-  return extractList(response).map(normalizeAttendanceEntry);
+  const records: AttendanceEntry[] = [];
+  for (let offset = 0; ; offset += 100) {
+    const response = await apiRequest<unknown>(
+      `/api/v1/attendance/sessions/${encodeURIComponent(sessionId)}/records?limit=100&offset=${offset}`
+    );
+    const batch = extractList(response).map(normalizeAttendanceEntry);
+    records.push(...batch);
+    if (batch.length < 100) break;
+    if (offset >= 10000) throw new Error("Attendance records exceed the safe pagination limit.");
+  }
+  return records;
 }
 
 export async function saveBulkAttendance(

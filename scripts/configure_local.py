@@ -108,7 +108,7 @@ def main():
         )
     infra = {
         **values,
-        "POSTGRES_HOST_PORT": "55432",
+        "POSTGRES_HOST_PORT": "15432",
         "REDIS_CACHE_HOST_PORT": "56379",
         "REDIS_DURABLE_HOST_PORT": "56380",
         "RABBITMQ_USER": "smartedu",
@@ -122,7 +122,7 @@ def main():
     for index, name in enumerate(NAMES, 1):
         common = {
             "ENVIRONMENT": "development",
-            "DATABASE_URL": f"postgresql+psycopg://{name}_svc:{values[f'{name.upper()}_DB_PASSWORD']}@127.0.0.1:55432/{name}_db",
+            "DATABASE_URL": f"postgresql+psycopg://{name}_svc:{values[f'{name.upper()}_DB_PASSWORD']}@127.0.0.1:15432/{name}_db",
             "JWT_ISSUER": "http://localhost:8001",
             "JWT_ACCESS_AUDIENCE": "smart-education-api",
             "JWT_AUDIENCE": "smart-education-api",
@@ -145,6 +145,7 @@ def main():
             "REDIS_DURABLE_URL": f"redis://:{values['REDIS_DURABLE_PASSWORD']}@127.0.0.1:56380/0",
             "RABBITMQ_URL": f"amqp://smartedu:{values['RABBITMQ_PASSWORD']}@127.0.0.1:55672/smartedu",
             "ACADEMIC_SERVICE_BASE_URL": "http://127.0.0.1:8002",
+            "FACILITY_SERVICE_BASE_URL": "http://127.0.0.1:8006",
             "IDENTITY_SERVICE_BASE_URL": "http://127.0.0.1:8001",
             "NOTIFICATION_SERVICE_BASE_URL": "http://127.0.0.1:8005",
             "INTERNAL_EVENT_TOKEN": values["INTERNAL_EVENT_TOKEN"],

@@ -48,44 +48,47 @@ export function AdminAcademicPage() {
   const createTeaching = useAdminMutation(api.createTeachingAssignment, adminKeys.teachingAssignments);
 
   const [departmentForm, setDepartmentForm] = useState({ code: "", name: "" });
-  const [programForm, setProgramForm] = useState({ code: "", name: "", department_id: "" });
-  const [yearForm, setYearForm] = useState({ name: "", starts_on: "", ends_on: "" });
+  const [programForm, setProgramForm] = useState({ code: "", name: "", department_id: "", duration_semesters: 8 });
+  const [yearForm, setYearForm] = useState({ code: "", name: "", starts_on: "", ends_on: "" });
   const [semesterForm, setSemesterForm] = useState({
     name: "",
     academic_year_id: "",
+    number: 1,
     starts_on: "",
     ends_on: ""
   });
   const [courseForm, setCourseForm] = useState({
     code: "",
     title: "",
-    department_id: "",
-    credit_hours: 3
+    program_id: "",
+    credits: 3,
+    semester_number: 1
   });
   const [sectionForm, setSectionForm] = useState({
-    name: "",
+    code: "",
     course_id: "",
     semester_id: "",
-    program_id: "",
     capacity: 40
   });
   const [studentForm, setStudentForm] = useState({
-    identity_user_id: "",
-    student_id: "",
+    external_user_id: "",
+    student_number: "",
     program_id: "",
-    batch: ""
+    admission_year_id: "",
+    current_semester: 1
   });
   const [teacherForm, setTeacherForm] = useState({
-    identity_user_id: "",
-    employee_id: "",
-    department_id: ""
+    external_user_id: "",
+    employee_number: "",
+    department_id: "",
+    designation: ""
   });
   const [enrollmentForm, setEnrollmentForm] = useState({
-    student_user_id: "",
+    student_profile_id: "",
     section_id: ""
   });
   const [assignmentForm, setAssignmentForm] = useState({
-    teacher_user_id: "",
+    teacher_profile_id: "",
     section_id: ""
   });
 
@@ -115,8 +118,10 @@ export function AdminAcademicPage() {
     try {
       await action();
       toast.push(success, "success");
+      return true;
     } catch (error) {
       toast.push(error instanceof Error ? error.message : "Academic operation failed.", "error");
+      return false;
     }
   }
 
@@ -137,7 +142,7 @@ export function AdminAcademicPage() {
               void perform(
                 () => createDepartment.mutateAsync(departmentForm),
                 "Department created."
-              ).then(() => setDepartmentForm({ code: "", name: "" }));
+              ).then((ok) => ok && setDepartmentForm({ code: "", name: "" }));
             }}
           >
             <Input
@@ -160,7 +165,7 @@ export function AdminAcademicPage() {
               void perform(
                 () => createProgram.mutateAsync(programForm),
                 "Program created."
-              ).then(() => setProgramForm({ code: "", name: "", department_id: "" }));
+              ).then((ok) => ok && setProgramForm({ code: "", name: "", department_id: "", duration_semesters: 8 }));
             }}
           >
             <Input
@@ -190,6 +195,9 @@ export function AdminAcademicPage() {
                 ))}
               </select>
             </label>
+            <Input label="Duration (semesters)" type="number" min={1} max={20}
+              value={programForm.duration_semesters}
+              onChange={(e) => setProgramForm((f) => ({ ...f, duration_semesters: Number(e.target.value) || 1 }))} />
             <Button type="submit">Add program</Button>
           </form>
 
@@ -208,11 +216,13 @@ export function AdminAcademicPage() {
               void perform(
                 () => createYear.mutateAsync(yearForm),
                 "Academic year created."
-              ).then(() =>
-                setYearForm({ name: "", starts_on: "", ends_on: "" })
+              ).then((ok) => ok &&
+                setYearForm({ code: "", name: "", starts_on: "", ends_on: "" })
               );
             }}
           >
+            <Input label="Year code" value={yearForm.code}
+              onChange={(e) => setYearForm((f) => ({ ...f, code: e.target.value }))} />
             <Input
               label="Year name"
               value={yearForm.name}
@@ -240,13 +250,8 @@ export function AdminAcademicPage() {
               void perform(
                 () => createSemester.mutateAsync(semesterForm),
                 "Semester created."
-              ).then(() =>
-                setSemesterForm({
-                  name: "",
-                  academic_year_id: "",
-                  starts_on: "",
-                  ends_on: ""
-                })
+              ).then((ok) => ok &&
+                setSemesterForm({ name: "", academic_year_id: "", number: 1, starts_on: "", ends_on: "" })
               );
             }}
           >
@@ -270,6 +275,9 @@ export function AdminAcademicPage() {
                 ))}
               </select>
             </label>
+            <Input label="Semester number" type="number" min={1}
+              value={semesterForm.number}
+              onChange={(e) => setSemesterForm((f) => ({ ...f, number: Number(e.target.value) || 1 }))} />
             <Input
               label="Starts"
               type="date"
@@ -296,16 +304,18 @@ export function AdminAcademicPage() {
                   createCourse.mutateAsync({
                     code: courseForm.code,
                     title: courseForm.title,
-                    department_id: courseForm.department_id || undefined,
-                    credit_hours: courseForm.credit_hours
+                    program_id: courseForm.program_id,
+                    credits: courseForm.credits,
+                    semester_number: courseForm.semester_number
                   }),
                 "Course created."
-              ).then(() =>
+              ).then((ok) => ok &&
                 setCourseForm({
                   code: "",
                   title: "",
-                  department_id: "",
-                  credit_hours: 3
+                  program_id: "",
+                  credits: 3,
+                  semester_number: 1
                 })
               );
             }}
@@ -323,33 +333,36 @@ export function AdminAcademicPage() {
               />
             </div>
             <label className="block text-sm font-medium">
-              Department
+              Program
               <select
                 className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={courseForm.department_id}
+                value={courseForm.program_id}
                 onChange={(e) =>
-                  setCourseForm((f) => ({ ...f, department_id: e.target.value }))
+                  setCourseForm((f) => ({ ...f, program_id: e.target.value }))
                 }
               >
-                <option value="">Optional department</option>
-                {(departments.data ?? []).map((item) => (
+                <option value="">Select program</option>
+                {(programs.data ?? []).map((item) => (
                   <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
                 ))}
               </select>
             </label>
             <Input
-              label="Credit hours"
+              label="Credits"
               type="number"
               min={1}
               max={12}
-              value={courseForm.credit_hours}
+              value={courseForm.credits}
               onChange={(e) =>
                 setCourseForm((f) => ({
                   ...f,
-                  credit_hours: Number(e.target.value) || 1
+                  credits: Number(e.target.value) || 1
                 }))
               }
             />
+            <Input label="Curriculum semester number" type="number" min={1}
+              value={courseForm.semester_number}
+              onChange={(e) => setCourseForm((f) => ({ ...f, semester_number: Number(e.target.value) || 1 }))} />
             <Button type="submit">Add course</Button>
           </form>
 
@@ -370,28 +383,26 @@ export function AdminAcademicPage() {
               void perform(
                 () =>
                   createSection.mutateAsync({
-                    name: sectionForm.name,
+                    code: sectionForm.code,
                     course_id: sectionForm.course_id,
                     semester_id: sectionForm.semester_id,
-                    program_id: sectionForm.program_id || undefined,
                     capacity: sectionForm.capacity
                   }),
                 "Section created."
-              ).then(() =>
+              ).then((ok) => ok &&
                 setSectionForm({
-                  name: "",
+                  code: "",
                   course_id: "",
                   semester_id: "",
-                  program_id: "",
                   capacity: 40
                 })
               );
             }}
           >
             <Input
-              label="Section name"
-              value={sectionForm.name}
-              onChange={(e) => setSectionForm((f) => ({ ...f, name: e.target.value }))}
+              label="Section code"
+              value={sectionForm.code}
+              onChange={(e) => setSectionForm((f) => ({ ...f, code: e.target.value }))}
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block text-sm font-medium">
@@ -425,21 +436,7 @@ export function AdminAcademicPage() {
                 </select>
               </label>
             </div>
-            <label className="block text-sm font-medium">
-              Program
-              <select
-                className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={sectionForm.program_id}
-                onChange={(e) =>
-                  setSectionForm((f) => ({ ...f, program_id: e.target.value }))
-                }
-              >
-                <option value="">Optional program</option>
-                {(programs.data ?? []).map((item) => (
-                  <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
-                ))}
-              </select>
-            </label>
+
             <Input
               label="Capacity"
               type="number"
@@ -464,18 +461,20 @@ export function AdminAcademicPage() {
               void perform(
                 () =>
                   createStudent.mutateAsync({
-                    identity_user_id: studentForm.identity_user_id,
-                    student_id: studentForm.student_id,
-                    program_id: studentForm.program_id || undefined,
-                    batch: studentForm.batch || undefined
+                    external_user_id: studentForm.external_user_id,
+                    student_number: studentForm.student_number,
+                    program_id: studentForm.program_id,
+                    admission_year_id: studentForm.admission_year_id,
+                    current_semester: studentForm.current_semester
                   }),
                 "Student academic profile created."
-              ).then(() =>
+              ).then((ok) => ok &&
                 setStudentForm({
-                  identity_user_id: "",
-                  student_id: "",
+                  external_user_id: "",
+                  student_number: "",
                   program_id: "",
-                  batch: ""
+                  admission_year_id: "",
+                  current_semester: 1
                 })
               );
             }}
@@ -483,13 +482,13 @@ export function AdminAcademicPage() {
             <h3 className="font-semibold">Student profile</h3>
             <Input
               label="Identity user UUID"
-              value={studentForm.identity_user_id}
-              onChange={(e) => setStudentForm((f) => ({ ...f, identity_user_id: e.target.value }))}
+              value={studentForm.external_user_id}
+              onChange={(e) => setStudentForm((f) => ({ ...f, external_user_id: e.target.value }))}
             />
             <Input
               label="Student ID"
-              value={studentForm.student_id}
-              onChange={(e) => setStudentForm((f) => ({ ...f, student_id: e.target.value }))}
+              value={studentForm.student_number}
+              onChange={(e) => setStudentForm((f) => ({ ...f, student_number: e.target.value }))}
             />
             <label className="block text-sm font-medium">
               Program
@@ -498,17 +497,23 @@ export function AdminAcademicPage() {
                 value={studentForm.program_id}
                 onChange={(e) => setStudentForm((f) => ({ ...f, program_id: e.target.value }))}
               >
-                <option value="">Optional program</option>
+                <option value="">Select program</option>
                 {(programs.data ?? []).map((item) => (
                   <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
                 ))}
               </select>
             </label>
-            <Input
-              label="Batch / cohort"
-              value={studentForm.batch}
-              onChange={(e) => setStudentForm((f) => ({ ...f, batch: e.target.value }))}
-            />
+            <label className="block text-sm font-medium">Admission academic year
+              <select className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                value={studentForm.admission_year_id}
+                onChange={(e) => setStudentForm((f) => ({ ...f, admission_year_id: e.target.value }))}>
+                <option value="">Select admission year</option>
+                {(years.data ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+            </label>
+            <Input label="Current semester" type="number" min={1}
+              value={studentForm.current_semester}
+              onChange={(e) => setStudentForm((f) => ({ ...f, current_semester: Number(e.target.value) || 1 }))} />
             <Button type="submit">Create student profile</Button>
           </form>
 
@@ -519,16 +524,18 @@ export function AdminAcademicPage() {
               void perform(
                 () =>
                   createTeacher.mutateAsync({
-                    identity_user_id: teacherForm.identity_user_id,
-                    employee_id: teacherForm.employee_id,
-                    department_id: teacherForm.department_id || undefined
+                    external_user_id: teacherForm.external_user_id,
+                    employee_number: teacherForm.employee_number,
+                    department_id: teacherForm.department_id,
+                    designation: teacherForm.designation
                   }),
                 "Teacher academic profile created."
-              ).then(() =>
+              ).then((ok) => ok &&
                 setTeacherForm({
-                  identity_user_id: "",
-                  employee_id: "",
-                  department_id: ""
+                  external_user_id: "",
+                  employee_number: "",
+                  department_id: "",
+                  designation: ""
                 })
               );
             }}
@@ -536,13 +543,13 @@ export function AdminAcademicPage() {
             <h3 className="font-semibold">Teacher profile</h3>
             <Input
               label="Identity user UUID"
-              value={teacherForm.identity_user_id}
-              onChange={(e) => setTeacherForm((f) => ({ ...f, identity_user_id: e.target.value }))}
+              value={teacherForm.external_user_id}
+              onChange={(e) => setTeacherForm((f) => ({ ...f, external_user_id: e.target.value }))}
             />
             <Input
               label="Employee ID"
-              value={teacherForm.employee_id}
-              onChange={(e) => setTeacherForm((f) => ({ ...f, employee_id: e.target.value }))}
+              value={teacherForm.employee_number}
+              onChange={(e) => setTeacherForm((f) => ({ ...f, employee_number: e.target.value }))}
             />
             <label className="block text-sm font-medium">
               Department
@@ -551,12 +558,14 @@ export function AdminAcademicPage() {
                 value={teacherForm.department_id}
                 onChange={(e) => setTeacherForm((f) => ({ ...f, department_id: e.target.value }))}
               >
-                <option value="">Optional department</option>
+                <option value="">Select department</option>
                 {(departments.data ?? []).map((item) => (
                   <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
                 ))}
               </select>
             </label>
+            <Input label="Designation" value={teacherForm.designation}
+              onChange={(e) => setTeacherForm((f) => ({ ...f, designation: e.target.value }))} />
             <Button type="submit">Create Teacher profile</Button>
           </form>
         </Card>
@@ -569,8 +578,8 @@ export function AdminAcademicPage() {
               void perform(
                 () => createEnrollment.mutateAsync(enrollmentForm),
                 "Student enrolled."
-              ).then(() =>
-                setEnrollmentForm({ student_user_id: "", section_id: "" })
+              ).then((ok) => ok &&
+                setEnrollmentForm({ student_profile_id: "", section_id: "" })
               );
             }}
           >
@@ -579,14 +588,14 @@ export function AdminAcademicPage() {
               Student
               <select
                 className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={enrollmentForm.student_user_id}
+                value={enrollmentForm.student_profile_id}
                 onChange={(e) =>
-                  setEnrollmentForm((f) => ({ ...f, student_user_id: e.target.value }))
+                  setEnrollmentForm((f) => ({ ...f, student_profile_id: e.target.value }))
                 }
               >
                 <option value="">Select Student</option>
                 {(students.data ?? []).map((item) => (
-                  <option key={item.id} value={item.identityUserId}>
+                  <option key={item.id} value={item.id}>
                     {item.studentId} · {item.identityUserId}
                   </option>
                 ))}
@@ -617,8 +626,8 @@ export function AdminAcademicPage() {
               void perform(
                 () => createTeaching.mutateAsync(assignmentForm),
                 "Teacher assigned to section."
-              ).then(() =>
-                setAssignmentForm({ teacher_user_id: "", section_id: "" })
+              ).then((ok) => ok &&
+                setAssignmentForm({ teacher_profile_id: "", section_id: "" })
               );
             }}
           >
@@ -627,14 +636,14 @@ export function AdminAcademicPage() {
               Teacher
               <select
                 className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={assignmentForm.teacher_user_id}
+                value={assignmentForm.teacher_profile_id}
                 onChange={(e) =>
-                  setAssignmentForm((f) => ({ ...f, teacher_user_id: e.target.value }))
+                  setAssignmentForm((f) => ({ ...f, teacher_profile_id: e.target.value }))
                 }
               >
                 <option value="">Select Teacher</option>
                 {(teachers.data ?? []).map((item) => (
-                  <option key={item.id} value={item.identityUserId}>
+                  <option key={item.id} value={item.id}>
                     {item.employeeId} · {item.identityUserId}
                   </option>
                 ))}

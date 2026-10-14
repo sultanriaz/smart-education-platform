@@ -119,3 +119,9 @@ test-results/
 playwright-report/
 .ruff_cache/
 *.egg-info/
+
+# Installer's local rollback snapshots (never commit them)
+/.wave-patch-backups/
+*.backup-*
+*.bak
+
