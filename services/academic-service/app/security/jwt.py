@@ -20,10 +20,12 @@ class KeyDiscoveryUnavailable(Exception):
 class Principal:
     user_id: UUID
     roles: frozenset[str]
+    permissions: frozenset[str] = frozenset()
+    access_token: str = ""
 
     @property
     def is_admin(self) -> bool:
-        return "admin" in self.roles
+        return "admin" in self.roles or "academic.records.write" in self.permissions
 
 
 @lru_cache
@@ -85,4 +87,8 @@ def verify_access_token(token: str) -> Principal:
             raise jwt.InvalidTokenError("Invalid NumericDate claim.")
     if claims["exp"] <= claims["iat"] or claims["exp"] <= claims["nbf"]:
         raise jwt.InvalidTokenError("Invalid token lifetime.")
-    return Principal(subject, frozenset(claims["roles"]))
+    raw = claims.get("permissions", [])
+    if not isinstance(raw, list) or any(not isinstance(v, str) or not v for v in raw):
+        raise jwt.InvalidTokenError("Invalid permissions claim")
+    return Principal(subject, frozenset(claims["roles"]),
+                     frozenset(raw), token)

@@ -25,6 +25,7 @@ MAX_RELAY_ATTEMPTS = 10
 
 SECURITY_EVENTS = ("identity.password_reset.requested", "identity.email_verification.requested")
 SUBSCRIPTIONS = {
+    "academic-service": ("identity.account_eligibility_changed",),
     "notification-service": SECURITY_EVENTS
     + (
         "attendance.low_attendance_detected",

@@ -11,6 +11,7 @@ import * as api from "../../features/admin/admin-api";
 import {
   adminKeys,
   useAcademicYears,
+  useCampuses,
   useAdminMutation,
   useCourses,
   useDepartments,
@@ -24,6 +25,7 @@ import {
 } from "../../features/admin/hooks";
 
 export function AdminAcademicPage() {
+  const campuses = useCampuses();
   const departments = useDepartments();
   const programs = usePrograms();
   const years = useAcademicYears();
@@ -36,6 +38,11 @@ export function AdminAcademicPage() {
   const teaching = useTeachingAssignments();
   const toast = useToast();
 
+  const createCampus = useAdminMutation(api.createCampus, adminKeys.campuses);
+  const bulkEnrollment = useAdminMutation(api.bulkEnroll, adminKeys.enrollments);
+  const [campusForm, setCampusForm] = useState({code:"", name:"", is_active:true});
+  const [batchStudentIds, setBatchStudentIds] = useState("");
+  const [batchSectionId, setBatchSectionId] = useState("");
   const createDepartment = useAdminMutation(api.createDepartment, adminKeys.departments);
   const createProgram = useAdminMutation(api.createProgram, adminKeys.programs);
   const createYear = useAdminMutation(api.createAcademicYear, adminKeys.years);
@@ -93,7 +100,7 @@ export function AdminAcademicPage() {
   });
 
   const allQueries = [
-    departments, programs, years, semesters, courses, sections,
+    campuses, departments, programs, years, semesters, courses, sections,
     students, teachers, enrollments, teaching
   ];
 
@@ -134,6 +141,36 @@ export function AdminAcademicPage() {
       />
 
       <div className="grid gap-6 xl:grid-cols-2">
+        <Card title="Campuses & bulk enrollment">
+          <form className="space-y-3" onSubmit={event => {
+            event.preventDefault();
+            void perform(() => createCampus.mutateAsync(campusForm), "Campus created.");
+          }}>
+            <Input label="Campus code" value={campusForm.code} onChange={e => setCampusForm(f => ({...f, code:e.target.value}))} />
+            <Input label="Campus name" value={campusForm.name} onChange={e => setCampusForm(f => ({...f, name:e.target.value}))} />
+            <Button type="submit" disabled={createCampus.isPending}>Create campus</Button>
+          </form>
+          <p className="text-sm text-muted">Existing campuses: {(campuses.data ?? []).map(c => `${c.code} (${c.name})`).join(", ") || "None"}</p>
+          <form className="mt-5 space-y-3" onSubmit={event => {
+            event.preventDefault();
+            const ids = batchStudentIds.split(/[\s,]+/).filter(Boolean);
+            if (!batchSectionId || ids.length < 1 || ids.length > 100) {
+              toast.push("Select a section and 1–100 student profile IDs.", "error"); return;
+            }
+            void perform(() => bulkEnrollment.mutateAsync({section_id:batchSectionId, student_profile_ids:ids}), "Bulk enrollment completed.");
+          }}>
+            <label className="block text-sm font-medium">Target section
+              <select className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5" value={batchSectionId} onChange={e => setBatchSectionId(e.target.value)}>
+                <option value="">Select section</option>
+                {(sections.data ?? []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">Student profile UUIDs (comma or newline separated)
+              <textarea className="mt-2 min-h-24 w-full rounded-xl border border-line bg-panel p-3" value={batchStudentIds} onChange={e => setBatchStudentIds(e.target.value)} />
+            </label>
+            <Button type="submit" disabled={bulkEnrollment.isPending}>Enroll batch atomically</Button>
+          </form>
+        </Card>
         <Card title="Departments & programs">
           <form
             className="grid gap-3 sm:grid-cols-[1fr_2fr_auto]"

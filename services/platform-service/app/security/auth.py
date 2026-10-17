@@ -11,6 +11,7 @@ from fastapi import Depends, Header, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import settings
+from smartedu_security.live_permissions import live_permission
 
 bearer = HTTPBearer(auto_error=True)
 _jwks_cache: tuple[float, dict] | None = None
@@ -21,6 +22,7 @@ class Principal:
     user_id: uuid.UUID
     roles: set[str]
     token: str
+    permissions: frozenset[str] = frozenset()
 
 
 def _get_jwks() -> dict:
@@ -69,10 +71,14 @@ def current_principal(
 
         user_id = uuid.UUID(payload["sub"])
         roles = {str(role).lower() for role in payload.get("roles", [])}
-        if not roles.intersection({"admin", "teacher", "student"}):
-            raise ValueError("Unsupported role")
-
-        return Principal(user_id=user_id, roles=roles, token=token)
+        raw = payload.get("permissions", [])
+        if not isinstance(raw, list) or any(not isinstance(v, str) or not v for v in raw):
+            raise ValueError("Invalid permissions claim")
+        if not roles.intersection({"admin", "teacher", "student"}) and not any(
+            scope.startswith("platform.") for scope in raw
+        ):
+            raise ValueError("No Platform role or permission")
+        return Principal(user_id=user_id, roles=roles, token=token, permissions=frozenset(raw))
     except Exception as exc:
         raise HTTPException(status_code=401, detail="Invalid access token") from exc
 
@@ -82,7 +88,9 @@ def require_roles(*roles: str):
 
     def dependency(principal: Principal = Depends(current_principal)) -> Principal:
         if required.isdisjoint(principal.roles):
-            raise HTTPException(status_code=403, detail="Insufficient permissions")
+            scope = "platform.admin.manage" if "admin" in required else None
+            if not scope or not live_permission(principal, scope, settings.JWT_JWKS_URL):
+                raise HTTPException(403, "Insufficient permissions")
         return principal
 
     return dependency

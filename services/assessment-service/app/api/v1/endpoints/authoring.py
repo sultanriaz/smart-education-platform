@@ -11,6 +11,7 @@ from app.schemas.models import (
     QuestionBankCreate,
     QuestionCreate,
     QuizCreate,
+    QuizUpdate,
     QuizQuestionAdd,
 )
 from app.security.auth import Principal, require_roles
@@ -70,6 +71,38 @@ def create_quiz(
 ):
     try:
         return service.create_quiz(payload, p.user_id)
+    except DomainError as exc:
+        fail(exc)
+
+
+@router.patch("/quizzes/{quiz_id}")
+def edit_quiz(
+    quiz_id: uuid.UUID, payload: QuizUpdate,
+    p: Principal = Depends(require_roles("admin", "teacher")),
+    service: AssessmentService = Depends(get_service),
+):
+    try:
+        quiz = service.repo.get_quiz(quiz_id)
+        if not quiz:
+            raise NotFoundError("Quiz not found")
+        _teacher_only_owner(p, quiz.created_by_user_id, "Teachers may only edit their own quizzes")
+        return service.edit_quiz(quiz_id, payload)
+    except DomainError as exc:
+        fail(exc)
+
+
+@router.post("/quizzes/{quiz_id}/archive")
+def archive_quiz(
+    quiz_id: uuid.UUID,
+    p: Principal = Depends(require_roles("admin", "teacher")),
+    service: AssessmentService = Depends(get_service),
+):
+    try:
+        quiz = service.repo.get_quiz(quiz_id)
+        if not quiz:
+            raise NotFoundError("Quiz not found")
+        _teacher_only_owner(p, quiz.created_by_user_id, "Teachers may only archive their own quizzes")
+        return service.archive_quiz(quiz_id)
     except DomainError as exc:
         fail(exc)
 

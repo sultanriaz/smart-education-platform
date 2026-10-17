@@ -8,7 +8,7 @@ from fastapi.responses import Response
 from app.api.dependencies import get_reporting_service
 from app.clients.academic import require_teacher_section
 from app.schemas.reports import SnapshotCreate, SnapshotOut
-from app.security.auth import Principal, require_roles
+from app.security.auth import Principal, require_roles, require_scoped_roles
 from app.services.reporting_service import ReportingService
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
@@ -45,7 +45,7 @@ def course_academic_report(
 @router.post("/snapshots", response_model=SnapshotOut)
 def create_snapshot(
     payload: SnapshotCreate,
-    principal: Principal = Depends(require_roles("admin")),
+    principal: Principal = Depends(require_scoped_roles("reporting.snapshots.write", "admin")),
     service: ReportingService = Depends(get_reporting_service),
 ):
     return service.create_snapshot(payload.report_type, payload.filters, principal.user_id)

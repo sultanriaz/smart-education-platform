@@ -1,3 +1,4 @@
+import { TimetableCalendar } from "../../components/timetable/TimetableCalendar";
 import { Card } from "../../components/ui/Card";
 import { InlineError } from "../../components/ui/InlineError";
 import { PageHeader } from "../../components/ui/PageHeader";
@@ -53,6 +54,8 @@ export function StudentTimetablePage() {
         title="My timetable"
         description="Your current scheduled classes, rooms, and class times."
       />
+
+      <TimetableCalendar occurrences={sorted} />
 
       {Object.keys(groups).length ? (
         <div className="space-y-6">

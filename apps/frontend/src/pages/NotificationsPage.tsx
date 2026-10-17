@@ -16,7 +16,9 @@ import {
 } from "../features/student/hooks";
 
 export function NotificationsPage() {
-  const notifications = useNotifications();
+  const [page, setPage] = useState(0);
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const notifications = useNotifications({ offset: page * 25, limit: 25, unreadOnly });
   const unread = useUnreadCount();
   const preferences = useNotificationPreferences();
   const markRead = useMarkNotificationRead();
@@ -26,11 +28,13 @@ export function NotificationsPage() {
 
   const [emailEnabled, setEmailEnabled] = useState(true);
   const [inAppEnabled, setInAppEnabled] = useState(true);
+  const [mutedCategories, setMutedCategories] = useState<string[]>([]);
 
   useEffect(() => {
     if (preferences.data) {
       setEmailEnabled(preferences.data.emailEnabled ?? true);
       setInAppEnabled(preferences.data.inAppEnabled ?? true);
+      setMutedCategories(preferences.data.mutedCategories ?? []);
     }
   }, [preferences.data]);
 
@@ -56,7 +60,7 @@ export function NotificationsPage() {
       await updatePreferences.mutateAsync({
         emailEnabled,
         inAppEnabled,
-        mutedCategories: preferences.data?.mutedCategories ?? []
+        mutedCategories
       });
       toast.push("Notification preferences updated.", "success");
     } catch (error) {
@@ -82,6 +86,11 @@ export function NotificationsPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(18rem,0.6fr)]">
         <Card title="Inbox">
+          <label className="mb-3 flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={unreadOnly}
+              onChange={event => { setUnreadOnly(event.target.checked); setPage(0); }} />
+            Show unread only
+          </label>
           {notifications.data?.length ? (
             <div className="space-y-3">
               {notifications.data.map((notification) => (
@@ -125,8 +134,13 @@ export function NotificationsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted">Your notification inbox is empty.</p>
+            <p className="text-sm text-muted">No notifications on this page.</p>
           )}
+          <nav aria-label="Notification pages" className="mt-4 flex items-center gap-3">
+            <Button variant="secondary" disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Previous</Button>
+            <span className="text-sm">Page {page + 1}</span>
+            <Button variant="secondary" disabled={(notifications.data?.length ?? 0) < 25} onClick={() => setPage(p => p + 1)}>Next</Button>
+          </nav>
         </Card>
 
         <Card title="Preferences">
@@ -155,6 +169,13 @@ export function NotificationsPage() {
               />
             </label>
 
+            <label className="block text-sm font-medium">
+              Muted categories (comma-separated)
+              <input className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                value={mutedCategories.join(", ")}
+                onChange={event => setMutedCategories([...new Set(event.target.value.split(",").map(s => s.trim()).filter(Boolean))])}
+                aria-label="Muted notification categories" />
+            </label>
             <Button
               onClick={() => void savePreferences()}
               disabled={updatePreferences.isPending}

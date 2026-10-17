@@ -1,4 +1,5 @@
 from __future__ import annotations
+import hashlib
 
 import mimetypes
 import uuid
@@ -10,6 +11,8 @@ from app.clients.academic import AcademicClient
 from app.core.config import settings
 from app.core.errors import ConflictError, ForbiddenError, NotFoundError, ValidationDomainError
 from app.domain.entities.models import (
+    FileDeletionTask,
+    FileOperationAudit,
     AccessAction,
     LearningResource,
     OutboxEvent,
@@ -43,7 +46,7 @@ class ResourceService:
         return "admin" in principal.roles
 
     def _is_teacher(self, principal: Principal) -> bool:
-        return "teacher" in principal.roles
+        return "teacher" in principal.roles or "learning.resources.manage" in principal.permissions
 
     def _ensure_manage_targets(self, principal: Principal, targets) -> None:
         if self._is_admin(principal):
@@ -205,6 +208,9 @@ class ResourceService:
         )
         try:
             self.repo.add_version(version)
+            self.db.flush()
+            self.db.add(FileOperationAudit(resource_id=resource.id, version_id=version.id,
+                actor_user_id=principal.user_id, operation="UPLOAD", checksum_sha256=stored.checksum_sha256))
             self.db.commit()
             self.db.refresh(version)
             return version
@@ -309,6 +315,14 @@ class ResourceService:
         if not version.storage_key:
             raise NotFoundError("Latest resource version has no stored file")
         data = self.storage.get_bytes(version.storage_key)
+        # Never deliver or advertise corrupt storage bytes as a verified download.
+        digest = hashlib.sha256(data).hexdigest()
+        if not version.checksum_sha256 or not __import__("hmac").compare_digest(
+            digest, version.checksum_sha256.lower()
+        ):
+            raise ConflictError("Stored file failed SHA-256 integrity verification")
+        self.db.add(FileOperationAudit(resource_id=resource.id, version_id=version.id,
+            actor_user_id=principal.user_id, operation="DOWNLOAD", checksum_sha256=digest))
         self.record_access(principal.user_id, resource.id, AccessAction.DOWNLOAD)
         return version, data
 
@@ -318,12 +332,16 @@ class ResourceService:
             targets.section_ids, targets.course_ids, offset=offset, limit=limit
         )
 
+    def student_history(self, principal: Principal, *, offset: int, limit: int):
+        return self.repo.access_history(principal.user_id, offset=offset, limit=limit)
+
     def recommendations(self, principal: Principal, limit: int = 20):
         targets = self.academic.get_student_accessible_targets(principal.user_id)
         resources = self.repo.list_published_for_targets(
             targets.section_ids, targets.course_ids, offset=0, limit=max(limit * 5, 100)
         )
         accessed = self.repo.accessed_resource_ids(principal.user_id)
+        affinity = self.repo.accessed_tag_affinity(principal.user_id)
         cutoff = utcnow() - timedelta(days=settings.RECOMMENDATION_RECENT_DAYS)
         scored = []
         for resource in resources:
@@ -339,7 +357,11 @@ class ResourceService:
                 score += 20
                 reasons.append("recently published")
             score += min(len(resource.tags), 10)
-            if resource.tags:
+            matched = sorted(set(resource.tags or []) & set(affinity))
+            if matched:
+                score += min(sum(affinity[t] for t in matched), 10) * 3
+                reasons.append("matches your recently accessed topics: " + ", ".join(matched[:3]))
+            elif resource.tags:
                 reasons.append("tagged learning material")
             scored.append((score, resource, ", ".join(reasons) or "available for your enrollment"))
 
@@ -351,3 +373,32 @@ class ResourceService:
 
         scored.sort(key=lambda item: (-item[0], -_ts(item[1])))
         return scored[:limit]
+
+
+    def delete_file_version(self, principal: Principal, resource_id: uuid.UUID,
+                            version_id: uuid.UUID) -> None:
+        """Never erase a published file or remove bytes before durable scheduling."""
+        resource = self._get_or_404(resource_id, for_update=True)
+        self._ensure_owner_or_admin(principal, resource)
+        if resource.resource_type != ResourceType.FILE:
+            raise ValidationDomainError("Only FILE resources have stored file versions")
+        if resource.status == ResourceStatus.PUBLISHED:
+            raise ConflictError("Archive the published resource before deleting files")
+        version = next((v for v in resource.versions if v.id == version_id), None)
+        if version is None:
+            raise NotFoundError("Resource version not found")
+        key = version.storage_key
+        if not key:
+            raise ValidationDomainError("Version has no stored file")
+        try:
+            # The deletion task and version removal commit atomically.
+            self.db.add(FileDeletionTask(storage_key=key, resource_id=resource.id,
+                                         actor_user_id=principal.user_id))
+            self.db.add(FileOperationAudit(resource_id=resource.id, version_id=version.id,
+                actor_user_id=principal.user_id, operation="DELETE_SCHEDULED",
+                checksum_sha256=version.checksum_sha256))
+            self.db.delete(version)
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise

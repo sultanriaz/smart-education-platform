@@ -11,6 +11,9 @@ from app.api.dependencies import Limit, Offset, Service
 from app.domain.models import (
     Enrollment,
     EnrollmentStatus,
+    Course,
+    Program,
+    TeacherAcademicProfile,
     Section,
     StudentAcademicProfile,
 )
@@ -56,7 +59,8 @@ def teacher_sections(service, user_id):
 
 
 def check_subject(principal, user_id):
-    if not principal.is_admin and principal.user_id != user_id:
+    if (not principal.is_admin and "academic.records.read" not in principal.permissions
+            and principal.user_id != user_id):
         raise HTTPException(403, "You may only inspect your own academic relationships.")
 
 
@@ -179,3 +183,33 @@ def course_members(
         .offset(offset)
     )
     return {"student_user_ids": [str(user_id) for user_id in service.db.scalars(query)]}
+
+
+@router.get("/internal/programs/{program_id}/members")
+def program_members(program_id: UUID, service: Service, _internal: Internal,
+                    limit: Limit = 100, offset: Offset = 0):
+    # Membership is Academic-owned; inactive profiles never appear.
+    service.get(Program, program_id)
+    stmt = (select(StudentAcademicProfile.external_user_id)
+            .where(StudentAcademicProfile.program_id == program_id,
+                   StudentAcademicProfile.is_active.is_(True))
+            .order_by(StudentAcademicProfile.external_user_id).limit(limit).offset(offset))
+    return {"student_user_ids": [str(value) for value in service.db.scalars(stmt)]}
+
+
+@router.get("/internal/departments/{department_id}/members")
+def department_members(department_id: UUID, service: Service, _internal: Internal,
+                       limit: Limit = 100, offset: Offset = 0):
+    # Aggregate active students and staff; dedupe before paging deterministically.
+    from app.domain.models import Department
+    service.get(Department, department_id)
+    students = (select(StudentAcademicProfile.external_user_id)
+                .join(Program, StudentAcademicProfile.program_id == Program.id)
+                .where(Program.department_id == department_id,
+                       StudentAcademicProfile.is_active.is_(True)))
+    teachers = (select(TeacherAcademicProfile.external_user_id)
+                .where(TeacherAcademicProfile.department_id == department_id,
+                       TeacherAcademicProfile.is_active.is_(True)))
+    from sqlalchemy import union
+    stmt = (union(students, teachers).order_by("external_user_id").limit(limit).offset(offset))
+    return {"student_user_ids": [str(row[0]) for row in service.db.execute(stmt)]}

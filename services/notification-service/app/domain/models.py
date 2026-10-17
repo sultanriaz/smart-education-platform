@@ -70,6 +70,11 @@ class NotificationCampaign(Base):
     channels: Mapped[list[str]] = mapped_column(JSON, default=lambda: ["IN_APP"])
     status: Mapped[str] = mapped_column(String(30), default="COMPLETED", index=True)
     recipient_count: Mapped[int] = mapped_column(Integer, default=0)
+    priority: Mapped[str] = mapped_column(String(20), default="NORMAL", server_default="NORMAL")
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+    scheduled_for: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )

@@ -30,6 +30,7 @@ from app.schemas.models import (
     QuestionBankCreate,
     QuestionCreate,
     QuizCreate,
+    QuizUpdate,
     QuizQuestionAdd,
 )
 
@@ -100,6 +101,31 @@ class AssessmentService:
             created_by_user_id=actor_id,
         )
         self.db.add(quiz)
+        self.db.commit()
+        self.db.refresh(quiz)
+        return quiz
+
+    def edit_quiz(self, quiz_id: uuid.UUID, payload: QuizUpdate):
+        quiz = self.repo.get_quiz(quiz_id)
+        if not quiz:
+            raise NotFoundError("Quiz not found")
+        if quiz.status != QuizStatus.DRAFT.value:
+            raise ConflictError("Only draft quizzes can be edited")
+        for key, value in payload.model_dump(exclude_unset=True).items():
+            setattr(quiz, key, value)
+        self.db.commit()
+        self.db.refresh(quiz)
+        return quiz
+
+    def archive_quiz(self, quiz_id: uuid.UUID):
+        quiz = self.repo.get_quiz(quiz_id)
+        if not quiz:
+            raise NotFoundError("Quiz not found")
+        if quiz.status == QuizStatus.ARCHIVED.value:
+            return quiz  # Repeat archive is idempotent; historical grades persist.
+        quiz.status = QuizStatus.ARCHIVED.value
+        self._event("assessment.quiz_archived", "quiz", quiz.id,
+                    {"quiz_id": str(quiz.id), "course_id": str(quiz.course_id)})
         self.db.commit()
         self.db.refresh(quiz)
         return quiz

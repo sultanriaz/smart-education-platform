@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time
 
 from smartedu_infra.runtime import RelayState
 from sqlalchemy import (
@@ -43,6 +43,9 @@ class Facility(Base):
     capacity: Mapped[int] = mapped_column(Integer)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     is_bookable: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    opens_at_local: Mapped[time | None] = mapped_column(nullable=True)
+    closes_at_local: Mapped[time | None] = mapped_column(nullable=True)
+    operating_timezone: Mapped[str] = mapped_column(String(64), default="UTC", server_default="UTC")
     metadata_json: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
@@ -101,6 +104,7 @@ class Booking(Base):
     )
     requester_user_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), index=True)
     purpose: Mapped[str] = mapped_column(String(500))
+    requester_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     ends_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     attendees: Mapped[int] = mapped_column(Integer)

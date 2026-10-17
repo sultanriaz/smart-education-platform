@@ -10,6 +10,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import settings
+from smartedu_security.live_permissions import live_permission
 
 bearer = HTTPBearer(auto_error=True)
 _jwks_cache: tuple[float, dict] | None = None
@@ -20,6 +21,7 @@ class Principal:
     user_id: uuid.UUID
     roles: set[str]
     token: str
+    permissions: frozenset[str] = frozenset()
 
 
 def _jwks() -> dict:
@@ -55,11 +57,27 @@ def current_principal(
             raise ValueError("wrong token type")
         user_id = uuid.UUID(payload["sub"])
         roles = {str(x).lower() for x in payload.get("roles", [])}
-        if not roles.intersection({"admin", "teacher", "student"}):
-            raise ValueError("unsupported role")
-        return Principal(user_id=user_id, roles=roles, token=token)
+        raw = payload.get("permissions", [])
+        if not isinstance(raw, list) or any(not isinstance(v, str) or not v for v in raw):
+            raise ValueError("Invalid permissions claim")
+        if not roles.intersection({"admin", "teacher", "student"}) and not any(
+            scope.startswith("assessment.") for scope in raw
+        ):
+            raise ValueError("No Assessment role or permission")
+        return Principal(user_id=user_id, roles=roles, token=token, permissions=frozenset(raw))
     except Exception as exc:
         raise HTTPException(status_code=401, detail="Invalid access token") from exc
+
+
+def require_scoped_roles(scope: str, *roles: str):
+    expected = {r.lower() for r in roles}
+
+    def dep(p: Principal = Depends(current_principal)) -> Principal:
+        if expected.isdisjoint(p.roles) and not live_permission(p, scope, settings.JWT_JWKS_URL):
+            raise HTTPException(403, "Insufficient permissions")
+        return p
+
+    return dep
 
 
 def require_roles(*roles: str):
@@ -67,7 +85,11 @@ def require_roles(*roles: str):
 
     def dep(p: Principal = Depends(current_principal)) -> Principal:
         if expected.isdisjoint(p.roles):
-            raise HTTPException(status_code=403, detail="Insufficient permissions")
+            # Only management/review dependencies can be expanded via a scope;
+            # student-specific ownership paths are NEVER unlocked by custom grants.
+            scope = ("assessment.authoring.manage" if "teacher" in expected else None)
+            if not scope or not live_permission(p, scope, settings.JWT_JWKS_URL):
+                raise HTTPException(status_code=403, detail="Insufficient permissions")
         return p
 
     return dep

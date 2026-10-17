@@ -124,4 +124,6 @@ playwright-report/
 /.wave-patch-backups/
 *.backup-*
 *.bak
+SmartEdu_*.zip
+SmartEdu_*_Hotfix/
 

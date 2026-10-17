@@ -11,6 +11,7 @@ from app.db.base import Base
 from app.domain.models import (
     AcademicYear,
     Course,
+    Campus,
     Department,
     Enrollment,
     EnrollmentStatus,
@@ -78,6 +79,10 @@ class AcademicService:
             self._validate(model, values, record_id=record_id)
             for field, value in values.items():
                 setattr(record, field, value)
+            if model in (StudentAcademicProfile, TeacherAcademicProfile):
+                # An explicit Academic profile edit takes precedence over an
+                # earlier Identity-managed temporary suspension.
+                record.identity_suspended = False
             self.db.flush()
         return record
 
@@ -98,7 +103,11 @@ class AcademicService:
     def _validate(
         self, model: type[Base], values: dict[str, Any], *, record_id: UUID | None = None
     ) -> None:
-        if model is Program:
+        if model is Department and values.get("campus_id") is not None:
+            campus = self.get(Campus, values["campus_id"])
+            if not campus.is_active:
+                raise ConflictError("Cannot attach a department to an inactive campus.")
+        elif model is Program:
             self.get(Department, values["department_id"])
             if record_id and (
                 self.repo.count(
@@ -129,8 +138,10 @@ class AcademicService:
             if values["semester_number"] > program.duration_semesters:
                 raise ConflictError("Course semester exceeds the program duration.")
         elif model is Section:
-            self.get(Course, values["course_id"])
-            self.get(Semester, values["semester_id"])
+            course = self.get(Course, values["course_id"])
+            term = self.get(Semester, values["semester_id"])
+            if values["is_active"] and (course.is_archived or not term.is_active):
+                raise ConflictError("Active sections require an unarchived course and active term.")
             if record_id and values["capacity"] < self.repo.enrollment_count(record_id):
                 raise ConflictError("Section capacity cannot be below its active enrollment count.")
         elif model is StudentAcademicProfile:
@@ -179,6 +190,22 @@ class AcademicService:
             self._enrollment_event("academic.enrollment_created", record, student)
         return record
 
+    def bulk_enroll(self, section_id: UUID, student_ids: list[UUID]) -> list[Enrollment]:
+        """All-or-nothing enrollment with a consistent lock order and one commit."""
+        if not student_ids or len(student_ids) > 100 or len(set(student_ids)) != len(student_ids):
+            raise ConflictError("Bulk enrollment requires 1–100 distinct student profiles.")
+        with transaction(self.db):
+            section = self.get(Section, section_id, lock=True)
+            results: list[Enrollment] = []
+            # Section lock serializes concurrent requests against its capacity.
+            for student_id in sorted(student_ids):
+                student = self.get(StudentAcademicProfile, student_id, lock=True)
+                self._validate_enrollment(student, section)
+                enrollment = self.repo.add(Enrollment(student_profile_id=student_id, section_id=section_id))
+                self._enrollment_event("academic.enrollment_created", enrollment, student)
+                results.append(enrollment)
+            return results
+
     def _enrollment_event(self, event_type, record, student):
         self.db.add(
             OutboxEvent(
@@ -200,7 +227,9 @@ class AcademicService:
 
         Historical enrollments are never deleted. Ineligible active enrollments
         become DROPPED with owner outbox events; teacher assignments are disabled.
-        Recovery/reactivation remains a deliberate academic administration action.
+        Identity reactivation restores eligible profile flags, but historical
+        DROPPED enrollments and disabled teacher assignments are deliberately
+        NOT recreated; an academic administrator must review these explicitly.
         """
         if self.identity_accounts is None:
             raise DomainError(503, "Identity reconciliation requires an owner account checker.")
@@ -214,15 +243,27 @@ class AcademicService:
             if student is not None and "student" not in roles:
                 if student.is_active:
                     student.is_active = False
+                    student.identity_suspended = True
                     result["student_profiles_disabled"] += 1
                 for enrollment in self.repo.active_enrollments_for_student(student.id, lock=True):
                     enrollment.status = EnrollmentStatus.DROPPED
                     self.db.flush()
                     self._enrollment_event("academic.enrollment_dropped", enrollment, student)
                     result["enrollments_dropped"] += 1
+            if student is not None and "student" in roles and student.identity_suspended:
+                student.is_active = True
+                student.identity_suspended = False
+                result.setdefault("student_profiles_restored", 0)
+                result["student_profiles_restored"] += 1
+            if teacher is not None and "teacher" in roles and teacher.identity_suspended:
+                teacher.is_active = True
+                teacher.identity_suspended = False
+                result.setdefault("teacher_profiles_restored", 0)
+                result["teacher_profiles_restored"] += 1
             if teacher is not None and "teacher" not in roles:
                 if teacher.is_active:
                     teacher.is_active = False
+                    teacher.identity_suspended = True
                     result["teacher_profiles_disabled"] += 1
                 for assignment in self.repo.active_assignments_for_teacher(teacher.id, lock=True):
                     assignment.is_active = False
@@ -234,6 +275,9 @@ class AcademicService:
         self, student: StudentAcademicProfile, section: Section, *, exclude: UUID | None = None
     ) -> None:
         course = self.get(Course, section.course_id)
+        term = self.get(Semester, section.semester_id)
+        if course.is_archived or not term.is_active:
+            raise ConflictError("Archived courses and inactive terms reject new enrollments.")
         if not student.is_active or not section.is_active:
             raise ConflictError("Only active students can enroll in active sections.")
         self._require_identity(student.external_user_id, "student")

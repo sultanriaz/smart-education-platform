@@ -108,6 +108,23 @@ class AcademicClient:
             offset += 100
         raise DependencyContractError("Academic course exceeds the supported batch size")
 
+    def list_program_member_ids(self, program_id: uuid.UUID) -> list[uuid.UUID]:
+        return self._list_member_ids(f"/api/v1/internal/programs/{program_id}/members")
+
+    def list_department_member_ids(self, department_id: uuid.UUID) -> list[uuid.UUID]:
+        return self._list_member_ids(f"/api/v1/internal/departments/{department_id}/members")
+
+    def _list_member_ids(self, path: str) -> list[uuid.UUID]:
+        result, offset = [], 0
+        while offset < 100_000:
+            payload = self._request(f"{path}?limit=100&offset={offset}")
+            page = self._roster_ids(payload)
+            result.extend(page)
+            if len(page) < 100:
+                return list(dict.fromkeys(result))
+            offset += 100
+        raise DependencyContractError("Academic membership exceeds supported batch size")
+
     def validate_teacher_assignment(
         self,
         teacher_user_id: uuid.UUID,

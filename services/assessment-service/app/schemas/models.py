@@ -37,6 +37,13 @@ class QuestionBankCreate(BaseModel):
     course_id: uuid.UUID | None = None
 
 
+class QuizUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=2, max_length=200)
+    description: str | None = None
+    duration_minutes: int | None = Field(default=None, gt=0)
+    pass_percent: float | None = Field(default=None, ge=0, le=100)
+
+
 class QuizCreate(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     description: str | None = None

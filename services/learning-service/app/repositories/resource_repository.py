@@ -39,20 +39,30 @@ class ResourceRepository:
             stmt = stmt.with_for_update()
         return self.db.scalar(stmt)
 
-    def list_resources(self, offset: int, limit: int) -> list[LearningResource]:
-        stmt = self._base().order_by(LearningResource.created_at.desc()).offset(offset).limit(limit)
+    def list_resources(self, offset: int, limit: int, *, q: str | None = None,
+                       resource_type: str | None = None, status: str | None = None) -> list[LearningResource]:
+        stmt = self._base()
+        if q:
+            stmt = stmt.where(LearningResource.title.ilike(f"%{q.strip()}%"))
+        if resource_type:
+            stmt = stmt.where(LearningResource.resource_type == resource_type)
+        if status:
+            stmt = stmt.where(LearningResource.status == status)
+        stmt = stmt.order_by(LearningResource.created_at.desc(), LearningResource.id).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).unique().all())
 
     def list_creator_resources(
-        self, user_id: uuid.UUID, offset: int, limit: int
+        self, user_id: uuid.UUID, offset: int, limit: int, *, q: str | None = None,
+        resource_type: str | None = None, status: str | None = None
     ) -> list[LearningResource]:
-        stmt = (
-            self._base()
-            .where(LearningResource.creator_user_id == user_id)
-            .order_by(LearningResource.created_at.desc())
-            .offset(offset)
-            .limit(limit)
-        )
+        stmt = self._base().where(LearningResource.creator_user_id == user_id)
+        if q:
+            stmt = stmt.where(LearningResource.title.ilike(f"%{q.strip()}%"))
+        if resource_type:
+            stmt = stmt.where(LearningResource.resource_type == resource_type)
+        if status:
+            stmt = stmt.where(LearningResource.status == status)
+        stmt = stmt.order_by(LearningResource.created_at.desc(), LearningResource.id).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).unique().all())
 
     def list_published_for_targets(
@@ -112,6 +122,25 @@ class ResourceRepository:
     def add_access(self, log: ResourceAccessLog) -> None:
         self.db.add(log)
         self.db.flush()
+
+    def access_history(self, user_id: uuid.UUID, *, offset: int, limit: int) -> list[ResourceAccessLog]:
+        return list(self.db.scalars(
+            select(ResourceAccessLog).where(ResourceAccessLog.user_id == user_id)
+            .order_by(ResourceAccessLog.created_at.desc(), ResourceAccessLog.id.desc())
+            .offset(offset).limit(limit)
+        ))
+
+    def accessed_tag_affinity(self, user_id: uuid.UUID) -> dict[str, int]:
+        # Bounded per-user signals; never use other students' access history.
+        stmt = (select(LearningResource.tags)
+                .join(ResourceAccessLog, ResourceAccessLog.resource_id == LearningResource.id)
+                .where(ResourceAccessLog.user_id == user_id)
+                .order_by(ResourceAccessLog.created_at.desc()).limit(100))
+        counts: dict[str, int] = {}
+        for tags in self.db.scalars(stmt):
+            for tag in set(tags or []):
+                counts[tag] = counts.get(tag, 0) + 1
+        return counts
 
     def accessed_resource_ids(self, user_id: uuid.UUID) -> set[uuid.UUID]:
         rows = self.db.scalars(

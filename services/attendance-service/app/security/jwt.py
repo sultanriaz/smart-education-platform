@@ -22,10 +22,11 @@ class Principal:
     user_id: UUID
     roles: frozenset[str]
     access_token: str = dataclass_field(default="", repr=False)
+    permissions: frozenset[str] = dataclass_field(default_factory=frozenset)
 
     @property
     def is_admin(self) -> bool:
-        return "admin" in self.roles
+        return "admin" in self.roles or "attendance.records.manage" in self.permissions
 
 
 @lru_cache
@@ -87,4 +88,7 @@ def verify_access_token(token: str) -> Principal:
             raise jwt.InvalidTokenError("Invalid NumericDate claim.")
     if claims["exp"] <= claims["iat"] or claims["exp"] <= claims["nbf"]:
         raise jwt.InvalidTokenError("Invalid token lifetime.")
-    return Principal(subject, frozenset(claims["roles"]), token)
+    raw = claims.get("permissions", [])
+    if not isinstance(raw, list) or any(not isinstance(p, str) or not p for p in raw):
+        raise jwt.InvalidTokenError("Invalid permissions claim")
+    return Principal(subject, frozenset(claims["roles"]), token, frozenset(raw))

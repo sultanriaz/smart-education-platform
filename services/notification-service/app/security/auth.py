@@ -19,6 +19,7 @@ class Principal:
     user_id: uuid.UUID
     roles: frozenset[str]
     raw_token: str
+    permissions: frozenset[str] = frozenset()
 
     def has_role(self, *roles: str) -> bool:
         wanted = {r.lower() for r in roles}
@@ -96,6 +97,11 @@ def get_current_principal(token: str = Depends(oauth2_scheme)) -> Principal:
     if not isinstance(roles_raw, list):
         raise HTTPException(status_code=401, detail="Invalid roles claim")
     roles = frozenset(str(role).lower() for role in roles_raw)
-    if not roles.intersection({"admin", "teacher", "student"}):
-        raise HTTPException(status_code=403, detail="No supported role in token")
-    return Principal(user_id=user_id, roles=roles, raw_token=token)
+    raw = claims.get("permissions", [])
+    if not isinstance(raw, list) or any(not isinstance(v, str) or not v for v in raw):
+        raise HTTPException(401, "Invalid permissions claim")
+    if not roles.intersection({"student", "teacher", "admin"}) and not any(
+        scope.startswith("notification.") for scope in raw
+    ):
+        raise HTTPException(403, "No Notification role or permission")
+    return Principal(user_id=user_id, roles=roles, raw_token=token, permissions=frozenset(raw))

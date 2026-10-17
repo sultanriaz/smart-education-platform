@@ -92,9 +92,11 @@ def cancel_booking(
 @router.get("/{booking_id}/history", response_model=list[BookingHistoryOut])
 def booking_history(
     booking_id: uuid.UUID,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
     actor: Principal = Depends(get_current_principal),
     service: BookingService = Depends(booking_service),
     db: Session = Depends(get_db),
 ):
     service.get_booking_for_actor(booking_id, actor)
-    return BookingRepository(db).list_history(booking_id)
+    return BookingRepository(db).list_history(booking_id, limit=limit, offset=offset)

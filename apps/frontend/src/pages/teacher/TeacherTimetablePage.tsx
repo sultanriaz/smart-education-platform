@@ -1,3 +1,4 @@
+import { TimetableCalendar } from "../../components/timetable/TimetableCalendar";
 import { Card } from "../../components/ui/Card";
 import { InlineError } from "../../components/ui/InlineError";
 import { PageHeader } from "../../components/ui/PageHeader";
@@ -46,6 +47,8 @@ export function TeacherTimetablePage() {
         title="Teaching timetable"
         description="Your assigned class occurrences for the current two-week window."
       />
+
+      <TimetableCalendar occurrences={sorted} />
 
       {Object.entries(groups).length ? (
         <div className="space-y-6">

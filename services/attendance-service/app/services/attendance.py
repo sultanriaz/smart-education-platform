@@ -42,7 +42,7 @@ class AttendanceService:
         self.settings = settings
 
     def _staff(self, actor: Principal) -> None:
-        if actor.roles.isdisjoint({"admin", "teacher"}):
+        if actor.roles.isdisjoint({"admin", "teacher"}) and not actor.is_admin:
             raise ForbiddenError()
 
     def _section_access(self, actor: Principal, section_id: UUID) -> None:

@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class BookingCreate(BaseModel):
     facility_id: uuid.UUID
     purpose: str = Field(min_length=3, max_length=500)
+    requester_note: str | None = Field(default=None, max_length=2000)
     starts_at: datetime
     ends_at: datetime
     attendees: int = Field(gt=0, le=100000)
@@ -34,6 +35,7 @@ class BookingOut(BaseModel):
     facility_id: uuid.UUID
     requester_user_id: uuid.UUID
     purpose: str
+    requester_note: str | None
     starts_at: datetime
     ends_at: datetime
     attendees: int

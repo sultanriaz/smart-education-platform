@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from app.schemas.events import InternalEventIn
 
 
-def ev(event_type, payload, event_id=None, source="test-service"):
+def ev(event_type, payload, event_id=None, source="test-service", occurred_at=None):
     return InternalEventIn(
         event_id=event_id or uuid.uuid4(),
         source_service=source,
         event_type=event_type,
         payload=payload,
-        occurred_at=datetime.now(UTC),
+        occurred_at=occurred_at if occurred_at is not None else datetime.now(UTC),
     )
 
 
@@ -97,19 +97,43 @@ def test_assessment_projection_upsert(service):
 def test_facility_booking_status_progression(service):
     booking = uuid.uuid4()
     facility = uuid.uuid4()
+    requested_at = datetime.now(UTC)
 
+    # Production ordering uses occurred_at followed by event UUID. On Windows,
+    # two datetime.now() calls may share a clock tick; use explicit owner times.
     service.ingest_event(
         ev(
             "facility.booking_requested",
             {"booking_id": str(booking), "facility_id": str(facility)},
+            occurred_at=requested_at,
         )
     )
     service.ingest_event(
         ev(
             "facility.booking_approved",
             {"booking_id": str(booking), "facility_id": str(facility)},
+            occurred_at=requested_at + timedelta(seconds=1),
         )
     )
+
+    rows = service._facility_dicts()
+    assert len(rows) == 1
+    assert rows[0]["status"] == "APPROVED"
+
+
+def test_facility_late_requested_event_does_not_revert_approval(service):
+    booking = uuid.uuid4()
+    facility = uuid.uuid4()
+    requested_at = datetime.now(UTC)
+    payload = {"booking_id": str(booking), "facility_id": str(facility)}
+
+    # Event delivery is not guaranteed to follow the owner's event timestamps.
+    assert service.ingest_event(
+        ev("facility.booking_approved", payload, occurred_at=requested_at + timedelta(seconds=1))
+    ) == "processed"
+    assert service.ingest_event(
+        ev("facility.booking_requested", payload, occurred_at=requested_at)
+    ) == "processed"
 
     rows = service._facility_dicts()
     assert len(rows) == 1

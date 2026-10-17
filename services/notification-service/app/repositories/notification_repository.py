@@ -51,6 +51,7 @@ class NotificationRepository:
             select(func.count())
             .select_from(Notification)
             .where(
+                (Notification.expires_at.is_(None)) | (Notification.expires_at > datetime.now(UTC)),
                 Notification.recipient_user_id == user_id,
                 Notification.in_app_visible.is_(True),
                 Notification.status == "UNREAD",
@@ -63,6 +64,7 @@ class NotificationRepository:
         result = self.db.execute(
             update(Notification)
             .where(
+                (Notification.expires_at.is_(None)) | (Notification.expires_at > now),
                 Notification.recipient_user_id == user_id,
                 Notification.status == "UNREAD",
                 Notification.in_app_visible.is_(True),

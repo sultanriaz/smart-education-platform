@@ -16,7 +16,7 @@ import {
   useSections
 } from "../../features/admin/hooks";
 
-type TargetKind = "ROLE" | "SECTION";
+type TargetKind = "ROLE" | "SECTION" | "DIRECT" | "COURSE" | "PROGRAM" | "DEPARTMENT";
 type RoleTarget = "student" | "teacher" | "admin";
 
 export function AdminNotificationsPage() {
@@ -43,10 +43,17 @@ export function AdminNotificationsPage() {
     email: false
   });
 
+  const publishCampaign = useAdminMutation(api.publishNotificationCampaign, adminKeys.campaigns);
+  const archiveCampaign = useAdminMutation(api.archiveNotificationCampaign, adminKeys.campaigns);
   const [campaignForm, setCampaignForm] = useState({
     targetKind: "ROLE" as TargetKind,
     role: "student" as RoleTarget,
     sectionId: "",
+    targetId: "",
+    recipients: "",
+    deliveryMode: "now" as "now" | "draft" | "scheduled",
+    publishAt: "",
+    expiresAt: "",
     templateCode: "",
     title: "",
     body: "",
@@ -111,6 +118,18 @@ export function AdminNotificationsPage() {
       return;
     }
 
+    if (["COURSE", "PROGRAM", "DEPARTMENT"].includes(campaignForm.targetKind) && !campaignForm.targetId) {
+      toast.push("Enter a target ID for this audience.", "error");
+      return;
+    }
+    if (campaignForm.targetKind === "DIRECT" && !campaignForm.recipients.trim()) {
+      toast.push("Enter at least one recipient user UUID.", "error");
+      return;
+    }
+    if (campaignForm.deliveryMode === "scheduled" && !campaignForm.publishAt) {
+      toast.push("Choose a future publication time.", "error");
+      return;
+    }
     if (campaignForm.targetKind === "SECTION" && !campaignForm.sectionId) {
       toast.push("Choose a target section.", "error");
       return;
@@ -118,16 +137,18 @@ export function AdminNotificationsPage() {
 
     try {
       await createCampaign.mutateAsync({
-        target:
-          campaignForm.targetKind === "ROLE"
-            ? {
-                kind: "ROLE",
-                role: campaignForm.role
-              }
-            : {
-                kind: "SECTION",
-                section_id: campaignForm.sectionId
-              },
+        target: campaignForm.targetKind === "ROLE"
+          ? { kind: "ROLE", role: campaignForm.role }
+          : campaignForm.targetKind === "SECTION"
+            ? { kind: "SECTION", section_id: campaignForm.sectionId }
+            : campaignForm.targetKind === "DIRECT"
+              ? { kind: "DIRECT", recipients: campaignForm.recipients.split(/[\s,]+/)
+                  .filter(Boolean).map(user_id => ({ user_id })) }
+              : campaignForm.targetKind === "COURSE"
+                ? { kind: "COURSE", course_id: campaignForm.targetId }
+                : campaignForm.targetKind === "PROGRAM"
+                  ? { kind: "PROGRAM", program_id: campaignForm.targetId }
+                  : { kind: "DEPARTMENT", department_id: campaignForm.targetId },
         template_code: campaignForm.templateCode || undefined,
         title: hasTemplate ? undefined : campaignForm.title.trim(),
         body: hasTemplate ? undefined : campaignForm.body.trim(),
@@ -136,14 +157,17 @@ export function AdminNotificationsPage() {
         channels: campaignForm.email
           ? ["IN_APP", "EMAIL"]
           : ["IN_APP"],
-        data: {}
+        data: {},
+        draft: campaignForm.deliveryMode === "draft",
+        publish_at: campaignForm.deliveryMode === "scheduled" ? new Date(campaignForm.publishAt).toISOString() : undefined,
+        expires_at: campaignForm.expiresAt ? new Date(campaignForm.expiresAt).toISOString() : undefined
       });
       setCampaignForm((current) => ({
         ...current,
         title: "",
         body: ""
       }));
-      toast.push("Notification campaign created and dispatched.", "success");
+      toast.push("Notification campaign saved with the selected delivery mode.", "success");
     } catch (error) {
       toast.push(
         error instanceof Error ? error.message : "Could not create campaign.",
@@ -243,6 +267,10 @@ export function AdminNotificationsPage() {
               >
                 <option value="ROLE">Role</option>
                 <option value="SECTION">Section</option>
+                <option value="COURSE">Course</option>
+                <option value="PROGRAM">Program</option>
+                <option value="DEPARTMENT">Department</option>
+                <option value="DIRECT">Direct user IDs</option>
               </select>
             </label>
 
@@ -264,7 +292,7 @@ export function AdminNotificationsPage() {
                   <option value="admin">Admins</option>
                 </select>
               </label>
-            ) : (
+            ) : campaignForm.targetKind === "SECTION" ? (
               <label className="block text-sm font-medium">
                 Section
                 <select
@@ -285,6 +313,12 @@ export function AdminNotificationsPage() {
                   ))}
                 </select>
               </label>
+            ) : campaignForm.targetKind === "DIRECT" ? (
+              <Input label="Recipient user IDs (comma-separated UUIDs)" value={campaignForm.recipients}
+                onChange={e => setCampaignForm(f => ({ ...f, recipients: e.target.value }))} />
+            ) : (
+              <Input label={`${campaignForm.targetKind} UUID`} value={campaignForm.targetId}
+                onChange={e => setCampaignForm(f => ({ ...f, targetId: e.target.value }))} />
             )}
 
             <label className="block text-sm font-medium">
@@ -371,8 +405,22 @@ export function AdminNotificationsPage() {
               Request Email delivery in addition to in-app delivery
             </label>
 
+            <label className="block text-sm font-medium">Delivery mode
+              <select className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                value={campaignForm.deliveryMode} onChange={e => setCampaignForm(f => ({ ...f, deliveryMode: e.target.value as typeof f.deliveryMode }))}>
+                <option value="now">Dispatch immediately</option>
+                <option value="draft">Save draft</option>
+                <option value="scheduled">Schedule delivery</option>
+              </select>
+            </label>
+            {campaignForm.deliveryMode === "scheduled" ? (
+              <Input label="Publish date and time" type="datetime-local" value={campaignForm.publishAt}
+                onChange={e => setCampaignForm(f => ({ ...f, publishAt: e.target.value }))} />
+            ) : null}
+            <Input label="Expiry date and time (optional)" type="datetime-local" value={campaignForm.expiresAt}
+              onChange={e => setCampaignForm(f => ({ ...f, expiresAt: e.target.value }))} />
             <Button type="submit" disabled={createCampaign.isPending}>
-              {createCampaign.isPending ? "Dispatching…" : "Send campaign"}
+              {createCampaign.isPending ? "Saving…" : "Save campaign"}
             </Button>
           </form>
         </Card>
@@ -413,8 +461,19 @@ export function AdminNotificationsPage() {
                       {new Date(item.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <Badge>{item.status}</Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge>{item.status}</Badge>
+                    {(["DRAFT", "SCHEDULED"].includes(item.status)) ? (
+                      <>
+                        <Button variant="secondary" disabled={publishCampaign.isPending}
+                          onClick={() => void publishCampaign.mutateAsync(item.id).catch(() => toast.push("Publication failed.", "error"))}>Publish now</Button>
+                        <Button variant="secondary" disabled={archiveCampaign.isPending}
+                          onClick={() => void archiveCampaign.mutateAsync(item.id).catch(() => toast.push("Archive failed.", "error"))}>Archive</Button>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
+                {item.scheduledFor ? <p className="mt-2 text-xs text-muted">Scheduled: {new Date(item.scheduledFor).toLocaleString()}</p> : null}
               </div>
             ))}
           </div>

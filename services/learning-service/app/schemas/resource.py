@@ -89,3 +89,12 @@ class RecommendationOut(BaseModel):
     resource: ResourceOut
     score: int
     reason: str
+
+
+class ResourceAccessOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    resource_id: uuid.UUID
+    user_id: uuid.UUID
+    action: str
+    created_at: datetime

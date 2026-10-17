@@ -306,6 +306,28 @@ export async function createTeachingAssignment(input: {
   );
 }
 
+export type Campus = { id: string; code: string; name: string; isActive: boolean };
+export async function listCampuses(): Promise<Campus[]> {
+  return list(await apiRequest<unknown>("/api/v1/academic/campuses")).map(value => {
+    const r = value && typeof value === "object" ? value as Record<string, unknown> : {};
+    return { id: String(r.id ?? ""), code: String(r.code ?? ""),
+      name: String(r.name ?? ""), isActive: r.is_active !== false };
+  });
+}
+export async function createCampus(input: { code: string; name: string; is_active: boolean }): Promise<void> {
+  await apiRequest("/api/v1/academic/campuses", { method: "POST", body: JSON.stringify(input) });
+}
+export async function bulkEnroll(input: { section_id: string; student_profile_ids: string[] }): Promise<unknown> {
+  return apiRequest("/api/v1/academic/enrollments/bulk", { method: "POST", body: JSON.stringify(input) });
+}
+export async function archiveCourse(id: string): Promise<void> {
+  const raw = await apiRequest<Record<string, unknown>>(`/api/v1/academic/courses/${id}`);
+  await apiRequest(`/api/v1/academic/courses/${id}`, { method: "PUT", body: JSON.stringify({
+    code: raw.code, title: raw.title, program_id: raw.program_id, credits: raw.credits,
+    semester_number: raw.semester_number, is_archived: true
+  }) });
+}
+
 // Scheduling
 export async function listSchedules(): Promise<Schedule[]> {
   return list(await apiRequest<unknown>("/api/v1/scheduling/schedules?limit=200")).map(schedule);
@@ -400,6 +422,9 @@ export async function createFacility(input: {
   floor?: string;
   capacity: number;
   is_bookable: boolean;
+  opens_at_local?: string;
+  closes_at_local?: string;
+  operating_timezone?: string;
   metadata?: Record<string, unknown>;
 }): Promise<Facility> {
   return facility(
@@ -508,7 +533,10 @@ export async function listNotificationCampaigns(): Promise<NotificationCampaign[
 
 export async function createNotificationCampaign(input: {
   target: {
-    kind: "ROLE" | "SECTION" | "DIRECT";
+    kind: "ROLE" | "SECTION" | "DIRECT" | "COURSE" | "PROGRAM" | "DEPARTMENT";
+    course_id?: string;
+    program_id?: string;
+    department_id?: string;
     role?: "admin" | "teacher" | "student";
     section_id?: string;
     recipients?: Array<{ user_id: string; email?: string }>;
@@ -520,6 +548,9 @@ export async function createNotificationCampaign(input: {
   priority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
   channels: Array<"IN_APP" | "EMAIL">;
   data?: Record<string, unknown>;
+  draft?: boolean;
+  publish_at?: string;
+  expires_at?: string;
 }): Promise<NotificationCampaign> {
   return campaign(
     await apiRequest<unknown>("/api/v1/notifications/admin/campaigns", {
@@ -527,6 +558,32 @@ export async function createNotificationCampaign(input: {
       body: JSON.stringify(input)
     })
   );
+}
+
+export async function publishNotificationCampaign(id: string): Promise<NotificationCampaign> {
+  return campaign(await apiRequest<unknown>(`/api/v1/notifications/admin/campaigns/${id}/publish`, { method: "POST" }));
+}
+export async function archiveNotificationCampaign(id: string): Promise<NotificationCampaign> {
+  return campaign(await apiRequest<unknown>(`/api/v1/notifications/admin/campaigns/${id}/archive`, { method: "POST" }));
+}
+export async function editNotificationCampaign(id: string, input: Parameters<typeof createNotificationCampaign>[0]): Promise<NotificationCampaign> {
+  return campaign(await apiRequest<unknown>(`/api/v1/notifications/admin/campaigns/${id}`, { method: "PUT", body: JSON.stringify(input) }));
+}
+
+export type Equipment = { id: string; code: string; name: string };
+export async function listEquipment(): Promise<Equipment[]> {
+  const data = list(await apiRequest<unknown>("/api/v1/facilities/equipment"));
+  return data.map(item => {
+    const r = item && typeof item === "object" ? item as Record<string, unknown> : {};
+    return { id: String(r.id ?? ""), code: String(r.code ?? ""), name: String(r.name ?? "") };
+  });
+}
+export async function createEquipment(input: { code: string; name: string; description?: string }): Promise<void> {
+  await apiRequest("/api/v1/facilities/equipment", {method:"POST", body:JSON.stringify(input)});
+}
+export async function assignEquipment(input: { facilityId: string; equipment_id: string; quantity: number }): Promise<void> {
+  await apiRequest(`/api/v1/facilities/facilities/${input.facilityId}/equipment`,
+    {method:"PUT", body: JSON.stringify({equipment_id:input.equipment_id, quantity:input.quantity})});
 }
 
 // Reporting

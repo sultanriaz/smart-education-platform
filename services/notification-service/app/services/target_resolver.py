@@ -40,7 +40,16 @@ class TargetResolver:
                 [ResolvedRecipient(u.id, str(u.email) if u.email else None) for u in users]
             )
 
-        member_ids = self.academic.list_section_member_ids(target.section_id, forwarded_token)
+        if target.kind == "SECTION":
+            member_ids = self.academic.list_section_member_ids(target.section_id, forwarded_token)
+        elif target.kind == "COURSE":
+            member_ids = self.academic.list_course_member_ids(target.course_id)
+        elif target.kind == "PROGRAM":
+            member_ids = self.academic.list_program_member_ids(target.program_id)
+        elif target.kind == "DEPARTMENT":
+            member_ids = self.academic.list_department_member_ids(target.department_id)
+        else:
+            raise ValueError("Unsupported target kind")
         if not member_ids:
             return []
         by_id = {}

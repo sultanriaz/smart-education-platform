@@ -102,12 +102,13 @@ class BookingRepository:
         self.db.add(history)
         self.db.flush()
 
-    def list_history(self, booking_id: uuid.UUID) -> list[BookingHistory]:
+    def list_history(self, booking_id: uuid.UUID, *, limit: int = 100, offset: int = 0) -> list[BookingHistory]:
         return list(
             self.db.scalars(
                 select(BookingHistory)
                 .where(BookingHistory.booking_id == booking_id)
-                .order_by(BookingHistory.created_at)
+                .order_by(BookingHistory.created_at, BookingHistory.id)
+                .offset(offset).limit(limit)
             ).all()
         )
 

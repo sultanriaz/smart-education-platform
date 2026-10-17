@@ -43,6 +43,7 @@ export type LearningResource = {
   externalUrl?: string | null;
   textContent?: string | null;
   score?: number | null;
+  reason?: string | null;
 };
 
 export type AssessmentAssignment = {
@@ -93,6 +94,7 @@ export type AssessmentResult = {
   quizId?: string;
   title?: string;
   score?: number | null;
+  reason?: string | null;
   maxScore?: number | null;
   percent?: number | null;
   passed?: boolean | null;

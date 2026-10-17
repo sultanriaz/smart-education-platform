@@ -113,7 +113,8 @@ export function normalizeLearningResource(value: unknown): LearningResource {
     downloadPath: nullableStr(r.download_url ?? r.download_path),
     externalUrl: nullableStr(latest.external_url ?? r.url ?? r.external_url),
     textContent: nullableStr(latest.text_content),
-    score: typeof wrapper.score === "number" ? wrapper.score : null
+    score: typeof wrapper.score === "number" ? wrapper.score : null,
+    reason: nullableStr(wrapper.reason)
   };
 }
 

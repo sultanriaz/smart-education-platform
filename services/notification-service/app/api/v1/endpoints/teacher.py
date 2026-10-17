@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -34,6 +35,9 @@ class TeacherAnnouncementCreate(BaseModel):
     )
     priority: Literal["LOW", "NORMAL", "HIGH", "URGENT"] = "NORMAL"
     channels: list[Literal["IN_APP", "EMAIL"]] = ["IN_APP"]
+    draft: bool = False
+    publish_at: datetime | None = None
+    expires_at: datetime | None = None
 
 
 @router.post("/announcements", response_model=CampaignOut, status_code=201)
@@ -67,6 +71,7 @@ def create_announcement(
             category=payload.category,
             priority=payload.priority,
             channels=payload.channels,
+            draft=payload.draft, publish_at=payload.publish_at, expires_at=payload.expires_at,
             data={
                 "section_id": str(payload.section_id),
                 "teacher_user_id": str(teacher.user_id),
@@ -106,3 +111,53 @@ def list_my_announcements(
         .limit(limit)
     )
     return list(db.scalars(stmt).all())
+
+
+@router.put("/announcements/{campaign_id}", response_model=CampaignOut)
+def edit_announcement(
+    campaign_id: uuid.UUID, payload: TeacherAnnouncementCreate,
+    teacher: Principal = Depends(require_roles("teacher")),
+    db: Session = Depends(get_db),
+    resolver: TargetResolver = Depends(get_target_resolver),
+):
+    if not resolver.academic.validate_teacher_assignment(teacher.user_id, payload.section_id, teacher.raw_token):
+        raise HTTPException(403, detail="Teacher is not assigned to this section")
+    campaign = db.get(NotificationCampaign, campaign_id)
+    if not campaign or campaign.created_by_user_id != teacher.user_id or campaign.target_kind != "SECTION":
+        raise HTTPException(403, detail="Not your section announcement")
+    from app.core.errors import ConflictError
+    try:
+        return CampaignService(db, resolver).edit_pending(
+            campaign_id,
+            CampaignCreate(target=CampaignTarget(kind="SECTION", section_id=payload.section_id),
+                           title=payload.title, body=payload.body, category=payload.category,
+                           priority=payload.priority, channels=payload.channels,
+                           draft=payload.draft, publish_at=payload.publish_at,
+                           expires_at=payload.expires_at), teacher.user_id,
+        )
+    except ConflictError as exc:
+        raise HTTPException(409, detail=str(exc)) from exc
+
+
+@router.post("/announcements/{campaign_id}/publish", response_model=CampaignOut)
+def publish_announcement(
+    campaign_id: uuid.UUID,
+    teacher: Principal = Depends(require_roles("teacher")),
+    db: Session = Depends(get_db),
+    resolver: TargetResolver = Depends(get_target_resolver),
+    dispatcher: TaskDispatcher = Depends(get_dispatcher),
+):
+    campaign = db.get(NotificationCampaign, campaign_id)
+    if not campaign or campaign.created_by_user_id != teacher.user_id or campaign.target_kind != "SECTION":
+        raise HTTPException(403, detail="Not your section announcement")
+    target = CampaignTarget.model_validate(campaign.target_value)
+    if not resolver.academic.validate_teacher_assignment(teacher.user_id, target.section_id, teacher.raw_token):
+        raise HTTPException(403, detail="Teacher is no longer assigned to this section")
+    from app.core.errors import ConflictError
+    try:
+        campaign, pending = CampaignService(db, resolver).publish_pending(campaign_id, actor_id=teacher.user_id)
+    except ConflictError as exc:
+        raise HTTPException(409, detail=str(exc)) from exc
+    for attempt in pending:
+        dispatcher.deliver_attempt(attempt)
+    return campaign

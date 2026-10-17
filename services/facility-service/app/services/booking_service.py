@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
 
@@ -22,6 +23,22 @@ def utcnow() -> datetime:
 
 def _aware(value: datetime) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=UTC)
+
+
+def inside_operating_hours(facility, starts_at: datetime, ends_at: datetime) -> bool:
+    """Intervals must be fully contained in one local business day; DST-aware."""
+    opens = facility.opens_at_local
+    closes = facility.closes_at_local
+    if opens is None and closes is None:
+        return True
+    if opens is None or closes is None:
+        return False
+    zone = ZoneInfo(facility.operating_timezone or "UTC")
+    local_start = _aware(starts_at).astimezone(zone)
+    local_end = _aware(ends_at).astimezone(zone)
+    if local_start.date() != local_end.date():
+        return False
+    return opens <= local_start.time().replace(tzinfo=None) and local_end.time().replace(tzinfo=None) <= closes
 
 
 class BookingService:
@@ -58,6 +75,8 @@ class BookingService:
             raise ConflictError(
                 "Facility is not available for booking", code="facility_not_bookable"
             )
+        if not inside_operating_hours(facility, payload.starts_at, payload.ends_at):
+            raise ConflictError("Facility is closed during the requested window", code="outside_operating_hours")
         if payload.attendees > facility.capacity:
             raise ValidationError(
                 "Attendee count exceeds facility capacity", code="capacity_exceeded"
@@ -73,6 +92,7 @@ class BookingService:
                 facility_id=facility.id,
                 requester_user_id=actor.user_id,
                 purpose=payload.purpose.strip(),
+                requester_note=payload.requester_note,
                 starts_at=payload.starts_at,
                 ends_at=payload.ends_at,
                 attendees=payload.attendees,

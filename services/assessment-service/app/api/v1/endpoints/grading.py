@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.api.dependencies import get_service
 from app.core.errors import ConflictError, DomainError, ForbiddenError, NotFoundError
 from app.schemas.models import AttemptOut, ManualGrade
-from app.security.auth import Principal, require_roles
+from app.security.auth import Principal, require_scoped_roles
 from app.services.assessment_service import AssessmentService
 
 router = APIRouter(tags=["Grading"])
@@ -17,7 +17,7 @@ router = APIRouter(tags=["Grading"])
 def grade(
     attempt_id: uuid.UUID,
     payload: ManualGrade,
-    p: Principal = Depends(require_roles("admin", "teacher")),
+    p: Principal = Depends(require_scoped_roles("assessment.grading.manage", "admin", "teacher")),
     service: AssessmentService = Depends(get_service),
 ):
     try:

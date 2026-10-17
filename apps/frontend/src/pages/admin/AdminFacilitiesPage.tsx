@@ -12,16 +12,22 @@ import {
   adminKeys,
   useAdminBookings,
   useAdminFacilities,
+  useEquipment,
   useAdminMutation,
   useFacilityBlocks
 } from "../../features/admin/hooks";
 
 export function AdminFacilitiesPage() {
   const facilities = useAdminFacilities();
+  const equipment = useEquipment();
   const bookings = useAdminBookings();
   const blocks = useFacilityBlocks();
   const toast = useToast();
 
+  const createEquipment = useAdminMutation(api.createEquipment, adminKeys.equipment);
+  const assignEquipment = useAdminMutation(api.assignEquipment, adminKeys.facilities);
+  const [equipmentForm, setEquipmentForm] = useState({code:"", name:"", description:""});
+  const [equipmentAssignment, setEquipmentAssignment] = useState({facilityId:"", equipment_id:"", quantity:1});
   const createFacility = useAdminMutation(api.createFacility, adminKeys.facilities);
   const updateFacility = useAdminMutation(
     ({ id, input }: { id: string; input: Parameters<typeof api.updateFacility>[1] }) =>
@@ -51,6 +57,9 @@ export function AdminFacilitiesPage() {
     building: "",
     floor: "",
     capacity: 30,
+    opens_at_local: "",
+    closes_at_local: "",
+    operating_timezone: "UTC",
     is_bookable: true
   });
   const [decisionNotes, setDecisionNotes] = useState<Record<string, string>>({});
@@ -61,7 +70,7 @@ export function AdminFacilitiesPage() {
     reason: ""
   });
 
-  if (facilities.isLoading || bookings.isLoading || blocks.isLoading) {
+  if (facilities.isLoading || bookings.isLoading || blocks.isLoading || equipment.isLoading) {
     return (
       <div className="page-container">
         <SectionLoader label="Loading facility administration…" />
@@ -69,7 +78,7 @@ export function AdminFacilitiesPage() {
     );
   }
 
-  if (facilities.error || bookings.error || blocks.error) {
+  if (facilities.error || bookings.error || blocks.error || equipment.error) {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Admin" title="Facilities" />
@@ -100,6 +109,9 @@ export function AdminFacilitiesPage() {
           floor: facilityForm.floor || undefined,
           capacity: facilityForm.capacity,
           is_bookable: facilityForm.is_bookable,
+          opens_at_local: facilityForm.opens_at_local || undefined,
+          closes_at_local: facilityForm.closes_at_local || undefined,
+          operating_timezone: facilityForm.operating_timezone,
           metadata: {}
         }),
       "Facility created."
@@ -141,6 +153,36 @@ export function AdminFacilitiesPage() {
       />
 
       <div className="grid gap-6 xl:grid-cols-2">
+        <Card title="Equipment administration">
+          <form className="space-y-3" onSubmit={event => {
+            event.preventDefault(); void perform(() => createEquipment.mutateAsync(equipmentForm), "Equipment created.");
+          }}>
+            <Input label="Equipment code" value={equipmentForm.code} onChange={e => setEquipmentForm(f=>({...f,code:e.target.value}))} />
+            <Input label="Equipment name" value={equipmentForm.name} onChange={e => setEquipmentForm(f=>({...f,name:e.target.value}))} />
+            <Button type="submit" disabled={createEquipment.isPending}>Create equipment</Button>
+          </form>
+          <form className="mt-5 space-y-3" onSubmit={event => {
+            event.preventDefault(); void perform(() => assignEquipment.mutateAsync(equipmentAssignment), "Equipment assigned.");
+          }}>
+            <label className="block text-sm font-medium">Facility
+              <select className="mt-2 w-full rounded-xl border border-line bg-panel p-3" value={equipmentAssignment.facilityId}
+                onChange={e => setEquipmentAssignment(f=>({...f,facilityId:e.target.value}))}>
+                <option value="">Select facility</option>
+                {(facilities.data ?? []).map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">Equipment
+              <select className="mt-2 w-full rounded-xl border border-line bg-panel p-3" value={equipmentAssignment.equipment_id}
+                onChange={e => setEquipmentAssignment(f=>({...f,equipment_id:e.target.value}))}>
+                <option value="">Select equipment</option>
+                {(equipment.data ?? []).map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
+              </select>
+            </label>
+            <Input label="Quantity" type="number" min={1} value={equipmentAssignment.quantity}
+              onChange={e => setEquipmentAssignment(f=>({...f,quantity:Number(e.target.value)}))} />
+            <Button type="submit" disabled={!equipmentAssignment.facilityId || !equipmentAssignment.equipment_id || assignEquipment.isPending}>Assign equipment</Button>
+          </form>
+        </Card>
         <Card title="Create facility">
           <form className="space-y-4" onSubmit={(event) => void submitFacility(event)}>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -213,6 +255,14 @@ export function AdminFacilitiesPage() {
               }
             />
 
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input label="Opening time (optional)" type="time" value={facilityForm.opens_at_local}
+                onChange={e => setFacilityForm(f=>({...f,opens_at_local:e.target.value}))} />
+              <Input label="Closing time (optional)" type="time" value={facilityForm.closes_at_local}
+                onChange={e => setFacilityForm(f=>({...f,closes_at_local:e.target.value}))} />
+            </div>
+            <Input label="Operating timezone (IANA)" value={facilityForm.operating_timezone}
+              onChange={e => setFacilityForm(f=>({...f,operating_timezone:e.target.value}))} />
             <label className="flex items-center gap-3 rounded-xl border border-line p-3 text-sm">
               <input
                 type="checkbox"

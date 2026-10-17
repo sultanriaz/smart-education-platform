@@ -7,6 +7,20 @@ from app.domain.entities.user import User
 from app.security.password import hash_password
 
 PERMISSIONS = {
+    'academic.records.read': 'List and inspect academic records',
+    'academic.records.write': 'Manage academic records and manual reconciliations',
+    'attendance.records.manage': 'Manage attendance sessions and records',
+    'assessment.authoring.manage': 'Author assessments within ownership restrictions',
+    'assessment.grading.manage': 'Grade assessment submissions',
+    'assessment.reviews.read': 'Read teacher assessment reviews within ownership restrictions',
+    'learning.resources.manage': 'Manage learning resources within ownership restrictions',
+    'learning.categories.manage': 'Manage learning categories',
+    'notification.admin.manage': 'Manage notification administration',
+    'notification.announcements.manage': 'Publish teacher announcements',
+    'reporting.reports.read': 'Read institution-wide reporting',
+    'reporting.snapshots.write': 'Create reporting snapshots',
+    'platform.admin.manage': 'Manage platform administration',
+
     "identity.users.read": "Read user accounts",
     "identity.users.write": "Create and update user accounts",
     "identity.roles.read": "Read roles and permissions",
@@ -18,6 +32,20 @@ PERMISSIONS = {
 }
 
 ROLE_PERMISSIONS = {
+    'academic.records.read': 'List and inspect academic records',
+    'academic.records.write': 'Manage academic records and manual reconciliations',
+    'attendance.records.manage': 'Manage attendance sessions and records',
+    'assessment.authoring.manage': 'Author assessments within ownership restrictions',
+    'assessment.grading.manage': 'Grade assessment submissions',
+    'assessment.reviews.read': 'Read teacher assessment reviews within ownership restrictions',
+    'learning.resources.manage': 'Manage learning resources within ownership restrictions',
+    'learning.categories.manage': 'Manage learning categories',
+    'notification.admin.manage': 'Manage notification administration',
+    'notification.announcements.manage': 'Publish teacher announcements',
+    'reporting.reports.read': 'Read institution-wide reporting',
+    'reporting.snapshots.write': 'Create reporting snapshots',
+    'platform.admin.manage': 'Manage platform administration',
+
     "student": [],
     "teacher": [],
     "admin": list(PERMISSIONS.keys()),

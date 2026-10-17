@@ -30,6 +30,14 @@ class DeliveryService:
         notification = self.notifications.get_notification(attempt.notification_id)
         if notification is None:
             raise NotFoundError("Notification not found")
+        if notification.expires_at:
+            expiry = (notification.expires_at if notification.expires_at.tzinfo else
+                      notification.expires_at.replace(tzinfo=UTC))
+            if expiry <= datetime.now(UTC):
+                attempt.status = "SKIPPED"
+                attempt.last_error = "Campaign expired before delivery"
+                self.db.commit()
+                return None
         if attempt.channel == "IN_APP":
             attempt.status = "SENT" if notification.in_app_visible else "SKIPPED"
             self.db.commit()

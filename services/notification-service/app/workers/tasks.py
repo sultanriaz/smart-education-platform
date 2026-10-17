@@ -28,3 +28,9 @@ def deliver_attempt(self, attempt_id: str):
             self.apply_async(args=[str(retry_id)], countdown=60)
     except Exception as exc:
         raise self.retry(exc=exc, countdown=min(300, 30 * (2**self.request.retries))) from exc
+
+
+@celery_app.task(name="notification.publish_due_campaigns")
+def publish_due_campaigns():
+    from app.event_worker import publish_due_campaigns as run_due
+    run_due()

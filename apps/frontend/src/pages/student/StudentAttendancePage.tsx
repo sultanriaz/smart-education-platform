@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Badge } from "../../components/ui/Badge";
 import { Card } from "../../components/ui/Card";
 import { InlineError } from "../../components/ui/InlineError";
@@ -11,8 +12,14 @@ import {
 } from "../../features/student/hooks";
 
 export function StudentAttendancePage() {
-  const summary = useAttendanceSummary();
-  const records = useAttendanceRecords();
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [courseId, setCourseId] = useState("");
+  const [offset, setOffset] = useState(0);
+  const limit = 50;
+  const filters = { dateFrom, dateTo, courseId, offset, limit };
+  const summary = useAttendanceSummary({ dateFrom, dateTo, courseId });
+  const records = useAttendanceRecords(filters);
 
   if (summary.isLoading || records.isLoading) {
     return (
@@ -59,6 +66,23 @@ export function StudentAttendancePage() {
       </Card>
 
       <Card className="mt-6" title="Attendance history">
+        <div className="mb-4 grid gap-3 sm:grid-cols-3">
+          <label className="text-sm font-medium">From
+            <input aria-label="Attendance from date" type="date" value={dateFrom}
+              onChange={(e) => { setDateFrom(e.target.value); setOffset(0); }}
+              className="mt-1 block w-full rounded border border-line bg-panel p-2" />
+          </label>
+          <label className="text-sm font-medium">To
+            <input aria-label="Attendance to date" type="date" value={dateTo}
+              onChange={(e) => { setDateTo(e.target.value); setOffset(0); }}
+              className="mt-1 block w-full rounded border border-line bg-panel p-2" />
+          </label>
+          <label className="text-sm font-medium">Course ID (optional)
+            <input aria-label="Attendance course filter" value={courseId} placeholder="Course UUID"
+              onChange={(e) => { setCourseId(e.target.value); setOffset(0); }}
+              className="mt-1 block w-full rounded border border-line bg-panel p-2" />
+          </label>
+        </div>
         {records.data?.length ? (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[680px] border-collapse text-left text-sm">
@@ -95,6 +119,14 @@ export function StudentAttendancePage() {
         ) : (
           <p className="text-sm text-muted">No attendance records are available yet.</p>
         )}
+        <nav aria-label="Attendance history pagination" className="mt-4 flex items-center justify-between gap-3">
+          <button type="button" className="rounded border border-line px-3 py-2"
+            disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - limit))}>Previous</button>
+          <span className="text-xs text-muted">Records {offset + 1}–{offset + (records.data?.length ?? 0)}</span>
+          <button type="button" className="rounded border border-line px-3 py-2"
+            disabled={(records.data?.length ?? 0) < limit}
+            onClick={() => setOffset(offset + limit)}>Next</button>
+        </nav>
       </Card>
     </div>
   );

@@ -4,7 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Response
 
-from app.api.dependencies import Admin, Limit, Offset, Service, Staff
+from app.api.dependencies import Admin, AdminRead, Limit, Offset, Service, Staff
 from app.domain.models import StudentAcademicProfile, TeacherAcademicProfile
 from app.schemas.academic import (
     StudentProfileRead,
@@ -23,7 +23,7 @@ def my_teacher_profile(service: Service, principal: Staff) -> TeacherProfileRead
 
 @router.get("/student-profiles", response_model=list[StudentProfileRead])
 def list_student_profiles(
-    service: Service, _principal: Admin, limit: Limit = 50, offset: Offset = 0
+    service: Service, _principal: AdminRead, limit: Limit = 50, offset: Offset = 0
 ) -> list[StudentProfileRead]:
     return [
         StudentProfileRead.model_validate(row)
@@ -40,7 +40,7 @@ def create_student_profiles(
 
 @router.get("/student-profiles/{record_id}", response_model=StudentProfileRead)
 def get_student_profiles(
-    record_id: UUID, service: Service, _principal: Admin
+    record_id: UUID, service: Service, _principal: AdminRead
 ) -> StudentProfileRead:
     return StudentProfileRead.model_validate(service.get(StudentAcademicProfile, record_id))
 
@@ -62,7 +62,7 @@ def delete_student_profiles(record_id: UUID, service: Service, _admin: Admin) ->
 
 @router.get("/teacher-profiles", response_model=list[TeacherProfileRead])
 def list_teacher_profiles(
-    service: Service, _principal: Admin, limit: Limit = 50, offset: Offset = 0
+    service: Service, _principal: AdminRead, limit: Limit = 50, offset: Offset = 0
 ) -> list[TeacherProfileRead]:
     return [
         TeacherProfileRead.model_validate(row)
@@ -79,7 +79,7 @@ def create_teacher_profiles(
 
 @router.get("/teacher-profiles/{record_id}", response_model=TeacherProfileRead)
 def get_teacher_profiles(
-    record_id: UUID, service: Service, _principal: Admin
+    record_id: UUID, service: Service, _principal: AdminRead
 ) -> TeacherProfileRead:
     return TeacherProfileRead.model_validate(service.get(TeacherAcademicProfile, record_id))
 

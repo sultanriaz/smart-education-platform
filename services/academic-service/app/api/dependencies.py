@@ -6,7 +6,7 @@ from fastapi import Depends, Query
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.security.dependencies import require_admin, require_staff
+from app.security.dependencies import require_admin, require_admin_read, require_staff
 from app.security.jwt import Principal
 from app.services.academic import AcademicService
 from app.services.identity_accounts import IdentityAccountClient
@@ -25,6 +25,7 @@ def get_service(
 
 Service = Annotated[AcademicService, Depends(get_service)]
 Admin = Annotated[Principal, Depends(require_admin)]
+AdminRead = Annotated[Principal, Depends(require_admin_read)]
 Staff = Annotated[Principal, Depends(require_staff)]
 Limit = Annotated[int, Query(ge=1, le=100)]
 Offset = Annotated[int, Query(ge=0)]

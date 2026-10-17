@@ -50,6 +50,9 @@ def create_resource(
 
 @router.get("", response_model=list[ResourceOut])
 def list_resources(
+    q: str | None = Query(default=None, max_length=100),
+    resource_type: str | None = Query(default=None, pattern="^(NOTE|VIDEO|LINK|FILE)$"),
+    status: str | None = Query(default=None, pattern="^(DRAFT|PUBLISHED|ARCHIVED)$"),
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=200),
     principal: Principal = Depends(require_roles("teacher", "admin")),
@@ -57,8 +60,9 @@ def list_resources(
 ):
     repo = ResourceRepository(db)
     if "admin" in principal.roles:
-        return repo.list_resources(offset, limit)
-    return repo.list_creator_resources(principal.user_id, offset, limit)
+        return repo.list_resources(offset, limit, q=q, resource_type=resource_type, status=status)
+    return repo.list_creator_resources(principal.user_id, offset, limit,
+                                       q=q, resource_type=resource_type, status=status)
 
 
 @router.get("/{resource_id}", response_model=ResourceOut)
@@ -128,6 +132,20 @@ async def upload_file(
             data,
             change_note,
         )
+    except DomainError as exc:
+        map_error(exc)
+
+
+@router.delete("/{resource_id}/versions/{version_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_file_version(
+    resource_id: uuid.UUID,
+    version_id: uuid.UUID,
+    principal: Principal = Depends(require_roles("teacher", "admin")),
+    service: ResourceService = Depends(get_resource_service),
+):
+    try:
+        service.delete_file_version(principal, resource_id, version_id)
+        return Response(status_code=204)
     except DomainError as exc:
         map_error(exc)
 

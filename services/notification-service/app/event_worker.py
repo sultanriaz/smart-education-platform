@@ -9,10 +9,11 @@ from smartedu_infra.runtime import SECURITY_EVENTS, run_owned_worker
 from sqlalchemy import or_, select
 
 from app.db.session import SessionLocal
-from app.domain.models import DeliveryAttempt, InboxEvent, OutboxEvent
+from app.domain.models import DeliveryAttempt, InboxEvent, OutboxEvent, NotificationCampaign
 from app.providers.email import get_email_provider
 from app.schemas.notification import InternalEventIn
 from app.services.delivery_service import DeliveryService
+from app.services.campaign_service import CampaignService
 from app.services.event_service import EventService
 from app.sprint18_security_events import security_email_from_event
 
@@ -50,7 +51,22 @@ def handle(envelope):
             service.process(inbox.id)
 
 
+def publish_due_campaigns():
+    now = datetime.now(UTC)
+    with SessionLocal() as db:
+        ids = list(db.scalars(select(NotificationCampaign.id).where(
+            NotificationCampaign.status == "SCHEDULED",
+            NotificationCampaign.scheduled_for <= now,
+        ).order_by(NotificationCampaign.scheduled_for, NotificationCampaign.id).limit(10)))
+    for campaign_id in ids:
+        with SessionLocal() as db:
+            _, pending = CampaignService(db).publish_pending(campaign_id, only_due=True)
+        # Delivery attempts are persisted and picked up by maintenance;
+        # never depend on an in-process dispatcher for exactly-once publication.
+
+
 def maintenance():
+    publish_due_campaigns()
     # Covers API-created attempts and persisted retries after worker restarts.
     # Each attempt is locked and committed by DeliveryService independently.
     with SessionLocal() as db:

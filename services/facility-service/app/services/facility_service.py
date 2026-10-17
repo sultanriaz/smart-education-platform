@@ -9,6 +9,7 @@ from app.domain.models import Equipment, Facility, FacilityEquipment, OutboxEven
 from app.repositories.facility_repository import FacilityRepository
 from app.repositories.outbox_repository import OutboxRepository
 from app.schemas.facility import (
+    validate_hours,
     EquipmentCreate,
     FacilityCreate,
     FacilityEquipmentAssign,
@@ -35,6 +36,9 @@ class FacilityService:
             floor=payload.floor,
             capacity=payload.capacity,
             is_bookable=payload.is_bookable,
+            opens_at_local=payload.opens_at_local,
+            closes_at_local=payload.closes_at_local,
+            operating_timezone=payload.operating_timezone,
             metadata_json=payload.metadata,
             created_by_user_id=actor.user_id,
         )
@@ -68,6 +72,11 @@ class FacilityService:
         changes = payload.model_dump(exclude_unset=True)
         if "metadata" in changes:
             changes["metadata_json"] = changes.pop("metadata")
+        validate_hours(
+            changes.get("opens_at_local", facility.opens_at_local),
+            changes.get("closes_at_local", facility.closes_at_local),
+            changes.get("operating_timezone", facility.operating_timezone),
+        )
         for key, value in changes.items():
             setattr(facility, key, value)
         try:

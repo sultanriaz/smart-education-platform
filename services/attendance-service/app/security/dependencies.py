@@ -7,6 +7,8 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.security.jwt import KeyDiscoveryUnavailable, Principal, verify_access_token
+from smartedu_security.live_permissions import live_permission
+from app.core.config import get_settings
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -25,6 +27,9 @@ def get_principal(
         raise HTTPException(503, "Identity verification keys are unavailable.") from exc
     except jwt.PyJWTError as exc:
         raise unauthorized from exc
+    if "attendance.records.manage" in principal.permissions:
+        live_permission(principal, "attendance.records.manage", get_settings().JWT_JWKS_URL)
     if principal.roles.isdisjoint({"admin", "teacher", "student"}):
-        raise HTTPException(403, "A platform role is required.")
+        if not live_permission(principal, "attendance.records.manage", get_settings().JWT_JWKS_URL):
+            raise HTTPException(403, "A platform role or attendance permission is required.")
     return principal

@@ -11,6 +11,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import settings
+from smartedu_security.live_permissions import live_permission
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -20,6 +21,7 @@ class Principal:
     user_id: uuid.UUID
     roles: frozenset[str]
     raw_token: str
+    permissions: frozenset[str] = frozenset()
 
 
 class JWKSCache:
@@ -82,10 +84,24 @@ def verify_token(token: str) -> Principal:
         if payload.get("type") != "access":
             raise HTTPException(status_code=401, detail="Invalid token type")
         user_id = uuid.UUID(str(payload["sub"]))
-        roles = frozenset(str(x).lower() for x in payload.get("roles", []))
-        if not roles.intersection({"student", "teacher", "admin"}):
-            raise HTTPException(status_code=403, detail="Unsupported role")
-        return Principal(user_id=user_id, roles=roles, raw_token=token)
+        raw_roles = payload.get("roles", [])
+        if not isinstance(raw_roles, list) or any(
+            not isinstance(role, str) or not role for role in raw_roles
+        ):
+            raise HTTPException(401, "Invalid roles claim")
+        # Built-in roles are case-sensitive. Never promote "Admin" to "admin".
+        roles = frozenset(raw_roles)
+        raw = payload.get("permissions", [])
+        if not isinstance(raw, list) or any(not isinstance(v, str) or not v for v in raw):
+            raise HTTPException(401, "Invalid permissions claim")
+        permissions = frozenset(raw)
+        # Valid custom-role principals must carry an applicable Learning scope.
+        # The API dependency still verifies that scope against live Identity state.
+        if roles.isdisjoint({"admin", "teacher", "student"}) and permissions.isdisjoint(
+            {"learning.resources.manage", "learning.categories.manage"}
+        ):
+            raise HTTPException(403, "No Learning role or permission")
+        return Principal(user_id=user_id, roles=roles, raw_token=token, permissions=permissions)
     except HTTPException:
         raise
     except Exception as exc:
@@ -100,7 +116,16 @@ def get_principal(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing bearer token",
         )
-    return verify_token(credentials.credentials)
+    principal = verify_token(credentials.credentials)
+    if "learning.resources.manage" in principal.permissions:
+        live_permission(principal, "learning.resources.manage", settings.JWT_JWKS_URL)
+    elif "learning.categories.manage" in principal.permissions:
+        live_permission(principal, "learning.categories.manage", settings.JWT_JWKS_URL)
+    if not principal.roles.intersection({"admin", "teacher", "student"}) and not principal.permissions.intersection(
+        {"learning.resources.manage", "learning.categories.manage"}
+    ):
+        raise HTTPException(403, "No Learning role or permission")
+    return principal
 
 
 def require_roles(*required: str):
@@ -108,7 +133,10 @@ def require_roles(*required: str):
 
     def dependency(principal: Principal = Depends(get_principal)) -> Principal:
         if principal.roles.isdisjoint(required_set):
-            raise HTTPException(status_code=403, detail="Insufficient permissions")
+            scope = ("learning.categories.manage" if required_set == {"admin"}
+                     else "learning.resources.manage" if "teacher" in required_set else None)
+            if not scope or not live_permission(principal, scope, settings.JWT_JWKS_URL):
+                raise HTTPException(403, "Insufficient permissions")
         return principal
 
     return dependency

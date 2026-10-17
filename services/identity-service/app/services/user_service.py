@@ -7,6 +7,7 @@ from app.db.transaction import transaction
 from app.repositories.role_repository import RoleRepository
 from app.repositories.token_repository import TokenRepository
 from app.repositories.user_repository import UserRepository
+from app.domain.entities.outbox import OutboxEvent
 from app.schemas.user import AdminUserCreate, AdminUserUpdate, UserSelfUpdate
 from app.security.password import hash_password
 from app.sprint18 import security_settings
@@ -48,6 +49,16 @@ class UserService:
                 user.full_name = payload.full_name.strip()
             return self.users.save(user)
 
+    def _eligibility_event(self, user):
+        # No personally identifying information in the outbox payload.
+        self.db.add(OutboxEvent(
+            event_type="identity.account_eligibility_changed",
+            aggregate_id=user.id,
+            payload={"user_id": str(user.id), "is_active": bool(user.is_active),
+                     "roles": sorted(role.name.lower() for role in user.roles),
+                     "auth_version": user.auth_version},
+        ))
+
     def update_by_admin(self, user_id: uuid.UUID, payload: AdminUserUpdate):
         with transaction(self.db):
             return self._update_by_admin(user_id, payload)
@@ -75,6 +86,7 @@ class UserService:
         if user.is_active != before_active or {role.name.lower() for role in user.roles} != before_roles:
             user.auth_version += 1
             self.tokens.revoke_user(user.id)
+            self._eligibility_event(user)
         return self.users.save(user)
 
     def deactivate(self, user_id: uuid.UUID):
@@ -86,4 +98,5 @@ class UserService:
                 user.is_active = False
                 user.auth_version += 1
                 self.tokens.revoke_user(user.id)
+                self._eligibility_event(user)
             return self.users.save(user)

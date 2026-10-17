@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.dependencies import get_resource_service
 from app.core.errors import DomainError
-from app.schemas.resource import RecommendationOut, ResourceOut
+from app.schemas.resource import RecommendationOut, ResourceOut, ResourceAccessOut
 from app.security.auth import Principal, require_roles
 from app.services.resource_service import ResourceService
 
@@ -37,3 +37,13 @@ def recommendations(
         ]
     except DomainError as exc:
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+
+
+@router.get("/activity", response_model=list[ResourceAccessOut])
+def activity_history(
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=100),
+    principal: Principal = Depends(require_roles("student")),
+    service: ResourceService = Depends(get_resource_service),
+):
+    return service.student_history(principal, offset=offset, limit=limit)

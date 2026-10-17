@@ -5,10 +5,11 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.core.errors import NotFoundError
+from app.core.errors import NotFoundError, ValidationError
 from app.repositories.booking_repository import BookingRepository
 from app.repositories.facility_repository import FacilityRepository
 from app.schemas.availability import AvailabilityConflict, AvailabilityOut
+from app.services.booking_service import inside_operating_hours
 
 
 class AvailabilityService:
@@ -19,6 +20,8 @@ class AvailabilityService:
     def check(
         self, facility_id: uuid.UUID, starts_at: datetime, ends_at: datetime
     ) -> AvailabilityOut:
+        if ends_at <= starts_at:
+            raise ValidationError("ends_at must follow starts_at", code="invalid_interval")
         facility = self.facilities.get_facility(facility_id)
         if not facility:
             raise NotFoundError("Facility not found", code="facility_not_found")
@@ -56,7 +59,8 @@ class AvailabilityService:
                     description=f"{reservation.source_service}:{reservation.source_reference_id}",
                 )
             )
-        available = facility.is_active and facility.is_bookable and not conflicts
+        available = (facility.is_active and facility.is_bookable and not conflicts
+                     and inside_operating_hours(facility, starts_at, ends_at))
         return AvailabilityOut(
             facility_id=facility_id,
             starts_at=starts_at,

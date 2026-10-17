@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 Channel = Literal["IN_APP", "EMAIL"]
 Priority = Literal["LOW", "NORMAL", "HIGH", "URGENT"]
-TargetKind = Literal["DIRECT", "ROLE", "SECTION"]
+TargetKind = Literal["DIRECT", "ROLE", "SECTION", "COURSE", "PROGRAM", "DEPARTMENT"]
 
 
 class NotificationOut(BaseModel):
@@ -94,6 +94,9 @@ class CampaignTarget(BaseModel):
     recipients: list[DirectRecipient] | None = None
     role: Literal["admin", "teacher", "student"] | None = None
     section_id: uuid.UUID | None = None
+    course_id: uuid.UUID | None = None
+    program_id: uuid.UUID | None = None
+    department_id: uuid.UUID | None = None
 
     @model_validator(mode="after")
     def validate_target(self):
@@ -101,8 +104,12 @@ class CampaignTarget(BaseModel):
             raise ValueError("DIRECT target requires recipients")
         if self.kind == "ROLE" and not self.role:
             raise ValueError("ROLE target requires role")
-        if self.kind == "SECTION" and not self.section_id:
-            raise ValueError("SECTION target requires section_id")
+        for kind, value in (
+            ("SECTION", self.section_id), ("COURSE", self.course_id),
+            ("PROGRAM", self.program_id), ("DEPARTMENT", self.department_id),
+        ):
+            if self.kind == kind and not value:
+                raise ValueError(f"{kind} target requires a matching ID")
         return self
 
 
@@ -115,10 +122,19 @@ class CampaignCreate(BaseModel):
     category: str = Field(default="general", min_length=1, max_length=80)
     priority: Priority = "NORMAL"
     channels: list[Channel] | None = None
-    data: dict = {}
+    data: dict = Field(default_factory=dict)
+    draft: bool = False
+    publish_at: datetime | None = None
+    expires_at: datetime | None = None
 
     @model_validator(mode="after")
     def validate_content(self):
+        for name in ("publish_at", "expires_at"):
+            value = getattr(self, name)
+            if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+                raise ValueError(f"{name} must carry a timezone offset")
+        if self.expires_at and self.publish_at and self.expires_at <= self.publish_at:
+            raise ValueError("expires_at must be after publish_at")
         if not self.template_code and (not self.title or not self.body):
             raise ValueError("Provide template_code or both title and body")
         return self
@@ -138,6 +154,10 @@ class CampaignOut(BaseModel):
     channels: list[str]
     status: str
     recipient_count: int
+    priority: str
+    data: dict
+    scheduled_for: datetime | None
+    expires_at: datetime | None
     created_at: datetime
 
 

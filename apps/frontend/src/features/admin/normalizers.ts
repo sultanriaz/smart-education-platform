@@ -288,6 +288,8 @@ export function campaign(value: unknown): NotificationCampaign {
     channels: stringArray(r.channels),
     status: s(r.status),
     recipientCount: n(r.recipient_count),
+    scheduledFor: ns(r.scheduled_for),
+    expiresAt: ns(r.expires_at),
     createdAt: s(r.created_at)
   };
 }

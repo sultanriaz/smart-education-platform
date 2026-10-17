@@ -1,11 +1,12 @@
 from __future__ import annotations
+from datetime import UTC, datetime
 
 import uuid
 
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.errors import NotFoundError, TemplateRenderError
+from app.core.errors import ConflictError, ForbiddenError, NotFoundError, TemplateRenderError
 from app.domain.models import (
     DeliveryAttempt,
     Notification,
@@ -19,7 +20,7 @@ from app.repositories.notification_repository import NotificationRepository
 from app.repositories.outbox_repository import OutboxRepository
 from app.repositories.preference_repository import PreferenceRepository
 from app.repositories.template_repository import TemplateRepository
-from app.schemas.notification import CampaignCreate
+from app.schemas.notification import CampaignCreate, CampaignTarget
 from app.services.target_resolver import ResolvedRecipient, TargetResolver
 from app.services.template_renderer import render_template
 
@@ -38,8 +39,25 @@ class CampaignService:
     def create(
         self, payload: CampaignCreate, actor_user_id: uuid.UUID, forwarded_token: str | None
     ) -> tuple[NotificationCampaign, list[uuid.UUID]]:
-        recipients = self.resolver.resolve(payload.target, forwarded_token)
         title, body, category, channels = self._content(payload)
+        # Drafts and future campaigns must not resolve or deliver early.
+        if payload.draft or (payload.publish_at and payload.publish_at > datetime.now(UTC)):
+            campaign = NotificationCampaign(
+                created_by_user_id=actor_user_id,
+                target_kind=payload.target.kind,
+                target_value=payload.target.model_dump(mode="json", exclude_none=True),
+                template_code=payload.template_code, title=title, body=body,
+                category=category, channels=channels, priority=payload.priority,
+                data=payload.data, scheduled_for=payload.publish_at,
+                expires_at=payload.expires_at,
+                status="DRAFT" if payload.draft else "SCHEDULED",
+                recipient_count=0,
+            )
+            self.campaigns.add_campaign(campaign)
+            self.db.commit()
+            self.db.refresh(campaign)
+            return campaign, []
+        recipients = self.resolver.resolve(payload.target, forwarded_token)
         campaign = NotificationCampaign(
             created_by_user_id=actor_user_id,
             target_kind=payload.target.kind,
@@ -51,6 +69,8 @@ class CampaignService:
             channels=channels,
             recipient_count=len(recipients),
             status="COMPLETED",
+            priority=payload.priority, data=payload.data,
+            scheduled_for=payload.publish_at, expires_at=payload.expires_at,
         )
         self.campaigns.add_campaign(campaign)
         self.db.flush()
@@ -75,6 +95,85 @@ class CampaignService:
         self.db.commit()
         self.db.refresh(campaign)
         return campaign, pending
+
+    def edit_pending(self, campaign_id: uuid.UUID, payload: CampaignCreate,
+                     actor_id: uuid.UUID, *, is_admin: bool = False):
+        campaign = self.db.get(NotificationCampaign, campaign_id, with_for_update=True)
+        if campaign is None:
+            raise NotFoundError("Campaign not found")
+        if not is_admin and campaign.created_by_user_id != actor_id:
+            raise ForbiddenError("Not the campaign owner")
+        if campaign.status not in {"DRAFT", "SCHEDULED"}:
+            raise ConflictError("Sent or archived campaigns cannot be edited")
+        title, body, category, channels = self._content(payload)
+        campaign.target_kind = payload.target.kind
+        campaign.target_value = payload.target.model_dump(mode="json", exclude_none=True)
+        campaign.template_code = payload.template_code
+        campaign.title, campaign.body, campaign.category = title, body, category
+        campaign.channels, campaign.priority, campaign.data = channels, payload.priority, payload.data
+        campaign.scheduled_for, campaign.expires_at = payload.publish_at, payload.expires_at
+        campaign.status = "DRAFT" if payload.draft else "SCHEDULED"
+        if campaign.status == "SCHEDULED" and not payload.publish_at:
+            raise ConflictError("Scheduled campaigns require publish_at")
+        self.db.commit()
+        self.db.refresh(campaign)
+        return campaign
+
+    def publish_pending(self, campaign_id: uuid.UUID, *, actor_id: uuid.UUID | None = None,
+                        is_admin: bool = False, only_due: bool = False):
+        from sqlalchemy import select
+        campaign = self.db.scalar(select(NotificationCampaign).where(
+            NotificationCampaign.id == campaign_id).with_for_update())
+        if campaign is None:
+            raise NotFoundError("Campaign not found")
+        if actor_id is not None and not is_admin and campaign.created_by_user_id != actor_id:
+            raise ForbiddenError("Not the campaign owner")
+        if campaign.status == "COMPLETED":
+            return campaign, []  # idempotent, never send twice
+        if campaign.status not in {"DRAFT", "SCHEDULED"}:
+            raise ConflictError("Campaign cannot be published from this state")
+        now = datetime.now(UTC)
+        if only_due and (campaign.status != "SCHEDULED" or
+                         not campaign.scheduled_for or
+                         (campaign.scheduled_for if campaign.scheduled_for.tzinfo else
+                          campaign.scheduled_for.replace(tzinfo=UTC)) > now):
+            return campaign, []
+        if campaign.expires_at and (campaign.expires_at if campaign.expires_at.tzinfo else
+                                    campaign.expires_at.replace(tzinfo=UTC)) <= now:
+            campaign.status = "EXPIRED"
+            self.db.commit()
+            return campaign, []
+        target = CampaignTarget.model_validate(campaign.target_value)
+        recipients = self.resolver.resolve(target, None)  # signed internal service tokens
+        pending = self._create_notifications(
+            recipients=recipients, campaign=campaign,
+            title=campaign.title, body=campaign.body, category=campaign.category,
+            priority=campaign.priority, channels=campaign.channels, data=campaign.data,
+        )
+        campaign.recipient_count = len(recipients)
+        campaign.status = "COMPLETED"
+        self.outbox.add_event(OutboxEvent(
+            event_type="notification.campaign_created", aggregate_type="campaign",
+            aggregate_id=campaign.id, payload={"recipient_count": len(recipients),
+                                               "category": campaign.category},
+        ))
+        self.db.commit()
+        self.db.refresh(campaign)
+        return campaign, pending
+
+    def archive_campaign(self, campaign_id: uuid.UUID, *, actor_id: uuid.UUID,
+                         is_admin: bool = False):
+        campaign = self.db.get(NotificationCampaign, campaign_id, with_for_update=True)
+        if campaign is None:
+            raise NotFoundError("Campaign not found")
+        if not is_admin and campaign.created_by_user_id != actor_id:
+            raise ForbiddenError("Not the campaign owner")
+        if campaign.status not in {"ARCHIVED", "COMPLETED", "DRAFT", "SCHEDULED"}:
+            raise ConflictError("Campaign cannot be archived")
+        # Delivered notices remain in recipient history; no new future publication.
+        campaign.status = "ARCHIVED"
+        self.db.commit()
+        return campaign
 
     def create_from_event(
         self,
@@ -157,6 +256,7 @@ class CampaignService:
             in_app_visible = "IN_APP" in channels and preference.in_app_enabled and not muted
             notification = Notification(
                 recipient_user_id=recipient.user_id,
+                expires_at=campaign.expires_at if campaign else None,
                 recipient_email=recipient.email,
                 campaign_id=campaign.id if campaign else None,
                 category=category,

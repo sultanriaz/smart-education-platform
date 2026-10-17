@@ -25,16 +25,29 @@ class RecordRead(BaseModel):
     updated_at: datetime
 
 
+class CampusWrite(Input):
+    code: Code
+    name: Name
+    is_active: bool = True
+
+
+class CampusRead(CampusWrite, RecordRead):
+    pass
+
+
 class DepartmentWrite(Input):
     code: Code
     name: Name
+    campus_id: UUID | None = None
 
 
 class DepartmentRead(DepartmentWrite, RecordRead):
     pass
 
 
-class ProgramWrite(DepartmentWrite):
+class ProgramWrite(Input):
+    code: Code
+    name: Name
     department_id: UUID
     duration_semesters: PositiveInt
 
@@ -54,8 +67,9 @@ class DateRange(Input):
         return self
 
 
-class AcademicYearWrite(DepartmentWrite, DateRange):
-    pass
+class AcademicYearWrite(DateRange):
+    code: Code
+    name: Name
 
 
 class AcademicYearRead(AcademicYearWrite, RecordRead):
@@ -66,6 +80,7 @@ class SemesterWrite(DateRange):
     academic_year_id: UUID
     number: PositiveInt
     name: Name
+    is_active: bool = True
 
 
 class SemesterRead(SemesterWrite, RecordRead):
@@ -78,6 +93,7 @@ class CourseWrite(Input):
     title: Name
     credits: Annotated[int, Field(gt=0, le=30)]
     semester_number: PositiveInt
+    is_archived: bool = False
 
 
 class CourseRead(CourseWrite, RecordRead):
@@ -121,6 +137,23 @@ class TeacherProfileWrite(Input):
 
 class TeacherProfileRead(TeacherProfileWrite, RecordRead):
     pass
+
+
+class BulkEnrollmentCreate(Input):
+    # Atomic operation: the entire batch succeeds or nothing commits.
+    section_id: UUID
+    student_profile_ids: list[UUID] = Field(min_length=1, max_length=100)
+
+    @model_validator(mode="after")
+    def unique_students(self) -> Self:
+        if len(set(self.student_profile_ids)) != len(self.student_profile_ids):
+            raise ValueError("Student profile IDs must be unique in a bulk request.")
+        return self
+
+
+class BulkEnrollmentOut(BaseModel):
+    created: int
+    enrollment_ids: list[UUID]
 
 
 class EnrollmentCreate(Input):

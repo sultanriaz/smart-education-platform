@@ -15,7 +15,7 @@ from app.domain.entities.models import (
     Quiz,
     QuizAssignment,
 )
-from app.security.auth import Principal, require_roles
+from app.security.auth import Principal, require_scoped_roles
 from app.services.assessment_service import AssessmentService
 
 router = APIRouter(prefix="/teachers/me", tags=["Teacher Assessment Read API"])
@@ -47,7 +47,7 @@ def _teacher_assignment_allowed(
 
 @router.get("/banks")
 def list_my_banks(
-    principal: Principal = Depends(require_roles("teacher", "admin")),
+    principal: Principal = Depends(require_scoped_roles("assessment.reviews.read", "teacher", "admin")),
     service: AssessmentService = Depends(get_service),
 ):
     stmt = select(QuestionBank).order_by(QuestionBank.created_at.desc())
@@ -70,7 +70,7 @@ def list_my_banks(
 @router.get("/questions")
 def list_my_questions(
     bank_id: uuid.UUID | None = Query(default=None),
-    principal: Principal = Depends(require_roles("teacher", "admin")),
+    principal: Principal = Depends(require_scoped_roles("assessment.reviews.read", "teacher", "admin")),
     service: AssessmentService = Depends(get_service),
 ):
     stmt = (
@@ -111,7 +111,7 @@ def list_my_questions(
 
 @router.get("/quizzes")
 def list_my_quizzes(
-    principal: Principal = Depends(require_roles("teacher", "admin")),
+    principal: Principal = Depends(require_scoped_roles("assessment.reviews.read", "teacher", "admin")),
     service: AssessmentService = Depends(get_service),
 ):
     stmt = select(Quiz).options(selectinload(Quiz.questions)).order_by(Quiz.updated_at.desc())
@@ -139,7 +139,7 @@ def list_my_quizzes(
 
 @router.get("/assignments")
 def list_my_assignments(
-    principal: Principal = Depends(require_roles("teacher", "admin")),
+    principal: Principal = Depends(require_scoped_roles("assessment.reviews.read", "teacher", "admin")),
     service: AssessmentService = Depends(get_service),
 ):
     assignments = list(
@@ -172,7 +172,7 @@ def list_my_assignments(
 @router.get("/assignments/{assignment_id}/attempts")
 def list_assignment_attempts(
     assignment_id: uuid.UUID,
-    principal: Principal = Depends(require_roles("teacher", "admin")),
+    principal: Principal = Depends(require_scoped_roles("assessment.reviews.read", "teacher", "admin")),
     service: AssessmentService = Depends(get_service),
 ):
     assignment = service.repo.get_assignment(assignment_id)

@@ -5,10 +5,12 @@ from uuid import UUID
 from fastapi import APIRouter, Response
 
 from app.api.dependencies import Admin, Limit, Offset, Service, Staff
-from app.domain.models import AcademicYear, Course, Department, Program, Semester
+from app.domain.models import AcademicYear, Campus, Course, Department, Program, Semester
 from app.schemas.academic import (
     AcademicYearRead,
     AcademicYearWrite,
+    CampusRead,
+    CampusWrite,
     CourseRead,
     CourseWrite,
     DepartmentRead,
@@ -20,6 +22,22 @@ from app.schemas.academic import (
 )
 
 router = APIRouter(tags=["catalog"])
+
+
+@router.get("/campuses", response_model=list[CampusRead])
+def list_campuses(service: Service, _principal: Staff, limit: Limit = 50, offset: Offset = 0):
+    return [CampusRead.model_validate(c) for c in service.list(Campus, limit=limit, offset=offset)]
+
+
+@router.post("/campuses", response_model=CampusRead, status_code=201)
+def create_campus(payload: CampusWrite, service: Service, _admin: Admin):
+    return CampusRead.model_validate(service.create(Campus, payload))
+
+
+@router.put("/campuses/{campus_id}", response_model=CampusRead)
+def update_campus(campus_id: UUID, payload: CampusWrite, service: Service, _admin: Admin):
+    return CampusRead.model_validate(service.replace(Campus, campus_id, payload))
+
 
 
 @router.get("/departments", response_model=list[DepartmentRead])

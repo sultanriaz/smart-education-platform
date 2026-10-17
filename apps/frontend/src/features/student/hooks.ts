@@ -10,6 +10,7 @@ import {
   getFacilities,
   getMyBookings,
   getMyResources,
+  getLearningActivity,
   getMyTimetable,
   getNotificationPreferences,
   getNotifications,
@@ -22,6 +23,7 @@ import {
   updateNotificationPreferences
 } from "./student-api";
 import type { NotificationPreferences } from "./types";
+import type { AttendanceFilters, NotificationFilters } from "./student-api";
 
 export const studentKeys = {
   attendanceSummary: ["student", "attendance", "summary"] as const,
@@ -38,14 +40,17 @@ export const studentKeys = {
   preferences: ["student", "notifications", "preferences"] as const
 };
 
-export const useAttendanceSummary = () =>
-  useQuery({ queryKey: studentKeys.attendanceSummary, queryFn: getAttendanceSummary });
+export const useAttendanceSummary = (filters: AttendanceFilters = {}) =>
+  useQuery({ queryKey: [...studentKeys.attendanceSummary, filters], queryFn: () => getAttendanceSummary(filters) });
 
-export const useAttendanceRecords = () =>
-  useQuery({ queryKey: studentKeys.attendanceRecords, queryFn: getAttendanceRecords });
+export const useAttendanceRecords = (filters: AttendanceFilters = {}) =>
+  useQuery({ queryKey: [...studentKeys.attendanceRecords, filters], queryFn: () => getAttendanceRecords(filters) });
 
 export const useTimetable = () =>
   useQuery({ queryKey: studentKeys.timetable, queryFn: getMyTimetable });
+
+export const useLearningActivity = (offset=0) =>
+  useQuery({ queryKey: ["student","learning","activity",offset], queryFn: () => getLearningActivity(offset) });
 
 export const useResources = () =>
   useQuery({ queryKey: studentKeys.resources, queryFn: getMyResources });
@@ -102,8 +107,8 @@ export const useCancelBooking = () => {
   });
 };
 
-export const useNotifications = () =>
-  useQuery({ queryKey: studentKeys.notifications, queryFn: getNotifications });
+export const useNotifications = (filters: NotificationFilters = {}) =>
+  useQuery({ queryKey: [...studentKeys.notifications, filters], queryFn: () => getNotifications(filters) });
 
 export const useUnreadCount = () =>
   useQuery({ queryKey: studentKeys.unread, queryFn: getUnreadCount, refetchInterval: 4_000, refetchIntervalInBackground: false });

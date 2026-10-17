@@ -173,6 +173,8 @@ export type NotificationCampaign = {
   channels: string[];
   status: string;
   recipientCount: number;
+  scheduledFor?: string | null;
+  expiresAt?: string | null;
   createdAt: string;
 };
 

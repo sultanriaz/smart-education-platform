@@ -29,16 +29,36 @@ import type {
   TimetableItem
 } from "./types";
 
-export async function getAttendanceSummary(): Promise<AttendanceSummary> {
+export type AttendanceFilters = {
+  dateFrom?: string;
+  dateTo?: string;
+  courseId?: string;
+  sectionId?: string;
+  offset?: number;
+  limit?: number;
+};
+
+function attendanceQuery(filters: AttendanceFilters = {}): string {
+  const params = new URLSearchParams();
+  if (filters.dateFrom) params.set("date_from", filters.dateFrom);
+  if (filters.dateTo) params.set("date_to", filters.dateTo);
+  if (filters.courseId) params.set("course_id", filters.courseId);
+  if (filters.sectionId) params.set("section_id", filters.sectionId);
+  params.set("limit", String(filters.limit ?? 50));
+  params.set("offset", String(filters.offset ?? 0));
+  return params.toString();
+}
+
+export async function getAttendanceSummary(filters: AttendanceFilters = {}): Promise<AttendanceSummary> {
   const response = await apiRequest<unknown>(
-    "/api/v1/attendance/students/me/attendance/summary"
+    `/api/v1/attendance/students/me/attendance/summary?${attendanceQuery(filters)}`
   );
   return normalizeAttendanceSummary(response);
 }
 
-export async function getAttendanceRecords(): Promise<AttendanceRecord[]> {
+export async function getAttendanceRecords(filters: AttendanceFilters = {}): Promise<AttendanceRecord[]> {
   const response = await apiRequest<unknown>(
-    "/api/v1/attendance/students/me/attendance"
+    `/api/v1/attendance/students/me/attendance?${attendanceQuery(filters)}`
   );
   return extractList(response).map(normalizeAttendanceRecord);
 }
@@ -60,6 +80,16 @@ export async function getMyResources(): Promise<LearningResource[]> {
     "/api/v1/learning/students/me/resources"
   );
   return extractList(response).map(normalizeLearningResource);
+}
+
+export type LearningActivity = { id: string; resource_id: string; action: string; created_at: string };
+export async function getLearningActivity(offset=0, limit=25): Promise<LearningActivity[]> {
+  const data = await apiRequest<unknown>(`/api/v1/learning/students/me/activity?offset=${offset}&limit=${limit}`);
+  return extractList(data).filter((x): x is LearningActivity =>
+    Boolean(x && typeof x === "object" && !Array.isArray(x) && "action" in x));
+}
+export async function logLearningResourceView(resourceId: string): Promise<void> {
+  await apiRequest(`/api/v1/learning/resources/${encodeURIComponent(resourceId)}`);
 }
 
 export async function getRecommendations(): Promise<LearningResource[]> {
@@ -175,9 +205,15 @@ export async function cancelBooking(input: { bookingId: string; reason: string }
   );
 }
 
-export async function getNotifications(): Promise<NotificationItem[]> {
+export type NotificationFilters = { offset?: number; limit?: number; unreadOnly?: boolean };
+
+export async function getNotifications(filters: NotificationFilters = {}): Promise<NotificationItem[]> {
+  const params = new URLSearchParams({
+    offset: String(filters.offset ?? 0), limit: String(filters.limit ?? 25),
+    unread_only: String(filters.unreadOnly ?? false)
+  });
   const response = await apiRequest<unknown>(
-    "/api/v1/notifications/notifications"
+    `/api/v1/notifications/notifications?${params}`
   );
   return extractList(response).map(normalizeNotification);
 }

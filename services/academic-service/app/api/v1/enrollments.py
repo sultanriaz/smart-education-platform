@@ -4,9 +4,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, Response
 
-from app.api.dependencies import Admin, Limit, Offset, Service
+from app.api.dependencies import Admin, AdminRead, Limit, Offset, Service
 from app.domain.models import Enrollment
-from app.schemas.academic import EnrollmentCreate, EnrollmentRead, EnrollmentUpdate
+from app.schemas.academic import BulkEnrollmentCreate, BulkEnrollmentOut, EnrollmentCreate, EnrollmentRead, EnrollmentUpdate
 
 router = APIRouter(prefix="/enrollments", tags=["enrollments"])
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/enrollments", tags=["enrollments"])
 @router.get("", response_model=list[EnrollmentRead])
 def list_enrollments(
     service: Service,
-    _admin: Admin,
+    _admin: AdminRead,
     student_profile_id: UUID | None = None,
     section_id: UUID | None = None,
     limit: Limit = 50,
@@ -36,6 +36,12 @@ def list_enrollments(
     ]
 
 
+@router.post("/bulk", response_model=BulkEnrollmentOut, status_code=201)
+def bulk_enroll(payload: BulkEnrollmentCreate, service: Service, _admin: Admin):
+    records = service.bulk_enroll(payload.section_id, payload.student_profile_ids)
+    return BulkEnrollmentOut(created=len(records), enrollment_ids=[r.id for r in records])
+
+
 @router.post("", response_model=EnrollmentRead, status_code=201)
 def create_enrollment(payload: EnrollmentCreate, service: Service, _admin: Admin) -> EnrollmentRead:
     return EnrollmentRead.model_validate(
@@ -44,7 +50,7 @@ def create_enrollment(payload: EnrollmentCreate, service: Service, _admin: Admin
 
 
 @router.get("/{record_id}", response_model=EnrollmentRead)
-def get_enrollment(record_id: UUID, service: Service, _admin: Admin) -> EnrollmentRead:
+def get_enrollment(record_id: UUID, service: Service, _admin: AdminRead) -> EnrollmentRead:
     return EnrollmentRead.model_validate(service.get(Enrollment, record_id))
 
 

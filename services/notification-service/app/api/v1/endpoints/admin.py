@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_dispatcher, get_target_resolver
 from app.db.session import get_db
+from app.core.errors import ConflictError, ForbiddenError, NotFoundError
 from app.queue.dispatcher import TaskDispatcher
 from app.repositories.campaign_repository import CampaignRepository
 from app.repositories.delivery_repository import DeliveryRepository
@@ -87,3 +88,53 @@ def list_deliveries(
     db: Session = Depends(get_db),
 ):
     return DeliveryRepository(db).list_attempts_for_notification(notification_id)
+
+
+def campaign_error(exc):
+    if isinstance(exc, NotFoundError):
+        raise HTTPException(404, detail=str(exc)) from exc
+    if isinstance(exc, ForbiddenError):
+        raise HTTPException(403, detail=str(exc)) from exc
+    raise HTTPException(409, detail=str(exc)) from exc
+
+
+@router.put("/campaigns/{campaign_id}", response_model=CampaignOut)
+def edit_campaign(
+    campaign_id: uuid.UUID, payload: CampaignCreate,
+    admin: Principal = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return CampaignService(db).edit_pending(campaign_id, payload, admin.user_id, is_admin=True)
+    except (ConflictError, ForbiddenError, NotFoundError) as exc:
+        campaign_error(exc)
+
+
+@router.post("/campaigns/{campaign_id}/publish", response_model=CampaignOut)
+def publish_campaign(
+    campaign_id: uuid.UUID,
+    admin: Principal = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+    resolver: TargetResolver = Depends(get_target_resolver),
+    dispatcher: TaskDispatcher = Depends(get_dispatcher),
+):
+    try:
+        campaign, pending = CampaignService(db, resolver).publish_pending(
+            campaign_id, actor_id=admin.user_id, is_admin=True)
+    except (ConflictError, ForbiddenError, NotFoundError) as exc:
+        campaign_error(exc)
+    for attempt in pending:
+        dispatcher.deliver_attempt(attempt)
+    return campaign
+
+
+@router.post("/campaigns/{campaign_id}/archive", response_model=CampaignOut)
+def archive_campaign(
+    campaign_id: uuid.UUID,
+    admin: Principal = Depends(require_roles("admin")),
+    db: Session = Depends(get_db),
+):
+    try:
+        return CampaignService(db).archive_campaign(campaign_id, actor_id=admin.user_id, is_admin=True)
+    except (ConflictError, ForbiddenError, NotFoundError) as exc:
+        campaign_error(exc)

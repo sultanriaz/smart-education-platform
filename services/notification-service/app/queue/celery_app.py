@@ -14,5 +14,7 @@ celery_app.conf.update(
     task_acks_late=True,
     worker_prefetch_multiplier=1,
     task_routes={"notification.*": {"queue": "notifications"}},
+    beat_schedule={"publish-scheduled-campaigns": {
+        "task": "notification.publish_due_campaigns", "schedule": 30.0}},
 )
 celery_app.autodiscover_tasks(["app.workers"])

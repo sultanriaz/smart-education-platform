@@ -6,6 +6,7 @@ export const adminKeys = {
   roles: ["admin", "identity", "roles"] as const,
   permissions: ["admin", "identity", "permissions"] as const,
 
+  campuses: ["admin", "academic", "campuses"] as const,
   departments: ["admin", "academic", "departments"] as const,
   programs: ["admin", "academic", "programs"] as const,
   years: ["admin", "academic", "years"] as const,
@@ -19,6 +20,7 @@ export const adminKeys = {
 
   schedules: ["admin", "scheduling", "schedules"] as const,
 
+  equipment: ["admin", "facilities", "equipment"] as const,
   facilities: ["admin", "facilities", "facilities"] as const,
   bookings: ["admin", "facilities", "bookings"] as const,
   blocks: ["admin", "facilities", "blocks"] as const,
@@ -44,6 +46,8 @@ export const useAdminRoles = () =>
 export const useAdminPermissions = () =>
   useQuery({ queryKey: adminKeys.permissions, queryFn: api.listPermissions });
 
+export const useCampuses = () =>
+  useQuery({ queryKey: adminKeys.campuses, queryFn: api.listCampuses });
 export const useDepartments = () =>
   useQuery({ queryKey: adminKeys.departments, queryFn: api.listDepartments });
 export const usePrograms = () =>
@@ -68,6 +72,8 @@ export const useTeachingAssignments = () =>
 export const useSchedules = () =>
   useQuery({ queryKey: adminKeys.schedules, queryFn: api.listSchedules });
 
+export const useEquipment = () =>
+  useQuery({ queryKey: adminKeys.equipment, queryFn: api.listEquipment });
 export const useAdminFacilities = () =>
   useQuery({ queryKey: adminKeys.facilities, queryFn: api.listFacilities });
 export const useAdminBookings = () =>

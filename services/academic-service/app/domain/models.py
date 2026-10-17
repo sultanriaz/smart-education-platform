@@ -26,10 +26,18 @@ class EnrollmentStatus(StrEnum):
     COMPLETED = "completed"
 
 
+class Campus(Record, Base):
+    __tablename__ = "campuses"
+    code: Mapped[str] = mapped_column(String(32), unique=True)
+    name: Mapped[str] = mapped_column(String(200))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
+
+
 class Department(Record, Base):
     __tablename__ = "departments"
     code: Mapped[str] = mapped_column(String(32), unique=True)
     name: Mapped[str] = mapped_column(String(200))
+    campus_id: Mapped[UUID | None] = mapped_column(ForeignKey("campuses.id"), nullable=True, index=True)
 
 
 class Program(Record, Base):
@@ -62,6 +70,7 @@ class Semester(Record, Base):
     name: Mapped[str] = mapped_column(String(200))
     starts_on: Mapped[date]
     ends_on: Mapped[date]
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
 
 
 class Course(Record, Base):
@@ -75,6 +84,7 @@ class Course(Record, Base):
     title: Mapped[str] = mapped_column(String(200))
     credits: Mapped[int]
     semester_number: Mapped[int]
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
 
 
 class Section(Record, Base):
@@ -99,6 +109,7 @@ class StudentAcademicProfile(Record, Base):
     admission_year_id: Mapped[UUID] = mapped_column(ForeignKey("academic_years.id"), index=True)
     current_semester: Mapped[int]
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
+    identity_suspended: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
 
 
 class TeacherAcademicProfile(Record, Base):
@@ -108,6 +119,7 @@ class TeacherAcademicProfile(Record, Base):
     department_id: Mapped[UUID] = mapped_column(ForeignKey("departments.id"), index=True)
     designation: Mapped[str] = mapped_column(String(100))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
+    identity_suspended: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
 
 
 class Enrollment(Record, Base):
@@ -143,3 +155,12 @@ class OutboxEvent(RelayState, Record, Base):
     published_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, index=True
     )
+
+
+class IdentityEligibilityInbox(Base):
+    """Persistent at-least-once consumer deduplication for Identity owner events."""
+
+    __tablename__ = "identity_eligibility_inbox"
+    event_id: Mapped[UUID] = mapped_column(primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(index=True)
+    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
