@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = process.env.SMARTEDU_FRONTEND_URL ?? "http://localhost:3000";
+const baseURL = process.env.SMARTEDU_FRONTEND_URL ?? "http://localhost:5173";
 
 export default defineConfig({
   testDir: "./specs",

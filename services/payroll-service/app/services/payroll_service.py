@@ -312,10 +312,16 @@ class PayrollService:
         *,
         run_id: uuid.UUID,
         actor_id: uuid.UUID | None = None,
+        simulate_failures: bool = False,
+        fail_employee_ids: list[uuid.UUID] | None = None,
     ) -> DisbursementBatch:
         run = self.db.scalar(select(PayrollRun).where(PayrollRun.id == run_id).with_for_update())
-        if not run or run.status != "APPROVED":
-            raise PayrollDomainError("Only APPROVED payroll runs can be disbursed")
+        if not run:
+            raise EntityNotFoundError(f"Payroll run {run_id} not found")
+        if run.status in ("PAID", "DISBURSEMENT_PARTIAL"):
+            raise PayrollDomainError(f"Duplicate disbursement prevented: Payroll run is already in {run.status} state")
+        if run.status != "APPROVED":
+            raise PayrollDomainError(f"Only APPROVED payroll runs can be disbursed (current status: {run.status})")
 
         now = datetime.now(UTC)
         items = self.db.scalars(
@@ -329,26 +335,57 @@ class PayrollService:
             status="COMPLETED",
             total_amount=run.total_net,
             total_employees=len(items),
+            failed_count=0,
+            reconciled_count=0,
             disbursed_at=now,
         )
         self.db.add(batch)
         self.db.flush()
 
+        failed_records_count = 0
+        fail_targets = set(fail_employee_ids or [])
+        if simulate_failures and not fail_targets and items:
+            # Pick first employee profile as failure target for verification
+            fail_targets.add(items[0].employee_profile_id)
+
         for item in items:
             profile = item.employee_profile
-            sim_ref = f"SIM-PAYOUT-{uuid.uuid4().hex[:12].upper()}"
+            should_fail = profile.id in fail_targets
+
+            if should_fail:
+                sim_ref = f"SIM-FAIL-{uuid.uuid4().hex[:12].upper()}"
+                status = "FAILED"
+                err_msg = "Simulated bank rail failure: Beneficiary IBAN verification failed or account frozen"
+                failed_records_count += 1
+            else:
+                sim_ref = f"SIM-PAYOUT-{uuid.uuid4().hex[:12].upper()}"
+                status = "SUCCESS"
+                err_msg = None
+
             rec = DisbursementRecord(
                 batch_id=batch.id,
                 employee_profile_id=profile.id,
                 amount=item.net_salary,
                 bank_name=profile.bank_name,
                 bank_account_number=profile.bank_account_number,
-                status="SUCCESS",
+                status=status,
                 simulated_reference=sim_ref,
+                error_message=err_msg,
+                retry_count=0,
+                reconciled=False,
             )
             self.db.add(rec)
 
-        run.status = "PAID"
+        batch.failed_count = failed_records_count
+        if failed_records_count == 0:
+            batch.status = "COMPLETED"
+            run.status = "PAID"
+        elif failed_records_count == len(items):
+            batch.status = "FAILED"
+            run.status = "DISBURSEMENT_FAILED"
+        else:
+            batch.status = "PARTIAL_FAILURE"
+            run.status = "DISBURSEMENT_PARTIAL"
 
         # Outbox event
         self.db.add(
@@ -360,6 +397,8 @@ class PayrollService:
                     "batch_number": batch_no,
                     "payroll_run_id": str(run.id),
                     "total_amount": str(batch.total_amount),
+                    "failed_count": failed_records_count,
+                    "status": batch.status,
                 },
             )
         )
@@ -367,4 +406,153 @@ class PayrollService:
         self.db.commit()
         self.db.refresh(batch)
         return batch
+
+    def retry_disbursement_record(
+        self,
+        *,
+        record_id: uuid.UUID,
+        corrected_bank_name: str | None = None,
+        corrected_account_number: str | None = None,
+        actor_id: uuid.UUID | None = None,
+    ) -> DisbursementRecord:
+        record = self.db.scalar(
+            select(DisbursementRecord).where(DisbursementRecord.id == record_id).with_for_update()
+        )
+        if not record:
+            raise EntityNotFoundError(f"Disbursement record {record_id} not found")
+
+        # Strict Duplicate Payout Prevention
+        if record.status == "SUCCESS":
+            raise PayrollDomainError(
+                f"Duplicate payout prevented: Record {record.simulated_reference} has already been settled successfully"
+            )
+
+        batch = self.db.scalar(
+            select(DisbursementBatch).where(DisbursementBatch.id == record.batch_id).with_for_update()
+        )
+        if not batch:
+            raise EntityNotFoundError(f"Disbursement batch {record.batch_id} not found")
+
+        run = self.db.scalar(
+            select(PayrollRun).where(PayrollRun.id == batch.payroll_run_id).with_for_update()
+        )
+
+        now = datetime.now(UTC)
+        if corrected_bank_name:
+            record.bank_name = corrected_bank_name
+        if corrected_account_number:
+            record.bank_account_number = corrected_account_number
+
+        record.retry_count += 1
+        record.last_retried_at = now
+        record.status = "SUCCESS"
+        record.simulated_reference = f"SIM-RETRY-{uuid.uuid4().hex[:12].upper()}"
+        record.error_message = None
+
+        if batch.failed_count > 0:
+            batch.failed_count -= 1
+
+        # Check if all records in batch are now successful
+        all_records = self.db.scalars(
+            select(DisbursementRecord).where(DisbursementRecord.batch_id == batch.id)
+        ).all()
+        if all(r.status == "SUCCESS" for r in all_records):
+            batch.status = "COMPLETED"
+            if run:
+                run.status = "PAID"
+
+        # Outbox event
+        self.db.add(
+            PayrollOutboxEvent(
+                aggregate_id=record.id,
+                event_type="payroll.disbursement.record_retried.v1",
+                payload={
+                    "record_id": str(record.id),
+                    "batch_id": str(batch.id),
+                    "employee_profile_id": str(record.employee_profile_id),
+                    "amount": str(record.amount),
+                    "simulated_reference": record.simulated_reference,
+                    "retry_count": record.retry_count,
+                },
+            )
+        )
+
+        # Audit record
+        self.db.add(
+            PayrollAuditRecord(
+                actor_id=actor_id,
+                action="PAYROLL_RECORD_RETRIED",
+                resource_type="DISBURSEMENT_RECORD",
+                resource_id=str(record.id),
+                details={"retry_count": record.retry_count, "simulated_ref": record.simulated_reference},
+            )
+        )
+
+        self.db.commit()
+        self.db.refresh(record)
+        return record
+
+    def reconcile_disbursement_batch(
+        self,
+        *,
+        batch_id: uuid.UUID,
+        actor_id: uuid.UUID | None = None,
+    ) -> dict[str, Any]:
+        batch = self.db.scalar(
+            select(DisbursementBatch).where(DisbursementBatch.id == batch_id).with_for_update()
+        )
+        if not batch:
+            raise EntityNotFoundError(f"Disbursement batch {batch_id} not found")
+
+        records = self.db.scalars(
+            select(DisbursementRecord).where(DisbursementRecord.batch_id == batch.id).with_for_update()
+        ).all()
+
+        now = datetime.now(UTC)
+        reconciled_now = 0
+        total_reconciled_amount = Decimal("0.00")
+
+        for r in records:
+            if r.status == "SUCCESS" and not r.reconciled:
+                r.reconciled = True
+                r.reconciled_at = now
+                reconciled_now += 1
+                total_reconciled_amount += r.amount
+
+        batch.reconciled_count = sum(1 for r in records if r.reconciled)
+
+        # Outbox event
+        self.db.add(
+            PayrollOutboxEvent(
+                aggregate_id=batch.id,
+                event_type="payroll.disbursement.reconciled.v1",
+                payload={
+                    "batch_id": str(batch.id),
+                    "reconciled_count": batch.reconciled_count,
+                    "total_reconciled_amount": str(total_reconciled_amount),
+                },
+            )
+        )
+
+        # Audit record
+        self.db.add(
+            PayrollAuditRecord(
+                actor_id=actor_id,
+                action="PAYROLL_BATCH_RECONCILED",
+                resource_type="DISBURSEMENT_BATCH",
+                resource_id=str(batch.id),
+                details={"reconciled_count": batch.reconciled_count, "reconciled_now": reconciled_now},
+            )
+        )
+
+        self.db.commit()
+        return {
+            "batch_id": str(batch.id),
+            "batch_number": batch.batch_number,
+            "total_records": len(records),
+            "reconciled_count": batch.reconciled_count,
+            "failed_count": batch.failed_count,
+            "status": batch.status,
+            "total_reconciled_amount": str(total_reconciled_amount),
+        }
 

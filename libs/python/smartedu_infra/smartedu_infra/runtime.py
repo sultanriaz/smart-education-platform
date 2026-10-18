@@ -64,6 +64,15 @@ SUBSCRIPTIONS = {
         "finance.#",
         "payroll.#",
     ),
+    "finance-service": (
+        "academic.enrollment.#",
+        "academic.student.#",
+        "finance.#",
+    ),
+    "payroll-service": (
+        "identity.user.#",
+        "payroll.#",
+    ),
 }
 
 

@@ -1,11 +1,26 @@
 import { expect, type Page } from "@playwright/test";
+import fs from "fs";
+import path from "path";
 
 export type Role = "student" | "teacher" | "admin";
 
 export function credentials(role: Role) {
   const prefix = `SMARTEDU_E2E_${role.toUpperCase()}`;
-  const email = process.env[`${prefix}_EMAIL`];
-  const password = process.env[`${prefix}_PASSWORD`];
+  let email = process.env[`${prefix}_EMAIL`];
+  let password = process.env[`${prefix}_PASSWORD`];
+
+  if (!email || !password) {
+    try {
+      const secretsPath = path.resolve(__dirname, "../../../.integration/runtime/secrets.json");
+      if (fs.existsSync(secretsPath)) {
+        const secrets = JSON.parse(fs.readFileSync(secretsPath, "utf-8"));
+        email = email || `${role}@demo.example.edu`;
+        password = password || (role === "admin" ? secrets["DEMO_PASSWORD"] : secrets[`${role.toUpperCase()}_PASSWORD`]);
+      }
+    } catch {
+      // Fallback to error below
+    }
+  }
 
   if (!email || !password) {
     throw new Error(

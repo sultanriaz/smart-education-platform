@@ -78,14 +78,44 @@ export interface Payslip {
   };
 }
 
+export interface DisbursementRecord {
+  id: string;
+  employee_profile_id: string;
+  amount: number;
+  bank_name: string;
+  bank_account_number: string;
+  status: "SUCCESS" | "FAILED";
+  simulated_reference: string;
+  error_message?: string;
+  retry_count: number;
+  last_retried_at?: string;
+  reconciled: boolean;
+  reconciled_at?: string;
+  created_at: string;
+}
+
 export interface DisbursementBatch {
   id: string;
-  run_id: string;
-  payment_rail: string;
-  status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+  payroll_run_id: string;
+  batch_number: string;
+  status: "COMPLETED" | "PARTIAL_FAILURE" | "FAILED" | "PENDING" | "PROCESSING";
   total_amount: number;
+  total_employees: number;
+  failed_count?: number;
+  reconciled_count?: number;
+  disbursed_at?: string;
+  created_at: string;
+  records?: DisbursementRecord[];
+}
+
+export interface BatchReconciliationResult {
+  batch_id: string;
+  batch_number: string;
   total_records: number;
-  processed_at?: string;
+  reconciled_count: number;
+  failed_count: number;
+  status: string;
+  total_reconciled_amount: string | number;
 }
 
 export interface PayrollSummary {
@@ -154,8 +184,20 @@ export const payrollApi = {
 
   // Disbursements
   getDisbursements: () => apiRequest<DisbursementBatch[]>("/api/v1/payroll/disbursements/batches"),
-  executeDisbursement: (payload: { run_id: string; payment_rail?: string }) =>
+  getBatchDetails: (batchId: string) =>
+    apiRequest<DisbursementBatch>(`/api/v1/payroll/disbursements/batches/${batchId}`),
+  executeDisbursement: (payload: { run_id: string; payment_rail?: string; simulate_failures?: boolean }) =>
     apiRequest<DisbursementBatch>(`/api/v1/payroll/disbursements/runs/${payload.run_id}/disburse`, {
+      method: "POST",
+      body: JSON.stringify({ simulate_failures: !!payload.simulate_failures })
+    }),
+  retryDisbursementRecord: (recordId: string, payload?: { corrected_bank_name?: string; corrected_account_number?: string }) =>
+    apiRequest<DisbursementRecord>(`/api/v1/payroll/disbursements/records/${recordId}/retry`, {
+      method: "POST",
+      body: JSON.stringify(payload || {})
+    }),
+  reconcileDisbursementBatch: (batchId: string) =>
+    apiRequest<BatchReconciliationResult>(`/api/v1/payroll/disbursements/batches/${batchId}/reconcile`, {
       method: "POST"
     }),
 

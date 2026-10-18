@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.v1.endpoints.health import get_db
 from app.core.errors import FinanceDomainError
 from app.domain.models import FeeStructure, Invoice, StudentFinancialAccount
-from app.schemas.finance import BulkInvoiceCreateIn, InvoiceOut, SingleInvoiceCreateIn
+from app.schemas.finance import BulkInvoiceCreateIn, InvoiceOut, ProcessOverdueInvoicesIn, SingleInvoiceCreateIn
 from app.security.auth import Principal, require_scoped_roles
 from app.services.invoice_service import InvoiceService
 
@@ -145,6 +145,24 @@ def apply_late_fee(
     svc = InvoiceService(db)
     try:
         return svc.apply_late_fee_if_overdue(id, as_of_date=as_of)
+    except FinanceDomainError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/process-overdue")
+def process_overdue_invoices(
+    data: ProcessOverdueInvoicesIn | None = None,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_scoped_roles("finance.invoices.manage", "admin", "finance_officer")),
+):
+    svc = InvoiceService(db)
+    try:
+        req_data = data or ProcessOverdueInvoicesIn()
+        return svc.process_overdue_invoices(
+            as_of_date=req_data.as_of_date,
+            grace_days=req_data.grace_days,
+            penalty_amount=req_data.penalty_amount,
+        )
     except FinanceDomainError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

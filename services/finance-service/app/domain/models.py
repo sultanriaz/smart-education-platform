@@ -137,6 +137,8 @@ class Invoice(Base):
     balance_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     late_fee_applied: Mapped[bool] = mapped_column(Boolean, default=False)
     late_fee_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"))
+    late_fee_applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    overdue_notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     status: Mapped[str] = mapped_column(
         String(30), default="ISSUED", index=True
     )  # DRAFT, ISSUED, PARTIALLY_PAID, PAID, OVERDUE, CANCELLED

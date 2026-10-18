@@ -475,7 +475,7 @@ def main():
             booking_start = booking_start.replace(tzinfo=UTC)
         if booking_start <= datetime.now(UTC) + timedelta(minutes=5):
             fresh_start = datetime.now(UTC) + timedelta(
-                days=30, minutes=random_secrets.randbelow(1440)
+                days=60 + random_secrets.randbelow(300), minutes=random_secrets.randbelow(1440)
             )
             payload["starts_at"] = fresh_start.isoformat()
             payload["ends_at"] = (fresh_start + timedelta(hours=1)).isoformat()

@@ -184,6 +184,12 @@ class BulkInvoiceCreateIn(BaseModel):
     preview: bool = False
 
 
+class ProcessOverdueInvoicesIn(BaseModel):
+    as_of_date: date | None = None
+    grace_days: int | None = None
+    penalty_amount: Decimal | None = None
+
+
 # Payments & Intents
 class PaymentIntentCreateIn(BaseModel):
     invoice_id: uuid.UUID

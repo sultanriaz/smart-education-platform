@@ -168,6 +168,8 @@ class DisbursementBatch(Base):
     )  # PREPARED, PROCESSING, COMPLETED, FAILED
     total_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2))
     total_employees: Mapped[int] = mapped_column(Integer)
+    failed_count: Mapped[int] = mapped_column(Integer, default=0)
+    reconciled_count: Mapped[int] = mapped_column(Integer, default=0)
     disbursed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -193,6 +195,10 @@ class DisbursementRecord(Base):
     status: Mapped[str] = mapped_column(String(30), default="SUCCESS")  # SUCCESS, FAILED
     simulated_reference: Mapped[str] = mapped_column(String(120), unique=True, index=True)
     error_message: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_retried_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reconciled: Mapped[bool] = mapped_column(Boolean, default=False)
+    reconciled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     batch: Mapped[DisbursementBatch] = relationship("DisbursementBatch", back_populates="records")

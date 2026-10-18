@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { Card } from "../../components/ui/Card";
@@ -23,7 +23,12 @@ import {
   FileCheck2,
   Send,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  RotateCcw,
+  RefreshCw,
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 
 export function AdminPayrollPage() {
@@ -62,8 +67,10 @@ export function AdminPayrollPage() {
     queryFn: () => payrollApi.getDisbursements()
   });
 
-  // State for calculation
+  // State for calculation and simulation
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
+  const [simulateFailureMode, setSimulateFailureMode] = useState(false);
+  const [expandedBatchId, setExpandedBatchId] = useState<string | null>(null);
 
   // Mutations
   const calculateRunMutation = useMutation({
@@ -91,14 +98,40 @@ export function AdminPayrollPage() {
 
   const executeDisbursementMutation = useMutation({
     mutationFn: (runId: string) =>
-      payrollApi.executeDisbursement({ run_id: runId, payment_rail: "1bill_ach" }),
+      payrollApi.executeDisbursement({
+        run_id: runId,
+        payment_rail: "1bill_ach",
+        simulate_failures: simulateFailureMode
+      }),
     onSuccess: (batch) => {
-      toast.push(`Simulated disbursement executed for ${batch.total_records} employees!`, "success");
+      toast.push(`Simulated disbursement executed! ${batch.failed_count ? `(${batch.failed_count} simulated failure(s) recorded)` : "All settled successfully."}`, "success");
       queryClient.invalidateQueries({ queryKey: ["admin", "payroll"] });
       setActiveTab("disbursements");
     },
     onError: (err: any) => {
       toast.push(err.message || "Disbursement execution failed.", "error");
+    }
+  });
+
+  const retryRecordMutation = useMutation({
+    mutationFn: (recordId: string) => payrollApi.retryDisbursementRecord(recordId),
+    onSuccess: (rec) => {
+      toast.push(`Disbursement retried successfully (Ref: ${rec.simulated_reference})! Duplicate payout strictly prevented.`, "success");
+      queryClient.invalidateQueries({ queryKey: ["admin", "payroll"] });
+    },
+    onError: (err: any) => {
+      toast.push(err.message || "Failed to retry disbursement record.", "error");
+    }
+  });
+
+  const reconcileBatchMutation = useMutation({
+    mutationFn: (batchId: string) => payrollApi.reconcileDisbursementBatch(batchId),
+    onSuccess: (res) => {
+      toast.push(`Disbursement batch ${res.batch_number} reconciled successfully (${res.reconciled_count} settled records)!`, "success");
+      queryClient.invalidateQueries({ queryKey: ["admin", "payroll"] });
+    },
+    onError: (err: any) => {
+      toast.push(err.message || "Disbursement batch reconciliation failed.", "error");
     }
   });
 
@@ -329,9 +362,10 @@ export function AdminPayrollPage() {
       )}
 
       {/* Tab: Maker-Checker Run Approvals */}
+      {/* Tab: Maker-Checker Run Approvals */}
       {activeTab === "runs" && (
         <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div>
               <h3 className="text-base font-bold flex items-center gap-2">
                 <FileCheck2 className="w-5 h-5 text-primary" />
@@ -341,6 +375,18 @@ export function AdminPayrollPage() {
                 Segregation of Duties: A payroll run created/calculated by one administrator cannot be approved by that same administrator.
               </p>
             </div>
+            <label className="flex items-center gap-2 text-xs bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 px-3 py-1.5 rounded cursor-pointer select-none">
+              <input
+                id="simulate-failures-chk"
+                type="checkbox"
+                checked={simulateFailureMode}
+                onChange={(e) => setSimulateFailureMode(e.target.checked)}
+                className="rounded text-amber-600 focus:ring-amber-500"
+              />
+              <span className="font-semibold text-amber-800 dark:text-amber-300">
+                Simulate Payout Rail Failures (Audit Test)
+              </span>
+            </label>
           </div>
 
           {runs.length === 0 ? (
@@ -405,41 +451,158 @@ export function AdminPayrollPage() {
       {/* Tab: Simulated Disbursements */}
       {activeTab === "disbursements" && (
         <Card className="p-6">
-          <h3 className="text-base font-bold mb-2">Simulated Bank Disbursements & Rails</h3>
-          <p className="text-xs text-muted mb-4">
-            Disbursement batches executed via simulated direct ACH/1Bill payment rail with fail-closed safety. All employee payslips are generated and unlocked upon completion.
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <h3 className="text-base font-bold">Simulated Bank Disbursements & Rails</h3>
+              <p className="text-xs text-muted mt-1">
+                Disbursement batches executed via simulated direct ACH/1Bill payment rail with fail-closed safety, individual record retries, and batch ledger reconciliation.
+              </p>
+            </div>
+          </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto mt-4">
             <table className="w-full text-xs text-left">
               <thead className="bg-muted/50 border-b">
                 <tr>
-                  <th className="py-2.5 px-3">Batch ID</th>
-                  <th className="py-2.5 px-3">Rail</th>
+                  <th className="py-2.5 px-3">Batch Number</th>
                   <th className="py-2.5 px-3">Total Amount</th>
-                  <th className="py-2.5 px-3">Records</th>
+                  <th className="py-2.5 px-3">Employees</th>
+                  <th className="py-2.5 px-3">Failed</th>
+                  <th className="py-2.5 px-3">Reconciled</th>
                   <th className="py-2.5 px-3">Status</th>
+                  <th className="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y font-mono">
                 {disbursements.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-6 text-muted font-sans">
+                    <td colSpan={7} className="text-center py-6 text-muted font-sans">
                       No disbursement batches executed yet.
                     </td>
                   </tr>
                 ) : (
-                  disbursements.map((d) => (
-                    <tr key={d.id}>
-                      <td className="py-2.5 px-3 font-bold">{d.id.slice(0, 8)}…</td>
-                      <td className="py-2.5 px-3 uppercase text-[11px] font-sans">{d.payment_rail}</td>
-                      <td className="py-2.5 px-3 font-bold text-green-600">PKR {Number(d.total_amount).toLocaleString()}</td>
-                      <td className="py-2.5 px-3 font-sans">{d.total_records} payslips</td>
-                      <td className="py-2.5 px-3 font-sans">
-                        <Badge>{d.status}</Badge>
-                      </td>
-                    </tr>
-                  ))
+                  disbursements.map((d) => {
+                    const isExpanded = expandedBatchId === d.id;
+                    const canReconcile = d.status === "COMPLETED" || d.status === "PARTIAL_FAILURE";
+                    return (
+                      <Fragment key={d.id}>
+                        <tr className="hover:bg-muted/20">
+                          <td className="py-2.5 px-3 font-bold flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedBatchId(isExpanded ? null : d.id)}
+                              className="text-muted hover:text-foreground p-0.5"
+                            >
+                              {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                            </button>
+                            <span>{d.batch_number || d.id.slice(0, 12)}</span>
+                          </td>
+                          <td className="py-2.5 px-3 font-bold text-green-600">PKR {Number(d.total_amount).toLocaleString()}</td>
+                          <td className="py-2.5 px-3 font-sans">{d.total_employees} staff</td>
+                          <td className="py-2.5 px-3 font-sans">
+                            {d.failed_count && d.failed_count > 0 ? (
+                              <span className="text-red-600 font-bold flex items-center gap-1">
+                                <AlertTriangle className="w-3.5 h-3.5" /> {d.failed_count}
+                              </span>
+                            ) : (
+                              <span className="text-muted">0</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 font-sans">
+                            <span className="text-emerald-600 font-medium">{d.reconciled_count || 0}</span>
+                          </td>
+                          <td className="py-2.5 px-3 font-sans">
+                            <Badge>{d.status}</Badge>
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-sans space-x-2">
+                            {canReconcile && (
+                              <Button
+                                variant="secondary"
+                                className="text-xs px-2 py-1 min-h-7"
+                                onClick={() => reconcileBatchMutation.mutate(d.id)}
+                                disabled={reconcileBatchMutation.isPending}
+                              >
+                                Reconcile Batch
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              className="text-xs px-2 py-1 min-h-7"
+                              onClick={() => setExpandedBatchId(isExpanded ? null : d.id)}
+                            >
+                              {isExpanded ? "Hide Records" : "View Records"}
+                            </Button>
+                          </td>
+                        </tr>
+
+                        {isExpanded && d.records && d.records.length > 0 && (
+                          <tr>
+                            <td colSpan={7} className="p-0 bg-muted/10">
+                              <div className="p-3 border-y border-dashed">
+                                <h4 className="text-[11px] font-sans font-bold text-muted mb-2 uppercase tracking-wider">
+                                  Batch Payout Records ({d.records.length})
+                                </h4>
+                                <table className="w-full text-[11px] text-left bg-card rounded border">
+                                  <thead className="bg-muted/40 border-b">
+                                    <tr>
+                                      <th className="py-1.5 px-2.5">Simulated Reference</th>
+                                      <th className="py-1.5 px-2.5">Bank / Account</th>
+                                      <th className="py-1.5 px-2.5">Amount</th>
+                                      <th className="py-1.5 px-2.5">Status</th>
+                                      <th className="py-1.5 px-2.5">Retries</th>
+                                      <th className="py-1.5 px-2.5">Reconciled</th>
+                                      <th className="py-1.5 px-2.5 text-right">Actions</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y font-mono">
+                                    {d.records.map((r) => (
+                                      <tr key={r.id}>
+                                        <td className="py-1.5 px-2.5 font-bold">{r.simulated_reference}</td>
+                                        <td className="py-1.5 px-2.5 font-sans">
+                                          {r.bank_name} ({r.bank_account_number})
+                                        </td>
+                                        <td className="py-1.5 px-2.5 font-bold text-green-600">PKR {Number(r.amount).toLocaleString()}</td>
+                                        <td className="py-1.5 px-2.5 font-sans">
+                                          <Badge>
+                                            <span className={r.status === "SUCCESS" ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                                              {r.status}
+                                            </span>
+                                          </Badge>
+                                          {r.error_message && (
+                                            <div className="text-[10px] text-red-600 font-sans mt-0.5 line-clamp-1" title={r.error_message}>
+                                              {r.error_message}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td className="py-1.5 px-2.5 font-sans">{r.retry_count}</td>
+                                        <td className="py-1.5 px-2.5 font-sans">
+                                          {r.reconciled ? <span className="text-green-600 font-bold">Yes</span> : <span className="text-muted">No</span>}
+                                        </td>
+                                        <td className="py-1.5 px-2.5 text-right font-sans">
+                                          {r.status === "FAILED" ? (
+                                            <Button
+                                              variant="secondary"
+                                              className="text-[10px] px-2 py-0.5 min-h-6 text-amber-700 hover:text-amber-800"
+                                              onClick={() => retryRecordMutation.mutate(r.id)}
+                                              disabled={retryRecordMutation.isPending}
+                                            >
+                                              <RotateCcw className="w-3 h-3 mr-1 inline" /> Retry Payout
+                                            </Button>
+                                          ) : (
+                                            <span className="text-muted text-[10px]">Settled</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })
                 )}
               </tbody>
             </table>

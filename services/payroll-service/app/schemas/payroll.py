@@ -136,6 +136,11 @@ class PayrollRunOut(BaseModel):
 
 
 # Disbursements
+class DisburseRunIn(BaseModel):
+    simulate_failures: bool = False
+    fail_employee_ids: list[uuid.UUID] = Field(default_factory=list)
+
+
 class DisbursementRecordOut(BaseModel):
     id: uuid.UUID
     employee_profile_id: uuid.UUID
@@ -145,6 +150,10 @@ class DisbursementRecordOut(BaseModel):
     status: str
     simulated_reference: str
     error_message: str | None = None
+    retry_count: int = 0
+    last_retried_at: datetime | None = None
+    reconciled: bool = False
+    reconciled_at: datetime | None = None
     created_at: datetime
 
     class Config:
@@ -158,12 +167,29 @@ class DisbursementBatchOut(BaseModel):
     status: str
     total_amount: Decimal
     total_employees: int
+    failed_count: int = 0
+    reconciled_count: int = 0
     disbursed_at: datetime | None = None
     created_at: datetime
     records: list[DisbursementRecordOut] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
+
+
+class DisbursementRetryIn(BaseModel):
+    corrected_bank_name: str | None = None
+    corrected_account_number: str | None = None
+
+
+class BatchReconciliationOut(BaseModel):
+    batch_id: uuid.UUID
+    batch_number: str
+    total_records: int
+    reconciled_count: int
+    failed_count: int
+    status: str
+    total_reconciled_amount: Decimal
 
 
 # Payslips

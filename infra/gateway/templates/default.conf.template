@@ -163,6 +163,8 @@ server {
     location = /api/v1/learning/metrics      { return 404; }
     location = /api/v1/assessments/metrics   { return 404; }
     location = /api/v1/reporting/metrics     { return 404; }
+    location = /api/v1/finance/metrics       { return 404; }
+    location = /api/v1/payroll/metrics       { return 404; }
 
     # Explicitly block every namespaced service-internal API from the public edge.
     # Longer-prefix locations win over the corresponding service namespace.
@@ -176,6 +178,8 @@ server {
     location ^~ /api/v1/assessments/internal/   { return 404; }
     location ^~ /api/v1/reporting/internal/     { return 404; }
     location ^~ /api/v1/platform/internal/      { return 404; }
+    location ^~ /api/v1/finance/internal/       { return 404; }
+    location ^~ /api/v1/payroll/internal/       { return 404; }
 
     # -------------------------
     # Identity

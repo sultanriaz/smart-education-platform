@@ -237,3 +237,115 @@ class InvoiceService:
 
         return invoice
 
+    def process_overdue_invoices(
+        self,
+        *,
+        as_of_date: date | None = None,
+        grace_days: int | None = None,
+        penalty_amount: Decimal | None = None,
+    ) -> dict[str, Any]:
+        current_date = as_of_date or datetime.now(UTC).date()
+        effective_grace = grace_days if grace_days is not None else settings.LATE_FEE_GRACE_DAYS
+        effective_penalty = (
+            Decimal(str(penalty_amount)).quantize(Decimal("0.01"))
+            if penalty_amount is not None
+            else Decimal(str(settings.LATE_FEE_AMOUNT)).quantize(Decimal("0.01"))
+        )
+
+        candidate_invoices = self.db.scalars(
+            select(Invoice)
+            .where(
+                Invoice.status.in_({"ISSUED", "PARTIALLY_PAID"}),
+                Invoice.late_fee_applied == False,
+                Invoice.balance_amount > Decimal("0.00"),
+            )
+            .with_for_update(skip_locked=True)
+        ).all()
+
+        penalized_invoices = []
+        total_penalty_assessed = Decimal("0.00")
+        now = datetime.now(UTC)
+
+        for inv in candidate_invoices:
+            threshold = inv.due_date + timedelta(days=effective_grace)
+            if current_date > threshold:
+                inv.late_fee_applied = True
+                inv.late_fee_amount = effective_penalty
+                inv.late_fee_applied_at = now
+                inv.total_amount += effective_penalty
+                inv.balance_amount += effective_penalty
+                inv.status = "OVERDUE"
+
+                unpaid_inst = next((inst for inst in inv.installments if inst.status != "PAID"), None)
+                if unpaid_inst:
+                    unpaid_inst.late_fee_amount += effective_penalty
+
+                account = self.db.scalar(
+                    select(StudentFinancialAccount)
+                    .where(StudentFinancialAccount.id == inv.account_id)
+                    .with_for_update()
+                )
+                if account:
+                    account.outstanding_balance += effective_penalty
+                    account.total_invoiced += effective_penalty
+
+                self.accounting.record_late_fee(inv, effective_penalty)
+
+                self.db.add(
+                    FinanceOutboxEvent(
+                        aggregate_id=inv.id,
+                        event_type="finance.invoice.overdue.v1",
+                        payload={
+                            "invoice_id": str(inv.id),
+                            "invoice_number": inv.invoice_number,
+                            "student_user_id": str(inv.student_user_id),
+                            "late_fee_amount": str(effective_penalty),
+                            "balance_amount": str(inv.balance_amount),
+                            "due_date": inv.due_date.isoformat(),
+                        },
+                    )
+                )
+
+                self.db.add(
+                    FinanceOutboxEvent(
+                        aggregate_id=inv.id,
+                        event_type="notification.announcement.created",
+                        payload={
+                            "student_user_id": str(inv.student_user_id),
+                            "title": f"Overdue Invoice Notice: {inv.invoice_number}",
+                            "body": f"Invoice {inv.invoice_number} is past due. A late fee of PKR {effective_penalty} has been applied. Outstanding balance: PKR {inv.balance_amount}.",
+                        },
+                    )
+                )
+
+                self.db.add(
+                    FinanceAuditEvent(
+                        action="LATE_FEE_ASSESSED",
+                        resource_type="INVOICE",
+                        resource_id=str(inv.id),
+                        details={
+                            "invoice_number": inv.invoice_number,
+                            "penalty": str(effective_penalty),
+                            "as_of_date": current_date.isoformat(),
+                        },
+                    )
+                )
+
+                penalized_invoices.append({
+                    "invoice_id": str(inv.id),
+                    "invoice_number": inv.invoice_number,
+                    "student_user_id": str(inv.student_user_id),
+                    "late_fee": str(effective_penalty),
+                    "new_balance": str(inv.balance_amount),
+                })
+                total_penalty_assessed += effective_penalty
+
+        self.db.commit()
+        return {
+            "processed_count": len(penalized_invoices),
+            "total_penalty_assessed": str(total_penalty_assessed),
+            "as_of_date": current_date.isoformat(),
+            "grace_days": effective_grace,
+            "penalized_invoices": penalized_invoices,
+        }
+
