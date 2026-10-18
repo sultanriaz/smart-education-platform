@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 import secrets
+from datetime import timedelta
+from sqlalchemy import select
+
+from app.core.errors import ConflictError
+from app.services.governance import digest_json, assert_version, feature_enabled
 import uuid
 from datetime import UTC, datetime
 
@@ -10,6 +15,8 @@ from sqlalchemy.orm import Session
 from app.core.errors import ForbiddenError, NotFoundError
 from app.domain.entities.models import (
     FeatureFlag,
+    FeatureFlagRevision,
+    SettingRevision,
     JobRecord,
     OutboxEvent,
     PlatformSetting,
@@ -87,6 +94,7 @@ class PlatformService:
     # Support
     def create_ticket(self, payload: TicketCreate, user_id: uuid.UUID):
         ticket = SupportTicket(
+            due_at=utcnow() + timedelta(hours={"URGENT": 4, "HIGH": 12, "MEDIUM": 48, "LOW": 96}.get(payload.priority.upper(), 48)),
             ticket_number=f"TKT-{secrets.token_hex(5).upper()}",
             created_by_user_id=user_id,
             subject=payload.subject,
@@ -143,6 +151,7 @@ class PlatformService:
             is_internal=payload.is_internal,
         )
         self.db.add(message)
+        ticket.last_message_at = utcnow()
         self._outbox(
             "platform.support_message_added",
             "support_ticket",
@@ -162,7 +171,11 @@ class PlatformService:
         if not ticket:
             raise NotFoundError("Ticket not found")
         if payload.status is not None:
-            ticket.status = payload.status.upper()
+            transitions = {"OPEN": {"IN_PROGRESS", "WAITING_REQUESTER", "RESOLVED", "CLOSED"}, "IN_PROGRESS": {"OPEN", "WAITING_REQUESTER", "RESOLVED", "CLOSED"}, "WAITING_REQUESTER": {"IN_PROGRESS", "RESOLVED", "CLOSED"}, "RESOLVED": {"IN_PROGRESS", "CLOSED"}, "CLOSED": {"IN_PROGRESS"}}
+            next_status = payload.status.upper()
+            if next_status != ticket.status and next_status not in transitions.get(ticket.status, set()):
+                raise ConflictError("Invalid support state transition")
+            ticket.status = next_status
             if ticket.status == "CLOSED":
                 ticket.closed_at = utcnow()
             elif ticket.closed_at is not None:
@@ -188,32 +201,59 @@ class PlatformService:
         self.db.refresh(ticket)
         return ticket
 
-    # Settings
+    # Settings: lock and verify the current revision; history remains immutable.
     def upsert_setting(self, key: str, payload: SettingUpsert, actor_id: uuid.UUID):
-        row = self.repo.setting(key)
+        row = self.db.scalar(select(PlatformSetting).where(PlatformSetting.key == key).with_for_update())
+        assert_version(row.version if row else 0, payload.expected_version)
         if row is None:
-            row = PlatformSetting(key=key)
+            row = PlatformSetting(key=key, version=0)
             self.db.add(row)
-        row.value = payload.value
-        row.is_public = payload.is_public
-        row.description = payload.description
+        row.version = (row.version or 0) + 1
+        row.value, row.is_public, row.description = payload.value, payload.is_public, payload.description
         row.updated_by_user_id = actor_id
+        self.db.add(SettingRevision(setting_key=key, version=row.version, value=payload.value, is_public=payload.is_public, description=payload.description, changed_by_user_id=actor_id, reason=payload.reason))
         self.db.commit()
         self.db.refresh(row)
         return row
 
+    def rollback_setting(self, key, version, actor_id, expected_version=None):
+        historical = self.db.scalar(select(SettingRevision).where(SettingRevision.setting_key == key, SettingRevision.version == version))
+        if historical is None:
+            raise NotFoundError("Setting revision not found")
+        return self.upsert_setting(key, SettingUpsert(value=historical.value, is_public=historical.is_public, description=historical.description, expected_version=expected_version, reason=f"Restore revision {version}"), actor_id)
+
     def upsert_feature(self, key: str, payload: FeatureFlagUpsert, actor_id: uuid.UUID):
-        row = self.repo.feature(key)
+        row = self.db.scalar(select(FeatureFlag).where(FeatureFlag.key == key).with_for_update())
+        assert_version(row.version if row else 0, payload.expected_version)
         if row is None:
-            row = FeatureFlag(key=key)
+            row = FeatureFlag(key=key, version=0)
             self.db.add(row)
-        row.enabled = payload.enabled
-        row.config = payload.config
-        row.description = payload.description
+        row.version = (row.version or 0) + 1
+        row.enabled, row.config, row.description = payload.enabled, payload.config, payload.description
         row.updated_by_user_id = actor_id
+        self.db.add(FeatureFlagRevision(flag_key=key, version=row.version, enabled=payload.enabled, config=payload.config, description=payload.description, changed_by_user_id=actor_id, reason=payload.reason))
         self.db.commit()
         self.db.refresh(row)
         return row
+
+    def rollback_feature(self, key, version, actor_id, expected_version=None):
+        historical = self.db.scalar(select(FeatureFlagRevision).where(FeatureFlagRevision.flag_key == key, FeatureFlagRevision.version == version))
+        if historical is None:
+            raise NotFoundError("Feature revision not found")
+        return self.upsert_feature(key, FeatureFlagUpsert(enabled=historical.enabled, config=historical.config, description=historical.description, expected_version=expected_version, reason=f"Restore revision {version}"), actor_id)
+
+    def flag_enabled(self, key: str, user_id: uuid.UUID):
+        flag = self.repo.feature(key)
+        return feature_enabled(flag, user_id) if flag else False
+
+    def escalate_due_tickets(self, *, now=None):
+        now = now or utcnow()
+        rows = self.db.scalars(select(SupportTicket).where(SupportTicket.due_at <= now, SupportTicket.escalated_at.is_(None), SupportTicket.status.notin_(["RESOLVED", "CLOSED"])).with_for_update(skip_locked=True)).all()
+        for ticket in rows:
+            ticket.escalated_at = now
+            self._outbox("platform.support_ticket_escalated", "support_ticket", str(ticket.id), {"ticket_id": str(ticket.id), "priority": ticket.priority})
+        self.db.commit()
+        return len(rows)
 
     # Service registry / health
     def upsert_service(self, payload: ServiceRegistryCreate):
@@ -280,7 +320,17 @@ class PlatformService:
 
     # Jobs
     def create_job(self, payload: JobCreate, actor_id: uuid.UUID):
+        digest = digest_json({"parameters": payload.parameters, "payload": payload.payload, "target_service": payload.target_service, "resource_type": payload.resource_type, "job_type": payload.job_type, "dry_run": payload.dry_run})
+        if payload.idempotency_key:
+            existing = self.db.scalar(select(JobRecord).where(JobRecord.job_type == payload.job_type, JobRecord.idempotency_key == payload.idempotency_key))
+            if existing:
+                if existing.content_digest != digest or existing.requested_by_user_id != actor_id:
+                    raise ConflictError("Idempotency key already bound to a different request")
+                return existing
         job = JobRecord(
+            content_digest=digest,
+            idempotency_key=payload.idempotency_key,
+            dry_run=payload.dry_run,
             job_type=payload.job_type,
             target_service=payload.target_service,
             resource_type=payload.resource_type,

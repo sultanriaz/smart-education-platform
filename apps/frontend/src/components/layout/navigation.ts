@@ -14,6 +14,7 @@ export const navigation: NavItem[] = [
   { label: "Learning", path: "/app/student/learning", roles: ["student"] },
   { label: "Assessments", path: "/app/student/assessments", roles: ["student"] },
   { label: "Facilities", path: "/app/student/facilities", roles: ["student"] },
+  { label: "Fee & Payments", path: "/app/student/finance", roles: ["student"] },
 
   { label: "Classes & attendance", path: "/app/teacher/attendance", roles: ["teacher"] },
   { label: "Teaching timetable", path: "/app/teacher/timetable", roles: ["teacher"] },
@@ -21,6 +22,7 @@ export const navigation: NavItem[] = [
   { label: "Assessments", path: "/app/teacher/assessments", roles: ["teacher"] },
   { label: "Announcements", path: "/app/teacher/announcements", roles: ["teacher"] },
   { label: "Facility bookings", path: "/app/teacher/facilities", roles: ["teacher"] },
+  { label: "My Payslips", path: "/app/teacher/payroll", roles: ["teacher"] },
 
   { label: "Users & RBAC", path: "/app/admin/users", roles: ["admin"] },
   { label: "Academic setup", path: "/app/admin/academic", roles: ["admin"] },
@@ -30,6 +32,8 @@ export const navigation: NavItem[] = [
   { label: "Announcements", path: "/app/admin/notifications", roles: ["admin"] },
   { label: "Reporting", path: "/app/admin/reporting", roles: ["admin"] },
   { label: "Platform operations", path: "/app/admin/platform", roles: ["admin"] },
+  { label: "Finance & Accounts", path: "/app/admin/finance", roles: ["admin"] },
+  { label: "Payroll Management", path: "/app/admin/payroll", roles: ["admin"] },
 
   { label: "Notifications", path: "/app/notifications", roles: ["student", "teacher", "admin"] },
   { label: "Profile", path: "/app/profile", roles: ["student", "teacher", "admin"] }

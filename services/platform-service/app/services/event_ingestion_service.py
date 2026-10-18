@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import uuid
 
+from app.services.governance import digest_json
+
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.domain.entities.models import AuditEntry, InternalEvent, SearchDocument
+from app.domain.entities.models import AuditEntry, InternalEvent, SearchDocument, SearchIndexRevision, utcnow
 from app.repositories.platform_repository import PlatformRepository
 from app.schemas.events import InternalEventIn
 
@@ -69,6 +71,10 @@ class EventIngestionService:
         self.db.add(
             AuditEntry(
                 source_service=event.source_service,
+                event_id=event.event_id,
+                outcome=str(data.get("outcome") or "SUCCEEDED")[:32],
+                request_id=str(data["request_id"])[:128] if data.get("request_id") else None,
+                trace_id=str(data["trace_id"])[:64] if data.get("trace_id") else None,
                 actor_user_id=actor_id,
                 action=str(data.get("action") or event.event_type),
                 entity_type=data.get("entity_type"),
@@ -91,8 +97,11 @@ class EventIngestionService:
             if not document_type or not document_id:
                 return
             row = self.repo.search_document(event.source_service, document_type, document_id)
-            if row:
+            if row and row.is_active:
                 row.is_active = False
+                row.deindexed_at = utcnow()
+                row.acl_version = (row.acl_version or 0) + 1
+                self.db.add(SearchIndexRevision(search_document_id=row.id, acl_version=row.acl_version, audience=[], content_hash=row.content_hash or "", deindexed_at=row.deindexed_at))
             return
 
         if event.event_type != "platform.search.upsert" and not isinstance(data, dict):
@@ -116,6 +125,7 @@ class EventIngestionService:
             "is_active": bool(data.get("is_active", True)),
         }
 
+        hash_value = digest_json(values)
         if row is None:
             row = SearchDocument(
                 source_service=event.source_service,
@@ -123,7 +133,15 @@ class EventIngestionService:
                 document_id=document_id,
                 **values,
             )
+            row.content_hash = hash_value
             self.db.add(row)
         else:
+            if row.content_hash == hash_value and row.is_active == values["is_active"]:
+                return
+            row.acl_version = (row.acl_version or 0) + 1
+            row.content_hash = hash_value
+            row.deindexed_at = None if values["is_active"] else utcnow()
             for key, value in values.items():
                 setattr(row, key, value)
+        self.db.flush()
+        self.db.add(SearchIndexRevision(search_document_id=row.id, acl_version=row.acl_version, audience=row.audience_roles, content_hash=hash_value, deindexed_at=row.deindexed_at))

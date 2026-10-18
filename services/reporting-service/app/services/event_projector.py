@@ -162,6 +162,9 @@ class EventProjector:
             "academic.enrollment_cancelled",
         }:
             self._enrollment(p, t)
+        elif t.startswith("finance.") or t.startswith("payroll."):
+            # Stored in AnalyticsEvent and available for financial and payroll analytics
+            pass
 
     def _attendance(self, payload):
         session_id = _uuid(payload.get("attendance_session_id") or payload.get("session_id"))

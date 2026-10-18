@@ -168,3 +168,14 @@ tbody tr:hover { background: rgb(var(--surface) / .65); }
 @media(max-width:900px) { .workspace,.sidebar-collapsed { grid-template-columns: minmax(0,1fr); } .workspace-sidebar,.desktop-menu { display: none; } .mobile-menu { display: inline-flex; } .workspace-topbar { height: 64px; padding: 0 18px; gap: 10px; } .welcome-orbit { width: 160px; } .auth-story { padding: 35px; } }
 @media(max-width:600px) { .page-container { padding: 20px 16px; } .workspace-topbar { padding: 0 10px; gap: 2px; } .breadcrumb { gap: 8px; font-size: 10px; } .breadcrumb > span:first-child,.breadcrumb > span:nth-child(2) { display: none; } .topbar-actions { gap: 0; } .search-trigger { border: 0; padding: 0; width: 38px; justify-content: center; background: transparent; margin: 0; } .search-trigger > span { display: none; } .dashboard-welcome { padding: 24px 20px; } .welcome-eyebrow { font-size: 7px; letter-spacing: .8px; } .welcome-orbit { display: none; } .dashboard-welcome h1 { letter-spacing: -.8px; } .panel { padding: 18px; } .content-footer { padding: 18px 16px; } .auth-layout { display: block; } .auth-story { padding: 22px 25px; min-height: 170px; } .auth-story h2 { font-size: 28px; letter-spacing: -1px; margin: 20px 0 0; } .auth-story p,.auth-story footer { display: none; } .auth-form-area { padding: 30px 25px; } .chart-bars { gap: 10px; padding-inline: 0; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration: .01ms !important; animation-delay: 0ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+
+/* Wave 15 focus-not-obscured and narrow reflow baseline; manual verification still required. */
+html { scroll-padding-top: 5rem; }
+:where(button, a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid rgb(var(--brand-700)); outline-offset: 3px;
+  scroll-margin-block: 5rem;
+}
+@media (max-width: 640px) {
+  .page-container { padding-inline: max(12px, env(safe-area-inset-left)); }
+  table { max-width: 100%; }
+}

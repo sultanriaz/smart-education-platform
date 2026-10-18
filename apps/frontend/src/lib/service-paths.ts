@@ -8,5 +8,7 @@ export const gatewayNamespaces = {
   learning: "/api/v1/learning",
   assessments: "/api/v1/assessments",
   reporting: "/api/v1/reporting",
-  platform: "/api/v1/platform"
+  platform: "/api/v1/platform",
+  finance: "/api/v1/finance",
+  payroll: "/api/v1/payroll"
 } as const;

@@ -1,6 +1,7 @@
 from app.db.base_class import Base
 from app.domain.entities.associations import role_permissions, user_roles  # noqa: F401
 from app.domain.entities.audit import SecurityAuditEvent  # noqa: F401
+from app.domain.entities.import_batch import IdentityImportBatch  # noqa: F401
 from app.domain.entities.outbox import OutboxEvent  # noqa: F401
 from app.domain.entities.refresh_token import RefreshToken  # noqa: F401
 from app.domain.entities.role import Permission, Role  # noqa: F401

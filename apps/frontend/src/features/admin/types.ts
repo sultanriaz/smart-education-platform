@@ -223,6 +223,7 @@ export type ServiceHealth = {
 
 export type PlatformSetting = {
   key: string;
+  version: number;
   value: Record<string, unknown>;
   isPublic: boolean;
   description?: string | null;
@@ -231,6 +232,7 @@ export type PlatformSetting = {
 
 export type FeatureFlag = {
   key: string;
+  version: number;
   enabled: boolean;
   config: Record<string, unknown>;
   description?: string | null;

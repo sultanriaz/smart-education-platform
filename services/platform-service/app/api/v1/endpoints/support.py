@@ -19,6 +19,14 @@ from app.services.platform_service import PlatformService
 router = APIRouter(prefix="/support", tags=["Support"])
 
 
+def ticket_view(ticket, is_admin):
+    # Serialize a detached response; never mutate the ORM relationship while filtering.
+    view = TicketOut.model_validate(ticket)
+    if not is_admin:
+        view.messages = [message for message in view.messages if not message.is_internal]
+    return view
+
+
 def fail(exc: DomainError):
     raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
@@ -29,7 +37,7 @@ def create_ticket(
     principal: Principal = Depends(current_principal),
     service: PlatformService = Depends(get_platform_service),
 ):
-    return service.create_ticket(payload, principal.user_id)
+    return ticket_view(service.create_ticket(payload, principal.user_id), "admin" in principal.roles)
 
 
 @router.get("/tickets", response_model=list[TicketOut])
@@ -37,7 +45,7 @@ def list_tickets(
     principal: Principal = Depends(current_principal),
     service: PlatformService = Depends(get_platform_service),
 ):
-    return service.list_tickets(principal.user_id, "admin" in principal.roles)
+    return [ticket_view(row, "admin" in principal.roles) for row in service.list_tickets(principal.user_id, "admin" in principal.roles)]
 
 
 @router.get("/tickets/{ticket_id}", response_model=TicketOut)
@@ -47,7 +55,7 @@ def get_ticket(
     service: PlatformService = Depends(get_platform_service),
 ):
     try:
-        return service.get_ticket(ticket_id, principal.user_id, "admin" in principal.roles)
+        return ticket_view(service.get_ticket(ticket_id, principal.user_id, "admin" in principal.roles), "admin" in principal.roles)
     except DomainError as exc:
         fail(exc)
 
@@ -78,6 +86,6 @@ def update_ticket(
     service: PlatformService = Depends(get_platform_service),
 ):
     try:
-        return service.update_ticket_admin(ticket_id, payload)
+        return ticket_view(service.update_ticket_admin(ticket_id, payload), True)
     except DomainError as exc:
         fail(exc)

@@ -353,6 +353,7 @@ export function setting(value: unknown): PlatformSetting {
   const r = record(value);
   return {
     key: s(r.key),
+    version: n(r.version),
     value: record(r.value),
     isPublic: b(r.is_public),
     description: ns(r.description),
@@ -364,6 +365,7 @@ export function feature(value: unknown): FeatureFlag {
   const r = record(value);
   return {
     key: s(r.key),
+    version: n(r.version),
     enabled: b(r.enabled),
     config: record(r.config),
     description: ns(r.description),

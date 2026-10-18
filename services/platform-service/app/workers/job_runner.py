@@ -10,6 +10,7 @@ from app.domain.entities.models import InternalEvent, JobRecord
 from app.schemas.events import InternalEventIn
 from app.services.event_ingestion_service import EventIngestionService
 from app.services.platform_service import PlatformService
+from app.services.governance import digest_json
 from app.sprint16 import internal_token_signer
 
 LEASE_SECONDS = 300
@@ -17,6 +18,10 @@ MAX_ATTEMPTS = 3
 
 
 def execute_job(db, job, client=None):
+    # An import may execute only the exact bytes validated and enqueued.
+    content = {"parameters": job.parameters, "payload": job.payload, "target_service": job.target_service, "resource_type": job.resource_type, "job_type": job.job_type, "dry_run": job.dry_run}
+    if job.content_digest and digest_json(content) != job.content_digest:
+        raise ValueError("Job request changed since validation")
     service = PlatformService(db)
     if job.job_type == "HEALTH_SWEEP":
         checks = service.check_services(http_client=client)
@@ -71,7 +76,7 @@ def execute_job(db, job, client=None):
             "GET" if job.job_type == "EXPORT" else "POST",
             url,
             headers=headers,
-            params=job.parameters,
+            params={**(job.parameters or {}), **({"dry_run": "true"} if job.dry_run and job.job_type == "IMPORT" else {})},
             json=job.payload if job.job_type == "IMPORT" else None,
             timeout=min(registry.timeout_seconds, 30),
         )
@@ -86,6 +91,9 @@ def execute_job(db, job, client=None):
 
 def process_jobs(session_factory, client=None):
     now = datetime.now(UTC)
+    # Escalation and job processing are both serialized by PostgreSQL row locks.
+    with session_factory() as maintenance_db:
+        PlatformService(maintenance_db).escalate_due_tickets(now=now)
     stale = now - timedelta(seconds=LEASE_SECONDS)
     with session_factory() as db:
         candidate = db.scalar(

@@ -82,6 +82,106 @@ def main():
     create("assessment-assignment", "assessment", f"quizzes/{quiz['id']}/assignments", {"section_id": section["id"], "opens_at": (now-timedelta(days=1)).isoformat(), "due_at": (now+timedelta(days=30)).isoformat(), "attempt_limit": 5}, "teacher")
     create("announcement", "notification", "teacher/announcements", {"section_id": section["id"], "title": "Demo · Welcome to your workspace", "body": "Your timetable, attendance, resources, and assessments are connected. This is a labelled demonstration announcement."}, "teacher")
     create("support-ticket", "platform", "support/tickets", {"subject": "Demo · Workspace feedback", "description": "This labelled support ticket verifies the service-owned help workflow."}, "student")
+
+    # Wave 17: Finance & Payroll Seed Fixtures
+    checker_password = secrets.get("CHECKER_PASSWORD", "S9!K8mP2vL#4uY7wQz")
+    create("checker", "identity", "users", {"email": "checker@demo.example.edu", "full_name": "Demo Finance Checker", "password": checker_password, "role": "admin"})
+    tokens["checker"] = request("POST", "identity", "auth/login", {"email": "checker@demo.example.edu", "password": checker_password})["access_token"]
+
+    fee_structure = create("fee-structure", "finance", "fee-structures", {
+        "name": "Demo · BSCS Autumn 2026",
+        "program_id": program["id"],
+        "academic_year_id": year["id"],
+        "semester_number": 1,
+        "components": [
+            {"name": "Tuition Fee", "component_type": "TUITION", "amount": 65000.0, "is_refundable": False, "eligible_for_scholarship": True},
+            {"name": "Examination Fee", "component_type": "EXAMINATION", "amount": 5000.0, "is_refundable": False, "eligible_for_scholarship": False},
+            {"name": "Laboratory Fee", "component_type": "LABORATORY", "amount": 3000.0, "is_refundable": False, "eligible_for_scholarship": False},
+            {"name": "Library Fee", "component_type": "LIBRARY", "amount": 2000.0, "is_refundable": False, "eligible_for_scholarship": False}
+        ]
+    })
+
+    scholarship = create("scholarship", "finance", "scholarships", {
+        "name": "Demo · Academic Merit Scholarship",
+        "code": "DEMO-MERIT-25",
+        "scholarship_type": "MERIT",
+        "percentage": 25.0,
+        "applies_to_components": ["TUITION"]
+    })
+
+    create("scholarship-award", "finance", "scholarships/awards", {
+        "scholarship_id": scholarship["id"],
+        "student_user_id": fixtures["student"]["id"],
+        "academic_year_id": year["id"],
+        "semester_number": 1
+    })
+
+    invoice = create("student-invoice", "finance", "invoices", {
+        "student_user_id": fixtures["student"]["id"],
+        "program_id": program["id"],
+        "academic_year_id": year["id"],
+        "semester_number": 1,
+        "installments_count": 3
+    })
+
+    if invoice.get("installments") and len(invoice["installments"]) > 0:
+        inst1 = invoice["installments"][0]
+        intent_resp = create("fee-payment-intent", "finance", "payments/intent", {
+            "invoice_id": invoice["id"],
+            "installment_id": inst1["id"],
+            "amount": float(inst1["amount"]),
+            "provider": "JAZZ_CASH"
+        }, role="student")
+        intent_id = intent_resp.get("intent", {}).get("id") or intent_resp.get("id")
+        create("fee-payment", "finance", "payments/simulate", {
+            "payment_intent_id": intent_id,
+            "fail": False
+        }, role="student")
+
+    teacher_payroll = create("teacher-payroll-profile", "payroll", "profiles", {
+        "user_id": fixtures["teacher"]["id"],
+        "employee_number": "DEMO-EMP-001",
+        "full_name": "Demo Teacher",
+        "email": "teacher@demo.example.edu",
+        "department_id": department["id"],
+        "designation": "Assistant Professor",
+        "employment_type": "FULL_TIME",
+        "bank_name": "Meezan Bank Ltd",
+        "bank_account_number": "010101010101",
+        "is_active": True
+    })
+
+    create("salary-structure", "payroll", "structures", {
+        "employee_profile_id": teacher_payroll["id"],
+        "effective_from": "2026-01-01",
+        "base_salary": 120000.0,
+        "components": [
+            {"name": "House Rent Allowance", "component_type": "ALLOWANCE", "amount": 15000.0, "is_percentage": False},
+            {"name": "Medical Allowance", "component_type": "ALLOWANCE", "amount": 5000.0, "is_percentage": False},
+            {"name": "Income Tax Withholding", "component_type": "DEDUCTION", "amount": 8000.0, "is_percentage": False},
+            {"name": "Provident Fund", "component_type": "DEDUCTION", "amount": 4000.0, "is_percentage": False}
+        ]
+    })
+
+    payroll_period = create("payroll-period", "payroll", "periods", {
+        "year": 2026,
+        "month": 9,
+        "start_date": "2026-09-01",
+        "end_date": "2026-09-30"
+    })
+
+    payroll_run = create("payroll-run", "payroll", "runs", {
+        "period_id": payroll_period["id"],
+        "notes": "Demo · September 2026 Faculty Payroll"
+    }, role="admin")
+
+    create("payroll-run-approval", "payroll", f"runs/{payroll_run['id']}/decision", {
+        "approved": True,
+        "notes": "Verified by Demo Finance Checker"
+    }, role="checker")
+
+    create("payroll-disbursement", "payroll", f"disbursements/runs/{payroll_run['id']}/disburse", {}, role="admin")
+
     client.close()
     print("Local demo fixtures ready. Credentials remain in .integration/runtime/secrets.json.")
 

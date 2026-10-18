@@ -95,21 +95,26 @@ export function AdminPlatformPage() {
     key: "",
     value: "{}",
     is_public: false,
-    description: ""
+    description: "",
+    expected_version: 0
   });
 
   const [featureForm, setFeatureForm] = useState({
     key: "",
     enabled: false,
     config: "{}",
-    description: ""
+    description: "",
+    expected_version: 0
   });
 
   const [jobForm, setJobForm] = useState({
     job_type: "HEALTH_SWEEP" as "IMPORT" | "EXPORT" | "HEALTH_SWEEP" | "REINDEX",
     target_service: "",
     resource_type: "",
-    parameters: "{}"
+    parameters: "{}",
+    payload: "{}",
+    dry_run: true,
+    idempotency_key: ""
   });
 
   const [ticketUpdates, setTicketUpdates] = useState<
@@ -166,7 +171,8 @@ export function AdminPlatformPage() {
         input: {
           value: parseObject(settingForm.value),
           is_public: settingForm.is_public,
-          description: settingForm.description || undefined
+          description: settingForm.description || undefined,
+          expected_version: settingForm.expected_version
         }
       });
       toast.push("Platform setting saved.", "success");
@@ -183,7 +189,8 @@ export function AdminPlatformPage() {
         input: {
           enabled: featureForm.enabled,
           config: parseObject(featureForm.config),
-          description: featureForm.description || undefined
+          description: featureForm.description || undefined,
+          expected_version: featureForm.expected_version
         }
       });
       toast.push("Feature flag saved.", "success");
@@ -200,7 +207,9 @@ export function AdminPlatformPage() {
         target_service: jobForm.target_service || undefined,
         resource_type: jobForm.resource_type || undefined,
         parameters: parseObject(jobForm.parameters),
-        payload: {}
+        payload: parseObject(jobForm.payload),
+        dry_run: jobForm.dry_run,
+        idempotency_key: jobForm.idempotency_key || undefined
       });
       toast.push("Platform job created.", "success");
     } catch (error) {
@@ -394,6 +403,7 @@ export function AdminPlatformPage() {
               />
               Expose as public authenticated setting
             </label>
+            <p className="text-xs text-muted">Editing revision {settingForm.expected_version}; concurrent updates are rejected.</p>
             <Button type="submit">Save setting</Button>
           </form>
 
@@ -407,7 +417,8 @@ export function AdminPlatformPage() {
                     key: item.key,
                     value: JSON.stringify(item.value, null, 2),
                     is_public: item.isPublic,
-                    description: item.description ?? ""
+                    description: item.description ?? "",
+                    expected_version: item.version
                   })
                 }
               >
@@ -456,6 +467,7 @@ export function AdminPlatformPage() {
               />
               Enabled
             </label>
+            <p className="text-xs text-muted">Editing revision {featureForm.expected_version}; concurrent updates are rejected.</p>
             <Button type="submit">Save feature flag</Button>
           </form>
 
@@ -469,7 +481,8 @@ export function AdminPlatformPage() {
                     key: item.key,
                     enabled: item.enabled,
                     config: JSON.stringify(item.config, null, 2),
-                    description: item.description ?? ""
+                    description: item.description ?? "",
+                    expected_version: item.version
                   })
                 }
               >
@@ -523,6 +536,21 @@ export function AdminPlatformPage() {
                   setJobForm((f) => ({ ...f, parameters: e.target.value }))
                 }
               />
+            </label>
+            <label className="block text-sm font-medium">
+              Validated owner payload JSON
+              <textarea
+                className="mt-2 min-h-24 w-full rounded-xl border border-line px-3 py-2 font-mono text-xs"
+                value={jobForm.payload}
+                onChange={(e) => setJobForm((f) => ({ ...f, payload: e.target.value }))}
+              />
+            </label>
+            <Input label="Idempotency key (required for safe retries)" value={jobForm.idempotency_key}
+              onChange={(e) => setJobForm((f) => ({ ...f, idempotency_key: e.target.value }))} />
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={jobForm.dry_run}
+                onChange={(e) => setJobForm((f) => ({ ...f, dry_run: e.target.checked }))} />
+              Validate import only (no owner writes)
             </label>
             <Button type="submit">Create job</Button>
           </form>

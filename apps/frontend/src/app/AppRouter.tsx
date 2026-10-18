@@ -24,12 +24,15 @@ const AdminPlatformPage = lazy(() => import("../pages/admin/AdminPlatformPage").
 const AdminReportingPage = lazy(() => import("../pages/admin/AdminReportingPage").then(module => ({ default: module.AdminReportingPage })));
 const AdminSchedulingPage = lazy(() => import("../pages/admin/AdminSchedulingPage").then(module => ({ default: module.AdminSchedulingPage })));
 const AdminUsersPage = lazy(() => import("../pages/admin/AdminUsersPage").then(module => ({ default: module.AdminUsersPage })));
+const AdminFinancePage = lazy(() => import("../pages/admin/AdminFinancePage").then(module => ({ default: module.AdminFinancePage })));
+const AdminPayrollPage = lazy(() => import("../pages/admin/AdminPayrollPage").then(module => ({ default: module.AdminPayrollPage })));
 
 const StudentAssessmentAttemptPage = lazy(() => import("../pages/student/StudentAssessmentAttemptPage").then(module => ({ default: module.StudentAssessmentAttemptPage })));
 const StudentAssessmentsPage = lazy(() => import("../pages/student/StudentAssessmentsPage").then(module => ({ default: module.StudentAssessmentsPage })));
 const StudentAttendancePage = lazy(() => import("../pages/student/StudentAttendancePage").then(module => ({ default: module.StudentAttendancePage })));
 const StudentDashboardPage = lazy(() => import("../pages/student/StudentDashboardPage").then(module => ({ default: module.StudentDashboardPage })));
 const StudentFacilitiesPage = lazy(() => import("../pages/student/StudentFacilitiesPage").then(module => ({ default: module.StudentFacilitiesPage })));
+const StudentFinancePage = lazy(() => import("../pages/student/StudentFinancePage").then(module => ({ default: module.StudentFinancePage })));
 const StudentLearningPage = lazy(() => import("../pages/student/StudentLearningPage").then(module => ({ default: module.StudentLearningPage })));
 const StudentTimetablePage = lazy(() => import("../pages/student/StudentTimetablePage").then(module => ({ default: module.StudentTimetablePage })));
 
@@ -39,6 +42,7 @@ const TeacherClassesAttendancePage = lazy(() => import("../pages/teacher/Teacher
 const TeacherDashboardPage = lazy(() => import("../pages/teacher/TeacherDashboardPage").then(module => ({ default: module.TeacherDashboardPage })));
 const TeacherFacilitiesPage = lazy(() => import("../pages/teacher/TeacherFacilitiesPage").then(module => ({ default: module.TeacherFacilitiesPage })));
 const TeacherLearningPage = lazy(() => import("../pages/teacher/TeacherLearningPage").then(module => ({ default: module.TeacherLearningPage })));
+const TeacherPayrollPage = lazy(() => import("../pages/teacher/TeacherPayrollPage").then(module => ({ default: module.TeacherPayrollPage })));
 const TeacherTimetablePage = lazy(() => import("../pages/teacher/TeacherTimetablePage").then(module => ({ default: module.TeacherTimetablePage })));
 
 export function AppRouter() {
@@ -71,6 +75,7 @@ export function AppRouter() {
               element={<StudentAssessmentAttemptPage />}
             />
             <Route path="student/facilities" element={<StudentFacilitiesPage />} />
+            <Route path="student/finance" element={<StudentFinancePage />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={["teacher"]} />}>
@@ -87,6 +92,7 @@ export function AppRouter() {
               element={<TeacherAnnouncementsPage />}
             />
             <Route path="teacher/facilities" element={<TeacherFacilitiesPage />} />
+            <Route path="teacher/payroll" element={<TeacherPayrollPage />} />
           </Route>
 
           <Route element={<ProtectedRoute roles={["admin"]} />}>
@@ -99,6 +105,8 @@ export function AppRouter() {
             <Route path="admin/notifications" element={<AdminNotificationsPage />} />
             <Route path="admin/reporting" element={<AdminReportingPage />} />
             <Route path="admin/platform" element={<AdminPlatformPage />} />
+            <Route path="admin/finance" element={<AdminFinancePage />} />
+            <Route path="admin/payroll" element={<AdminPayrollPage />} />
           </Route>
 
           <Route path="notifications" element={<NotificationsPage />} />

@@ -681,6 +681,8 @@ export async function upsertPlatformSetting(
     value: Record<string, unknown>;
     is_public: boolean;
     description?: string;
+    expected_version?: number;
+    reason?: string;
   }
 ): Promise<PlatformSetting> {
   return setting(
@@ -704,6 +706,8 @@ export async function upsertFeatureFlag(
     enabled: boolean;
     config: Record<string, unknown>;
     description?: string;
+    expected_version?: number;
+    reason?: string;
   }
 ): Promise<FeatureFlag> {
   return feature(
@@ -727,6 +731,8 @@ export async function createPlatformJob(input: {
   resource_type?: string;
   parameters?: Record<string, unknown>;
   payload?: Record<string, unknown>;
+  dry_run?: boolean;
+  idempotency_key?: string;
 }): Promise<PlatformJob> {
   return job(
     await apiRequest<unknown>("/api/v1/platform/admin/jobs", {

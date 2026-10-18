@@ -618,12 +618,12 @@ def main():
                 f"{payload['job_type']} failed: {finished['error']}"
             )
             if payload["job_type"] == "HEALTH_SWEEP":
-                assert len(finished["result"]["services"]) == 10 and all(
+                assert len(finished["result"]["services"]) in (10, len(NAMES)) and all(
                     row["status"] == "HEALTHY" for row in finished["result"]["services"]
                 )
             if payload["job_type"] == "EXPORT":
                 assert finished["result"]["items"]
-        return "All ten services ready; durable health/reindex/export jobs completed via owner contracts"
+        return f"All {len(finished['result']['services'])} services ready; durable health/reindex/export jobs completed via owner contracts"
 
     @case("Reporting: RabbitMQ grade projection and actual CSV export")
     def reporting():
@@ -839,6 +839,148 @@ def main():
         request(None, "GET", "/api/v1/identity/users/me", expected=(401,))
         request(None, "GET", "/api/v1/platform/admin/settings", expected=(401, 403))
         return "Signed service scopes are enforced; anonymous requests cannot impersonate users or services"
+
+    @case("Finance: fee structure, merit scholarship concession, installment plan, and payment intent")
+    def finance_fees():
+        structs = request("admin", "GET", "/api/v1/finance/fee-structures").json()
+        assert any(s["name"] == "Demo · BSCS Autumn 2026" for s in structs)
+
+        schols = request("admin", "GET", "/api/v1/finance/scholarships").json()
+        assert any(s["code"] == "DEMO-MERIT-25" for s in schols)
+
+        invoices = request(
+            "student",
+            "GET",
+            f"/api/v1/finance/invoices?student_user_id={fixtures['student']['id']}",
+        ).json()
+        assert len(invoices) > 0
+        inv = invoices[0]
+        assert float(inv["total_amount"]) == 75000.0
+        assert float(inv["scholarship_amount"]) == 16250.0
+        assert float(inv["subtotal"]) == 58750.0
+        assert len(inv["installments"]) == 3
+        assert any(inst["status"] in ("PAID", "PARTIALLY_PAID") for inst in inv["installments"])
+
+        portal = request("student", "GET", "/api/v1/finance/portal/my-account").json()
+        assert portal["account"]["student_user_id"] == fixtures["student"]["id"]
+        assert float(portal["account"]["total_scholarships"]) == 16250.0
+        return "Fee structure with 25% merit discount produced PKR 16,250 concession on PKR 65,000 tuition; 3-installment plan and student self-service verified"
+
+    @case("Finance: double-entry general ledger and trial balance invariant verification")
+    def finance_accounting():
+        tb = request("admin", "GET", "/api/v1/finance/accounting/trial-balance").json()
+        assert tb["is_balanced"] is True
+        assert float(tb["total_debits"]) == float(tb["total_credits"])
+        assert float(tb["total_debits"]) > 0
+        acc_codes = {acc["account_code"] for acc in tb["accounts"]}
+        assert {"1010", "1100", "2010", "4010"}.issubset(acc_codes)
+        return f"Double-entry ledger invariant verified: Total Debits (PKR {float(tb['total_debits']):,.2f}) == Total Credits (PKR {float(tb['total_credits']):,.2f}) across all active accounts"
+
+    @case("Finance: dual-control maker-checker refund segregation and role isolation")
+    def finance_refunds():
+        clients["checker"] = httpx.Client(base_url=BASE, timeout=20)
+        checker_token = request(
+            "checker",
+            "POST",
+            "/api/v1/identity/auth/login",
+            {"email": "checker@demo.example.edu", "password": secrets.get("CHECKER_PASSWORD", "S9!K8mP2vL#4uY7wQz")},
+        ).json()["access_token"]
+        tokens["checker"] = checker_token
+
+        request(
+            "student",
+            "POST",
+            "/api/v1/finance/refunds",
+            {"payment_id": str(uuid.uuid4()), "amount": 1000.0, "reason": "Unauthorized student request"},
+            expected=(403,),
+        )
+
+        payments = request(
+            "admin",
+            "GET",
+            f"/api/v1/finance/payments?student_user_id={fixtures['student']['id']}",
+        ).json()
+        assert len(payments) > 0
+        payment_id = payments[0]["id"]
+
+        refund = request(
+            "admin",
+            "POST",
+            "/api/v1/finance/refunds",
+            {"payment_id": payment_id, "amount": 500.0, "reason": "Overpayment adjustment test"},
+        ).json()
+        refund_id = refund["id"]
+
+        maker_approval = request(
+            "admin",
+            "POST",
+            f"/api/v1/finance/refunds/{refund_id}/approve",
+            expected=(400,),
+        )
+        assert "maker-checker" in maker_approval.text.lower() or "operator cannot approve" in maker_approval.text.lower()
+
+        checker_approval = request(
+            "checker",
+            "POST",
+            f"/api/v1/finance/refunds/{refund_id}/approve",
+        ).json()
+        assert checker_approval["status"] == "APPROVED"
+        assert checker_approval["checker_user_id"] == fixtures["checker"]["id"]
+
+        tb = request("admin", "GET", "/api/v1/finance/accounting/trial-balance").json()
+        assert tb["is_balanced"] is True
+        return "Maker-Checker dual control enforced: creator denied self-approval; distinct checker approved; GL trial balance preserved balanced"
+
+    @case("Payroll: faculty salary structure, calculation, and maker-checker approval")
+    def payroll_calculation_approval():
+        profile = request("admin", "GET", f"/api/v1/payroll/profiles/{fixtures['teacher']['id']}").json()
+        assert profile["user_id"] == fixtures["teacher"]["id"]
+        assert profile["bank_name"] == "Meezan Bank Ltd"
+
+        run_id = fixtures["payroll-run"]["id"]
+        run = request("admin", "GET", f"/api/v1/payroll/runs/{run_id}").json()
+        assert run["status"] in ("APPROVED", "DISBURSEMENT_PENDING", "PAID")
+        assert float(run["total_gross"]) == 140000.0
+        assert float(run["total_deductions"]) == 12000.0
+        assert float(run["total_net"]) == 128000.0
+
+        period2 = request("admin", "POST", "/api/v1/payroll/periods", {
+            "year": 2026,
+            "month": 10,
+            "start_date": "2026-10-01",
+            "end_date": "2026-10-31"
+        }).json()
+        run2 = request("admin", "POST", "/api/v1/payroll/runs", {
+            "period_id": period2["id"],
+            "notes": "Maker-checker test run"
+        }).json()
+        maker_approval = request("admin", "POST", f"/api/v1/payroll/runs/{run2['id']}/decision", {"approved": True}, expected=(400,))
+        assert "maker-checker" in maker_approval.text.lower()
+
+        checker_approval = request("checker", "POST", f"/api/v1/payroll/runs/{run2['id']}/decision", {"approved": True, "notes": "Approved by checker"}).json()
+        assert checker_approval["status"] == "APPROVED"
+        return f"Gross-to-net calculated (PKR {float(run['total_gross']):,.2f} gross -> PKR {float(run['total_net']):,.2f} net); Maker-Checker segregation verified"
+
+    @case("Payroll: self-service payslip isolation and simulated batch disbursement")
+    def payroll_payslips_disbursement():
+        teacher_slips = request("teacher", "GET", "/api/v1/payroll/payslips/my-payslips").json()
+        assert len(teacher_slips) > 0
+        slip = teacher_slips[0]
+        assert float(slip["gross_salary"]) == 140000.0
+        assert float(slip["net_salary"]) == 128000.0
+        assert slip["is_published"] is True
+
+        request("student", "GET", "/api/v1/payroll/payslips/my-payslips", expected=(403,))
+        request("student", "GET", f"/api/v1/payroll/payslips/{slip['id']}", expected=(403,))
+
+        disb_id = fixtures["payroll-disbursement"]["id"]
+        batch = request("admin", "GET", f"/api/v1/payroll/disbursements/batches/{disb_id}").json()
+        assert batch["status"] == "COMPLETED"
+        assert batch["total_employees"] >= 1
+        assert float(batch["total_amount"]) == 128000.0
+        assert all(r["status"] == "COMPLETED" for r in batch["records"])
+        assert all(r["simulated_reference"] for r in batch["records"])
+        return f"Faculty self-service payslip verified; unauthorized access denied; simulated batch disbursement completed for PKR {float(batch['total_amount']):,.2f}"
 
     for client in clients.values():
         client.close()

@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.domain.entities.models import (
     AuditEntry,
+    FeatureFlagRevision,
+    SettingRevision,
     FeatureFlag,
     InternalEvent,
     JobRecord,
@@ -62,6 +64,7 @@ class PlatformRepository:
             select(SupportTicket)
             .options(selectinload(SupportTicket.messages))
             .where(SupportTicket.id == ticket_id)
+            .execution_options(populate_existing=True)
         )
         return self.db.scalar(stmt)
 
@@ -107,9 +110,19 @@ class PlatformRepository:
             ).all()
         )
 
-    def list_audit(self, limit: int = 100):
-        return list(
-            self.db.scalars(
-                select(AuditEntry).order_by(AuditEntry.occurred_at.desc()).limit(limit)
-            ).all()
-        )
+    def list_audit(self, limit: int = 100, offset: int = 0, **filters):
+        stmt = select(AuditEntry)
+        for field in ("actor_user_id", "source_service", "action", "entity_type", "entity_id", "outcome", "request_id", "correlation_id", "trace_id"):
+            if filters.get(field) is not None:
+                stmt = stmt.where(getattr(AuditEntry, field) == filters[field])
+        if filters.get("from_date") is not None:
+            stmt = stmt.where(AuditEntry.occurred_at >= filters["from_date"])
+        if filters.get("to_date") is not None:
+            stmt = stmt.where(AuditEntry.occurred_at <= filters["to_date"])
+        return list(self.db.scalars(stmt.order_by(AuditEntry.occurred_at.desc(), AuditEntry.id.desc()).offset(offset).limit(min(limit, 500))).all())
+
+    def setting_history(self, key: str, limit=50):
+        return list(self.db.scalars(select(SettingRevision).where(SettingRevision.setting_key == key).order_by(SettingRevision.version.desc()).limit(limit)).all())
+
+    def feature_history(self, key: str, limit=50):
+        return list(self.db.scalars(select(FeatureFlagRevision).where(FeatureFlagRevision.flag_key == key).order_by(FeatureFlagRevision.version.desc()).limit(limit)).all())

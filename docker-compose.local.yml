@@ -193,6 +193,8 @@ services:
       PROXY_READ_TIMEOUT: ${PROXY_READ_TIMEOUT:-30s}
       TLS_SERVER_NAME: ${TLS_SERVER_NAME:-localhost}
       LOCAL_NATIVE_UPSTREAMS: 'true'
+      FINANCE_UPSTREAM: host.docker.internal:8011
+      PAYROLL_UPSTREAM: host.docker.internal:8012
     ports:
     - 127.0.0.1:18080:8080
     networks:

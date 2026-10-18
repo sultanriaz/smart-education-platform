@@ -1,0 +1,20 @@
+from __future__ import annotations
+
+from smartedu_infra import DatabaseSettings, build_engine
+from sqlalchemy.orm import Session, sessionmaker
+
+from app.core.config import settings
+
+engine = build_engine(
+    DatabaseSettings(DATABASE_URL=settings.DATABASE_URL, DB_APPLICATION_NAME="finance-service")
+)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
+
+
+def get_db():
+    db: Session = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+

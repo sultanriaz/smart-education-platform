@@ -13,7 +13,7 @@ def main():
     from app.core.config import settings
 
     url = make_url(settings.DATABASE_URL)
-    if settings.ENVIRONMENT != "development" or url.host != "127.0.0.1" or url.port != 55432:
+    if settings.ENVIRONMENT != "development" or url.host != "127.0.0.1" or url.port not in (55432, 15432):
         raise SystemExit("Local demo repair only supports the isolated integration database.")
     with SessionLocal() as db:
         old = db.scalar(

@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from smartedu_security import PasswordPolicyError
@@ -7,8 +8,10 @@ from sqlalchemy.orm import Session
 from app.core.exceptions import ConflictError, NotFoundError
 from app.db.session import get_db
 from app.repositories.user_repository import UserRepository
+from app.repositories.audit_repository import AuditRepository
+from app.schemas.security_history import SecurityActivityOut
 from app.schemas.user import AdminUserCreate, AdminUserUpdate, UserOut, UserSelfUpdate
-from app.security.dependencies import get_current_user, require_permission
+from app.security.dependencies import get_current_user, require_permission, require_roles
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -50,6 +53,18 @@ def create_user(
         raise HTTPException(
             status_code=422, detail={"code": "password_policy_failed", "reasons": exc.reasons}
         ) from exc
+
+
+@router.get("/me/security-history", response_model=list[SecurityActivityOut])
+def own_security_history(offset: int = Query(default=0, ge=0), limit: int = Query(default=50, ge=1, le=100), user=Depends(get_current_user), db: Session = Depends(get_db)):
+    return AuditRepository(db).history(user_id=user.id, offset=offset, limit=limit)
+
+
+@router.get("/security-history", response_model=list[SecurityActivityOut])
+def admin_security_history(user_id: uuid.UUID | None = None, action: str | None = None, outcome: str | None = None, from_date: datetime | None = None, to_date: datetime | None = None, offset: int = Query(default=0, ge=0), limit: int = Query(default=50, ge=1, le=100), _admin=Depends(require_roles("admin")), db: Session = Depends(get_db)):
+    if from_date and to_date and from_date > to_date:
+        raise HTTPException(422, "from_date exceeds to_date")
+    return AuditRepository(db).history(user_id=user_id, action=action, outcome=outcome, from_date=from_date, to_date=to_date, offset=offset, limit=limit)
 
 
 @router.get("/{user_id}", response_model=UserOut)

@@ -48,6 +48,8 @@ SUBSCRIPTIONS = {
         "facility.#",
         "notification.#",
         "schedule.#",
+        "finance.#",
+        "payroll.#",
     ),
     "platform-service": (
         "academic.#",
@@ -59,6 +61,8 @@ SUBSCRIPTIONS = {
         "schedule.#",
         "platform.#",
         "audit.#",
+        "finance.#",
+        "payroll.#",
     ),
 }
 

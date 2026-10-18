@@ -1,0 +1,26 @@
+from app.db.base_class import Base  # noqa
+from app.domain.models import (  # noqa
+    Account,
+    FeeComponent,
+    FeeStructure,
+    FinanceAuditEvent,
+    FinanceInboxEvent,
+    FinanceOutboxEvent,
+    InstitutionConfig,
+    Invoice,
+    InvoiceInstallment,
+    InvoiceLineItem,
+    JournalEntry,
+    JournalLine,
+    Payment,
+    PaymentAllocation,
+    PaymentIntent,
+    Receipt,
+    ReconciliationBatch,
+    ReconciliationItem,
+    RefundRequest,
+    Scholarship,
+    ScholarshipAward,
+    StudentFinancialAccount,
+)
+

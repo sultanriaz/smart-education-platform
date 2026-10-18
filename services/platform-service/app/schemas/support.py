@@ -14,7 +14,7 @@ class TicketCreate(BaseModel):
 
 
 class TicketUpdateAdmin(BaseModel):
-    status: str | None = None
+    status: str | None = Field(default=None, pattern="^(OPEN|IN_PROGRESS|WAITING_REQUESTER|RESOLVED|CLOSED)$")
     priority: str | None = None
     assigned_to_user_id: uuid.UUID | None = None
 
@@ -49,3 +49,7 @@ class TicketOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     closed_at: datetime | None
+    due_at: datetime | None = None
+    escalated_at: datetime | None = None
+    last_message_at: datetime | None = None
+    messages: list[MessageOut] = Field(default_factory=list)

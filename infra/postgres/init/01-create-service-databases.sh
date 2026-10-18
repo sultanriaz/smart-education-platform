@@ -38,5 +38,8 @@ ensure_role_and_db learning_svc learning_db "$LEARNING_DB_PASSWORD"
 ensure_role_and_db assessment_svc assessment_db "$ASSESSMENT_DB_PASSWORD"
 ensure_role_and_db reporting_svc reporting_db "$REPORTING_DB_PASSWORD"
 ensure_role_and_db platform_svc platform_db "$PLATFORM_DB_PASSWORD"
+ensure_role_and_db finance_svc finance_db "$FINANCE_DB_PASSWORD"
+ensure_role_and_db payroll_svc payroll_db "$PAYROLL_DB_PASSWORD"
 
 echo "Created/verified Smart Education logical service databases."
+

@@ -24,6 +24,8 @@ NAMES = [
     "assessment",
     "reporting",
     "platform",
+    "finance",
+    "payroll",
 ]
 
 
@@ -61,6 +63,10 @@ def main():
         ).decode()
         values["DEMO_PASSWORD"] = "Demo!" + secrets.token_urlsafe(18) + "7aZ"
         secret_file.write_text(json.dumps(values, indent=2))
+    for name in NAMES:
+        db_key = f"{name.upper()}_DB_PASSWORD"
+        if db_key not in values:
+            values[db_key] = secrets.token_urlsafe(32)
     for key in (
         "REDIS_CACHE_PASSWORD",
         "REDIS_DURABLE_PASSWORD",
@@ -148,6 +154,8 @@ def main():
             "FACILITY_SERVICE_BASE_URL": "http://127.0.0.1:8006",
             "IDENTITY_SERVICE_BASE_URL": "http://127.0.0.1:8001",
             "NOTIFICATION_SERVICE_BASE_URL": "http://127.0.0.1:8005",
+            "FINANCE_SERVICE_BASE_URL": "http://127.0.0.1:8011",
+            "PAYROLL_SERVICE_BASE_URL": "http://127.0.0.1:8012",
             "INTERNAL_EVENT_TOKEN": values["INTERNAL_EVENT_TOKEN"],
             "INTERNAL_SERVICE_TOKEN": values["INTERNAL_EVENT_TOKEN"],
             "SERVICE_INTERNAL_TOKEN": values["INTERNAL_EVENT_TOKEN"],

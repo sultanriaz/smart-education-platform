@@ -51,6 +51,10 @@ class AuditEntry(Base):
     entity_type: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
     entity_id: Mapped[str | None] = mapped_column(String(160), nullable=True, index=True)
     correlation_id: Mapped[str | None] = mapped_column(String(160), nullable=True, index=True)
+    event_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True, unique=True)
+    outcome: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    request_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
 
@@ -77,6 +81,9 @@ class SearchDocument(Base):
     audience_roles: Mapped[list] = mapped_column(
         JSON, default=lambda: ["admin", "teacher", "student"]
     )
+    acl_version: Mapped[int] = mapped_column(Integer, default=1)
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    deindexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -104,6 +111,9 @@ class SupportTicket(Base):
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    escalated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     messages: Mapped[list[SupportMessage]] = relationship(
         back_populates="ticket", cascade="all, delete-orphan", lazy="selectin"
     )
@@ -123,11 +133,51 @@ class SupportMessage(Base):
     ticket: Mapped[SupportTicket] = relationship(back_populates="messages")
 
 
+class SettingRevision(Base):
+    __tablename__ = "setting_revisions"
+    __table_args__ = (UniqueConstraint("setting_key", "version", name="uq_setting_revision"),)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    setting_key: Mapped[str] = mapped_column(String(160), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    value: Mapped[dict] = mapped_column(JSON)
+    is_public: Mapped[bool] = mapped_column(Boolean)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    changed_by_user_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True))
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class FeatureFlagRevision(Base):
+    __tablename__ = "feature_flag_revisions"
+    __table_args__ = (UniqueConstraint("flag_key", "version", name="uq_feature_flag_revision"),)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    flag_key: Mapped[str] = mapped_column(String(160), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    enabled: Mapped[bool] = mapped_column(Boolean)
+    config: Mapped[dict] = mapped_column(JSON)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    changed_by_user_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True))
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SearchIndexRevision(Base):
+    __tablename__ = "search_index_revisions"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    search_document_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), index=True)
+    acl_version: Mapped[int] = mapped_column(Integer)
+    audience: Mapped[list] = mapped_column(JSON)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    indexed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    deindexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class PlatformSetting(Base):
     __tablename__ = "platform_settings"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     key: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    version: Mapped[int] = mapped_column(Integer, default=0)
     value: Mapped[dict] = mapped_column(JSON, default=dict)
     is_public: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     description: Mapped[str | None] = mapped_column(String(300), nullable=True)
@@ -142,6 +192,7 @@ class FeatureFlag(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     key: Mapped[str] = mapped_column(String(160), unique=True, index=True)
+    version: Mapped[int] = mapped_column(Integer, default=0)
     enabled: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     config: Mapped[dict] = mapped_column(JSON, default=dict)
     description: Mapped[str | None] = mapped_column(String(300), nullable=True)
@@ -196,6 +247,10 @@ class JobRecord(Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     requested_by_user_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), index=True)
     attempts: Mapped[int] = mapped_column(Integer, default=0)
+    content_digest: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    dry_run: Mapped[bool] = mapped_column(Boolean, default=False)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, index=True
     )

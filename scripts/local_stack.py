@@ -26,6 +26,8 @@ NAMES = [
     "assessment",
     "reporting",
     "platform",
+    "finance",
+    "payroll",
 ]
 
 
@@ -174,7 +176,11 @@ def main():
                     env=environment(name),
                     stdout=log,
                     stderr=subprocess.STDOUT,
-                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+                    creationflags=(
+                        subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS
+                    )
+                    if os.name == "nt"
+                    else 0,
                 )
             records.append(
                 {

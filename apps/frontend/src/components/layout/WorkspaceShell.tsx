@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { ArrowUpRight, Bell, BookOpen, CalendarDays, ChevronDown, ClipboardCheck, GraduationCap, LayoutDashboard, LifeBuoy, LogOut, Menu, Moon, Search, Settings2, ShieldCheck, Sun, Users, X } from "lucide-react";
+import { ArrowUpRight, Banknote, Bell, BookOpen, CalendarDays, ChevronDown, ClipboardCheck, CreditCard, GraduationCap, LayoutDashboard, LifeBuoy, LogOut, Menu, Moon, Search, Settings2, ShieldCheck, Sun, Users, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "../../features/auth/useAuth";
 import { hasAnyRole, primaryRole } from "../../features/auth/permissions";
@@ -14,6 +14,8 @@ function iconFor(label: string): LucideIcon {
   if (/Users/.test(label)) return Users;
   if (/Academic/.test(label)) return GraduationCap;
   if (/operations/.test(label)) return ShieldCheck;
+  if (/Finance|Fee|Payments/.test(label)) return CreditCard;
+  if (/Payroll|Payslip/.test(label)) return Banknote;
   return icons[label] ?? BookOpen;
 }
 

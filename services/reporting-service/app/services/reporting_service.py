@@ -98,80 +98,43 @@ class ReportingService:
     def overview(self) -> dict:
         return self.repo.overview()
 
-    def create_snapshot(self, report_type: str, filters: dict, actor_id: uuid.UUID):
-        if report_type == "overview" and filters:
-            raise DomainError("Overview has no row filters; choose a detailed report")
-        if report_type == "overview":
-            payload = self.overview()
-        elif report_type == "attendance":
-            payload = {"rows": self._attendance_dicts()}
-        elif report_type == "assessment":
-            payload = {"rows": self._assessment_dicts()}
-        elif report_type == "facility":
-            payload = {"rows": self._facility_dicts()}
-        elif report_type == "notification":
-            payload = {"rows": self._notification_dicts()}
-        elif report_type == "schedule":
-            payload = {"rows": self._schedule_dicts()}
-        elif report_type == "enrollment":
-            payload = {"rows": self._enrollment_dicts()}
-        else:
-            raise DomainError("Unsupported report type")
+    REPORT_FIELDS = {
+        "attendance": {"attendance_session_id", "student_user_id", "section_id", "course_id", "status", "session_date"},
+        "assessment": {"attempt_id", "student_user_id", "quiz_id", "section_id", "course_id", "percent", "passed", "graded_at"},
+        "facility": {"booking_id", "facility_id", "requested_by_user_id", "status", "starts_at", "ends_at"},
+        "notification": {"delivery_id", "notification_id", "channel", "status", "occurred_at"},
+        "schedule": {"source_event_id", "section_id", "teacher_user_id", "room_id", "activity_type", "occurred_at"},
+        "enrollment": {"student_user_id", "section_id", "program_id", "status"},
+    }
 
-        if filters:
-            fields = {
-                "attendance": {
-                    "attendance_session_id",
-                    "student_user_id",
-                    "section_id",
-                    "course_id",
-                    "status",
-                    "session_date",
-                },
-                "assessment": {
-                    "attempt_id",
-                    "student_user_id",
-                    "quiz_id",
-                    "section_id",
-                    "course_id",
-                    "percent",
-                    "passed",
-                    "graded_at",
-                },
-                "facility": {
-                    "booking_id",
-                    "facility_id",
-                    "requested_by_user_id",
-                    "status",
-                    "starts_at",
-                    "ends_at",
-                },
-                "notification": {
-                    "delivery_id",
-                    "notification_id",
-                    "channel",
-                    "status",
-                    "occurred_at",
-                },
-                "schedule": {
-                    "source_event_id",
-                    "section_id",
-                    "teacher_user_id",
-                    "room_id",
-                    "activity_type",
-                    "occurred_at",
-                },
-                "enrollment": {"student_user_id", "section_id", "program_id", "status"},
-            }[report_type]
-            if set(filters) - fields or any(
-                isinstance(value, (dict, list)) for value in filters.values()
-            ):
-                raise DomainError("Filters must be scalar equality values for report columns")
-            payload["rows"] = [
-                row
-                for row in payload["rows"]
-                if all(str(row[key]) == str(value) for key, value in filters.items())
-            ]
+    def report_rows(self, report_type: str, filters: dict | None = None):
+        row_sets = {"attendance": self._attendance_dicts, "assessment": self._assessment_dicts, "facility": self._facility_dicts, "notification": self._notification_dicts, "schedule": self._schedule_dicts, "enrollment": self._enrollment_dicts}
+        if report_type not in row_sets:
+            raise DomainError("Unsupported report type")
+        filters = filters or {}
+        if set(filters) - self.REPORT_FIELDS[report_type] or any(isinstance(value, (dict,list)) for value in filters.values()):
+            raise DomainError("Filters must be scalar equality values for report columns")
+        return [row for row in row_sets[report_type]() if all(str(row[field]) == str(value) for field, value in filters.items())]
+
+    @staticmethod
+    def csv_cell(value):
+        if not isinstance(value, str):
+            return value
+        if value.startswith(("=", "+", "-", "@", "\t", "\r", "\n")) or value.lstrip(" ").startswith(("=", "+", "-", "@")):
+            return "'" + value
+        return value
+
+    def report_page(self, report_type: str, filters: dict | None = None, *, limit: int = 50, offset: int = 0):
+        rows = self.report_rows(report_type, filters)
+        return {"rows": rows[offset:offset+limit], "total": len(rows), "limit": limit, "offset": offset, "filters": filters or {}, "source": "reporting_projections"}
+
+    def create_snapshot(self, report_type: str, filters: dict, actor_id: uuid.UUID):
+        if report_type == "overview":
+            if filters:
+                raise DomainError("Overview has no row filters; choose a detailed report")
+            payload = self.overview()
+        else:
+            payload = {"rows": self.report_rows(report_type, filters)}
 
         snapshot = ReportSnapshot(
             report_type=report_type,
@@ -184,32 +147,16 @@ class ReportingService:
         self.db.refresh(snapshot)
         return snapshot
 
-    def export_csv(self, report_type: str, actor_id: uuid.UUID) -> tuple[str, int]:
-        row_sets = {
-            "attendance": self._attendance_dicts,
-            "assessment": self._assessment_dicts,
-            "facility": self._facility_dicts,
-            "notification": self._notification_dicts,
-            "schedule": self._schedule_dicts,
-            "enrollment": self._enrollment_dicts,
-        }
-        if report_type not in row_sets:
-            raise DomainError("Unsupported report type")
-        rows = row_sets[report_type]()
+    def export_csv(self, report_type: str, actor_id: uuid.UUID, filters: dict | None = None) -> tuple[str, int]:
+        rows = self.report_rows(report_type, filters)
+        if len(rows) > 10000:
+            raise DomainError("Export too large; narrow the filters")
         output = io.StringIO()
-        if rows:
-            writer = csv.DictWriter(output, fieldnames=list(rows[0].keys()))
-            writer.writeheader()
-            writer.writerows(rows)
-
-        self.db.add(
-            ExportAudit(
-                report_type=report_type,
-                format="csv",
-                generated_by_user_id=actor_id,
-                row_count=len(rows),
-            )
-        )
+        writer = csv.DictWriter(output, fieldnames=sorted(self.REPORT_FIELDS[report_type]), lineterminator="\r\n")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({key: self.csv_cell(value) for key, value in row.items()})
+        self.db.add(ExportAudit(report_type=report_type, format="csv", generated_by_user_id=actor_id, row_count=len(rows)))
         self.db.commit()
         return output.getvalue(), len(rows)
 

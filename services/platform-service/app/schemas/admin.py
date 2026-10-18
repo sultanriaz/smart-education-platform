@@ -12,6 +12,8 @@ class SettingUpsert(BaseModel):
     value: dict
     is_public: bool = False
     description: str | None = None
+    expected_version: int | None = Field(default=None, ge=0)
+    reason: str | None = Field(default=None, max_length=500)
 
 
 class SettingOut(BaseModel):
@@ -19,6 +21,7 @@ class SettingOut(BaseModel):
 
     key: str
     value: dict
+    version: int = 0
     is_public: bool
     description: str | None
     updated_at: datetime
@@ -26,8 +29,10 @@ class SettingOut(BaseModel):
 
 class FeatureFlagUpsert(BaseModel):
     enabled: bool
-    config: dict = {}
+    config: dict = Field(default_factory=dict)
     description: str | None = None
+    expected_version: int | None = Field(default=None, ge=0)
+    reason: str | None = Field(default=None, max_length=500)
 
 
 class FeatureFlagOut(BaseModel):
@@ -35,6 +40,7 @@ class FeatureFlagOut(BaseModel):
 
     key: str
     enabled: bool
+    version: int = 0
     config: dict
     description: str | None
     updated_at: datetime
@@ -108,7 +114,9 @@ class JobCreate(BaseModel):
     target_service: str | None = None
     resource_type: str | None = None
     parameters: dict = {}
-    payload: dict = {}
+    payload: dict = Field(default_factory=dict)
+    idempotency_key: str | None = Field(default=None, min_length=8, max_length=160)
+    dry_run: bool = False
 
 
 class JobOut(BaseModel):
@@ -123,6 +131,9 @@ class JobOut(BaseModel):
     result: dict
     error: str | None
     attempts: int
+    content_digest: str | None = None
+    dry_run: bool = False
+    expires_at: datetime | None = None
     created_at: datetime
     started_at: datetime | None
     completed_at: datetime | None
