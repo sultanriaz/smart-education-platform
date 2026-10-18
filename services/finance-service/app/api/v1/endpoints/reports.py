@@ -12,6 +12,7 @@ from app.security.auth import Principal, require_scoped_roles
 router = APIRouter(prefix="/reports", tags=["Finance Reports"])
 
 
+@router.get("/summary")
 @router.get("/overview")
 def get_finance_overview(
     db: Session = Depends(get_db),
@@ -34,14 +35,22 @@ def get_finance_overview(
     for p in payments:
         method_dist[p.method] = str(Decimal(method_dist.get(p.method, "0.00")) + p.amount)
 
+    active_invoices = [i for i in invoices if i.status in {"ISSUED", "PARTIALLY_PAID", "OVERDUE"}]
+    collection_rate = float((total_collected / total_invoiced * 100) if total_invoiced > 0 else 0.0)
+
     return {
-        "total_invoiced": str(total_invoiced),
-        "total_collected": str(total_collected),
-        "outstanding_receivables": str(total_receivable),
-        "total_scholarships": str(total_scholarships),
-        "total_overdue": str(total_overdue),
+        "total_invoiced": float(total_invoiced),
+        "total_billed": float(total_invoiced),
+        "total_collected": float(total_collected),
+        "outstanding_receivables": float(total_receivable),
+        "total_outstanding": float(total_receivable),
+        "total_scholarships": float(total_scholarships),
+        "total_overdue": float(total_overdue),
         "overdue_invoices_count": len(overdue_invoices),
-        "total_refunds_settled": str(total_refunds),
+        "total_refunds_settled": float(total_refunds),
+        "total_refunded": float(total_refunds),
+        "active_invoices_count": len(active_invoices),
+        "collection_rate": round(collection_rate, 2),
         "payment_method_distribution": method_dist,
     }
 

@@ -293,3 +293,4 @@ cd tests\e2e; npx playwright test specs\wave17-finance-payroll.spec.ts; cd ..\..
 > **Simulated Financial Rails**: All payment gateways (JazzCash, EasyPaisa, Stripe) and bank payouts (1Link) run on deterministic simulation adapters. No real credit card or bank account will ever be charged.
 > 
 > **Production Hardening Prerequisite**: Before general production release, external TLS termination, multi-AZ PostgreSQL failover, and production payment provider merchant agreements must be configured.
+

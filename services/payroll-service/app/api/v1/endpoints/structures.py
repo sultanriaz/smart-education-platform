@@ -15,6 +15,18 @@ from app.services.payroll_service import PayrollService
 router = APIRouter(prefix="/structures", tags=["Salary Structures"])
 
 
+@router.get("", response_model=list[SalaryStructureOut])
+def list_salary_structures(
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_scoped_roles("payroll.structures.read", "admin", "payroll_officer")),
+):
+    query = (
+        select(SalaryStructure)
+        .order_by(SalaryStructure.created_at.desc())
+    )
+    return list(db.scalars(query).all())
+
+
 @router.post("", response_model=SalaryStructureOut, status_code=201)
 def assign_salary_structure(
     data: SalaryStructureIn,

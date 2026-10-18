@@ -43,6 +43,7 @@ class SalaryStructureOut(BaseModel):
     is_active: bool
     created_at: datetime
     components: list[SalaryComponentOut] = Field(default_factory=list)
+    name: str = "Faculty Salary Structure"
 
     class Config:
         from_attributes = True
