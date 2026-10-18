@@ -46,7 +46,7 @@ rules:
   - 201
 - name: notifications.preferences
   method: GET
-  path: /api/v1/notifications/preferences
+  path: /api/v1/notifications/preferences/me
   anonymous: 401
   student: 200
   teacher: 200
@@ -82,14 +82,14 @@ rules:
   - 201
 - name: reporting.admin.dashboard
   method: GET
-  path: /api/v1/reporting/dashboard/admin
+  path: /api/v1/reporting/dashboard/overview
   anonymous: 401
   student: 403
   teacher: 403
   admin: 200
 - name: platform.audit
   method: GET
-  path: /api/v1/platform/audit
+  path: /api/v1/platform/admin/audit
   anonymous: 401
   student: 403
   teacher: 403

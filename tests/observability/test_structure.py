@@ -15,10 +15,12 @@ SERVICES = {
     "assessment-service",
     "reporting-service",
     "platform-service",
+    "finance-service",
+    "payroll-service",
 }
 
 
-def test_all_ten_services_have_sprint21_bridge():
+def test_all_twelve_services_have_sprint21_bridge():
     found = {
         path.parent.parent.name
         for path in (ROOT / "services").glob("*-service/app/sprint21.py")

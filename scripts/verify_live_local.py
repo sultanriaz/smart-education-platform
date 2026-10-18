@@ -957,13 +957,20 @@ def main():
             (p for p in existing_periods if p["id"] not in run_period_ids), None
         )
         if not available_period:
-            used_months = {p["month"] for p in existing_periods if p["year"] == 2026}
-            next_month = next((m for m in range(1, 13) if m not in used_months), 11)
+            used_pairs = {(p["year"], p["month"]) for p in existing_periods}
+            target_year, target_month = 2026, 1
+            for y in range(2026, 2035):
+                for m in range(1, 13):
+                    if (y, m) not in used_pairs:
+                        target_year, target_month = y, m
+                        break
+                if (target_year, target_month) not in used_pairs:
+                    break
             available_period = request("admin", "POST", "/api/v1/payroll/periods", {
-                "year": 2026,
-                "month": next_month,
-                "start_date": f"2026-{next_month:02d}-01",
-                "end_date": f"2026-{next_month:02d}-28",
+                "year": target_year,
+                "month": target_month,
+                "start_date": f"{target_year}-{target_month:02d}-01",
+                "end_date": f"{target_year}-{target_month:02d}-28",
             }).json()
         run2 = request("admin", "POST", "/api/v1/payroll/runs", {
             "period_id": available_period["id"],
