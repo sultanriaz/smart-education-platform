@@ -38,15 +38,26 @@ def handle_event(envelope):
 
         logger.info("payroll_event_processing event_id=%s type=%s from=%s", event_id, event_type, source)
 
-        if event_type in ("identity.user.created.v1", "identity.user.created"):
+        if event_type in (
+            "identity.user.created.v1",
+            "identity.user.created",
+            "identity.user.roles_changed.v1",
+            "identity.user.updated.v1",
+        ):
             # Check if this user needs an employee profile provisioned
             user_id_raw = data.get("user_id") or data.get("id")
             roles = data.get("roles") or []
             role = data.get("role") or ""
-            is_employee = any(
-                r in ("teacher", "faculty", "staff", "admin", "payroll_officer", "accountant")
-                for r in (roles if isinstance(roles, list) else [role])
-            )
+            roles_list = []
+            if isinstance(roles, list):
+                roles_list.extend(roles)
+            elif roles:
+                roles_list.append(str(roles))
+            if role and role not in roles_list:
+                roles_list.append(str(role))
+
+            employee_role_set = {"teacher", "faculty", "staff", "admin", "payroll_officer", "accountant"}
+            is_employee = any(str(r).lower() in employee_role_set for r in roles_list)
 
             if user_id_raw and is_employee:
                 try:

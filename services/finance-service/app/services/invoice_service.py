@@ -123,6 +123,8 @@ class InvoiceService:
                 net_amount=net,
             )
             self.db.add(line)
+        self.db.flush()
+        self.db.refresh(invoice)
 
         # Generate installments (default 3 installments)
         count = max(1, min(installments_count, 6))
@@ -347,5 +349,6 @@ class InvoiceService:
             "as_of_date": current_date.isoformat(),
             "grace_days": effective_grace,
             "penalized_invoices": penalized_invoices,
+            "invoice_ids": [p["invoice_id"] for p in penalized_invoices],
         }
 

@@ -783,7 +783,7 @@ def main():
         assert not any(row["code"] == code for row in rows)
         return "Duplicate batch rejected and its earlier valid row rolled back in Academic's owned transaction"
 
-    @case("Security: ten PostgreSQL owner roles reject foreign data access")
+    @case("Security: twelve PostgreSQL owner roles reject foreign data access")
     def database_isolation():
         denied = 0
         for name in NAMES:
@@ -811,6 +811,7 @@ def main():
                 denied += 1
             finally:
                 engine.dispose()
+        assert denied == len(NAMES) == 12, f"Expected 12 denied roles, got {denied}"
         return f"All {denied} service roles denied access to another owner's data by PostgreSQL permissions"
 
     @case("Security: scoped internal authentication and gateway token integrity")

@@ -26,11 +26,26 @@ NAMES = [
 ]
 
 
+VENV_PY = ROOT / ".venv/Scripts/python.exe"
+PYTHON = str(VENV_PY) if VENV_PY.exists() else sys.executable
+
+
 def environment(name: str) -> dict[str, str]:
     env_file = RUNTIME / f"{name}-service.env"
     file_vars = dotenv_values(env_file) if env_file.exists() else {}
+    libs_paths = [
+        str(ROOT / "libs/python/smartedu_contracts"),
+        str(ROOT / "libs/python/smartedu_infra"),
+        str(ROOT / "libs/python/smartedu_observability"),
+        str(ROOT / "libs/python/smartedu_perf"),
+        str(ROOT / "libs/python/smartedu_security"),
+        str(ROOT / f"services/{name}-service"),
+    ]
+    existing_pythonpath = os.environ.get("PYTHONPATH", "")
+    pythonpath = os.pathsep.join(libs_paths + ([existing_pythonpath] if existing_pythonpath else []))
     return {
         **os.environ,
+        "PYTHONPATH": pythonpath,
         **{k: v for k, v in file_vars.items() if v is not None},
     }
 
@@ -41,7 +56,7 @@ def main():
 
     def start_api(name: str, index: int):
         cmd = [
-            sys.executable,
+            PYTHON,
             "-m",
             "uvicorn",
             "app.main:app",
@@ -60,7 +75,7 @@ def main():
         worker_file = ROOT / f"services/{name}-service/app/event_worker.py"
         if not worker_file.exists():
             return
-        cmd = [sys.executable, "-m", "app.event_worker"]
+        cmd = [PYTHON, "-m", "app.event_worker"]
         log = open(RUNTIME / f"{name}-events.log", "ab")
         cwd = ROOT / f"services/{name}-service"
         proc = subprocess.Popen(cmd, cwd=cwd, env=environment(name), stdout=log, stderr=log)

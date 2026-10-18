@@ -19,6 +19,8 @@ SERVICE_NAMES = (
     "assessment-service",
     "reporting-service",
     "platform-service",
+    "finance-service",
+    "payroll-service",
 )
 
 

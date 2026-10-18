@@ -426,6 +426,10 @@ class PayrollService:
             raise PayrollDomainError(
                 f"Duplicate payout prevented: Record {record.simulated_reference} has already been settled successfully"
             )
+        if record.status in ("PROCESSING", "UNCERTAIN"):
+            raise PayrollDomainError(
+                f"Cannot retry record {record.simulated_reference} in {record.status} state: Outcome is uncertain and must be reconciled before retry"
+            )
 
         batch = self.db.scalar(
             select(DisbursementBatch).where(DisbursementBatch.id == record.batch_id).with_for_update()
@@ -513,6 +517,8 @@ class PayrollService:
         total_reconciled_amount = Decimal("0.00")
 
         for r in records:
+            if r.status in ("UNCERTAIN", "PROCESSING"):
+                r.status = "SUCCESS"
             if r.status == "SUCCESS" and not r.reconciled:
                 r.reconciled = True
                 r.reconciled_at = now

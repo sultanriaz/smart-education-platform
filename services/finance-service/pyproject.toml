@@ -1,6 +1,6 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = [".", "../../libs/python/smartedu_infra", "../../libs/python/smartedu_contracts"]
 
 [tool.ruff]
 line-length = 100
