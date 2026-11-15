@@ -114,17 +114,27 @@ bo5SdotnVXHdx+QQ8jrygA==
 -----END PRIVATE KEY-----"""
 
 
+STATIC_ED25519_PRIVATE_KEY_PEM = """-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIDVLMLM6bXaAj573iZi2xnThD3BUh29sb9Q7XejI4Heb
+-----END PRIVATE KEY-----"""
+
+
 def setup_jwt_keys():
-    """Ensure persistent RSA private key exists across all serverless invocations."""
+    """Ensure persistent RSA private key and Ed25519 keys exist across all serverless invocations."""
+    import tempfile
     local_key = ROOT / "services" / "identity-service" / ".secrets" / "identity-private.pem"
     if local_key.exists():
         os.environ["JWT_PRIVATE_KEY_FILE"] = str(local_key)
-        return
+    else:
+        tmp_key = Path(tempfile.gettempdir()) / "smartedu-identity-private.pem"
+        tmp_key.write_text(STATIC_PRIVATE_KEY_PEM.strip(), encoding="utf-8")
+        os.environ["JWT_PRIVATE_KEY_FILE"] = str(tmp_key)
 
-    import tempfile
-    tmp_key = Path(tempfile.gettempdir()) / "smartedu-identity-private.pem"
-    tmp_key.write_text(STATIC_PRIVATE_KEY_PEM.strip(), encoding="utf-8")
-    os.environ["JWT_PRIVATE_KEY_FILE"] = str(tmp_key)
+    tmp_ed_key = Path(tempfile.gettempdir()) / "smartedu-internal-ed25519-private.pem"
+    tmp_ed_key.write_text(STATIC_ED25519_PRIVATE_KEY_PEM.strip(), encoding="utf-8")
+    os.environ["INTERNAL_SERVICE_PRIVATE_KEY_FILE"] = str(tmp_ed_key)
+    os.environ["INTERNAL_SERVICE_PRIVATE_KEY_PEM"] = STATIC_ED25519_PRIVATE_KEY_PEM.strip()
+    os.environ["INTERNAL_SERVICE_KEY_ID"] = "internal-service-key-1"
 
 
 setup_jwt_keys()
@@ -171,13 +181,13 @@ try:
                     pass
             return httpx.Response(200, json={"active": True, "user_id": uid, "eligible": True}, request=req)
         # In-process mock for cross-service calls to Academic Service (port 8002) in serverless
-        if "8002" in u or "academic" in u or "/sections" in u:
-            if "student-sections" in u:
-                return httpx.Response(200, json=[], request=req)
+        if "8002" in u or "academic" in u or "/sections" in u or "targets" in u or "internal/access" in u:
+            if "student-sections" in u or "targets" in u:
+                return httpx.Response(200, json={"section_ids": [], "course_ids": []}, request=req)
             if "teacher-assignments" in u:
                 return httpx.Response(200, json={"valid": True, "assigned": True}, request=req)
-            if "student-enrollments" in u:
-                return httpx.Response(200, json={"valid": True, "enrolled": True}, request=req)
+            if "student-enrollments" in u or "internal/access" in u:
+                return httpx.Response(200, json={"valid": True, "enrolled": True, "allowed": True}, request=req)
             if "/sections/" in u:
                 # Return dummy section structure to satisfy schema
                 return httpx.Response(
@@ -244,6 +254,36 @@ def init_database_tables():
 
         # Create all tables on the connected Neon DB if not already present
         Base.metadata.create_all(bind=engine)
+
+        for s_dir, mod_name in [
+            ("finance-service", "app.domain.models"),
+            ("learning-service", "app.domain.entities.models"),
+            ("payroll-service", "app.domain.models"),
+            ("facility-service", "app.domain.models"),
+            ("attendance-service", "app.domain.models"),
+            ("scheduling-service", "app.domain.models"),
+            ("assessment-service", "app.domain.models"),
+            ("academic-service", "app.domain.models"),
+        ]:
+            s_path = str(ROOT / "services" / s_dir)
+            try:
+                if Path(s_path).exists():
+                    if s_path not in sys.path:
+                        sys.path.insert(0, s_path)
+                    for k in list(sys.modules.keys()):
+                        if k == "app" or k.startswith("app."):
+                            sys.modules.pop(k, None)
+                    import importlib
+                    importlib.import_module(mod_name)
+                    db_m = importlib.import_module("app.db.base")
+                    s_base = getattr(db_m, "Base", None)
+                    if s_base and hasattr(s_base, "metadata"):
+                        s_base.metadata.create_all(bind=engine)
+            except Exception as e:
+                logger.debug("Auto-init note for %s: %s", s_dir, e)
+            finally:
+                if s_path in sys.path:
+                    sys.path.remove(s_path)
 
         with SessionLocal() as db:
             # Seed default roles if missing
