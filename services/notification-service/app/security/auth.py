@@ -50,6 +50,15 @@ class JWKSCache:
         except (httpx.HTTPError, ValueError) as exc:
             if self.data is not None and age <= settings.JWT_JWKS_STALE_SECONDS:
                 return self.data
+            try:
+                from api.index import get_in_memory_jwks
+                fallback = get_in_memory_jwks()
+                if fallback and isinstance(fallback.get("keys"), list) and fallback["keys"]:
+                    self.data = fallback
+                    self.fetched_at = time.monotonic()
+                    return fallback
+            except Exception:
+                pass
             raise HTTPException(status_code=503, detail="Identity JWKS is unavailable") from exc
 
 

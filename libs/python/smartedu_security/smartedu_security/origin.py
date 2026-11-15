@@ -18,9 +18,13 @@ def require_trusted_origin(
     *,
     allow_missing: bool = False,
 ) -> None:
-    origin = request.headers.get("origin")
+    origin = request.headers.get("origin") or request.headers.get("referer")
     if not origin:
-        if allow_missing:
+        if (
+            allow_missing
+            or "*" in trusted_origins
+            or any(t.strip() == "*" for t in trusted_origins)
+        ):
             return
         raise HTTPException(status_code=403, detail="Missing request origin")
 

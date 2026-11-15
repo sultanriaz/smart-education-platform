@@ -367,6 +367,8 @@ class ResourceService:
 
         def _ts(resource):
             value = resource.published_at or resource.created_at
+            if value is None:
+                return 0.0
             if value.tzinfo is None:
                 value = value.replace(tzinfo=UTC)
             return value.timestamp()

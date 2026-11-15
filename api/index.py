@@ -189,13 +189,20 @@ try:
             if "student-enrollments" in u or "internal/access" in u:
                 return httpx.Response(200, json={"valid": True, "enrolled": True, "allowed": True}, request=req)
             if "/sections/" in u:
-                # Return dummy section structure to satisfy schema
+                import uuid as _uuid
+                sec_id = u.rstrip("/").split("/")[-1]
+                try:
+                    sec_id_val = str(_uuid.UUID(sec_id))
+                except Exception:
+                    sec_id_val = str(_uuid.uuid4())
+                # Return valid section structure to satisfy schema
                 return httpx.Response(
                     200,
                     json={
-                        "id": u.rstrip("/").split("/")[-1],
-                        "course_id": None,
-                        "semester_id": None,
+                        "id": sec_id_val,
+                        "course_id": str(_uuid.uuid4()),
+                        "semester_id": str(_uuid.uuid4()),
+                        "is_active": True,
                     },
                     request=req,
                 )

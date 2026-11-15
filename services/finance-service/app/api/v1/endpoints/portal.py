@@ -23,6 +23,7 @@ def get_student_portal_overview(
 ):
     svc = InvoiceService(db)
     account = svc.get_or_create_account(principal.user_id)
+    db.commit()
     invoices = db.scalars(
         select(Invoice)
         .where(Invoice.student_user_id == principal.user_id)

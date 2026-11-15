@@ -5,7 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Base pagination
@@ -29,8 +29,7 @@ class FeeComponentOut(FeeComponentIn):
     id: uuid.UUID
     fee_structure_id: uuid.UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FeeStructureIn(BaseModel):
@@ -53,8 +52,7 @@ class FeeStructureOut(BaseModel):
     updated_at: datetime
     components: list[FeeComponentOut] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Scholarships
@@ -71,8 +69,7 @@ class ScholarshipOut(ScholarshipIn):
     id: uuid.UUID
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ScholarshipAwardIn(BaseModel):
@@ -93,8 +90,7 @@ class ScholarshipAwardOut(BaseModel):
     created_at: datetime
     scholarship: ScholarshipOut | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Student Accounts
@@ -110,8 +106,7 @@ class StudentFinancialAccountOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Invoices
@@ -123,8 +118,7 @@ class InvoiceLineItemOut(BaseModel):
     discount_amount: Decimal
     net_amount: Decimal
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InvoiceInstallmentOut(BaseModel):
@@ -136,8 +130,7 @@ class InvoiceInstallmentOut(BaseModel):
     late_fee_amount: Decimal
     status: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InvoiceOut(BaseModel):
@@ -162,8 +155,7 @@ class InvoiceOut(BaseModel):
     items: list[InvoiceLineItemOut] = Field(default_factory=list)
     installments: list[InvoiceInstallmentOut] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SingleInvoiceCreateIn(BaseModel):
@@ -212,8 +204,7 @@ class PaymentIntentOut(BaseModel):
     expires_at: datetime
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SimulatePaymentIn(BaseModel):
@@ -230,8 +221,7 @@ class PaymentAllocationOut(BaseModel):
     amount: Decimal
     allocated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaymentOut(BaseModel):
@@ -248,8 +238,7 @@ class PaymentOut(BaseModel):
     created_at: datetime
     allocations: list[PaymentAllocationOut] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReceiptOut(BaseModel):
@@ -262,8 +251,7 @@ class ReceiptOut(BaseModel):
     issued_at: datetime
     receipt_data: dict[str, Any]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Refunds
@@ -292,8 +280,7 @@ class RefundRequestOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Accounting & GL
@@ -304,8 +291,7 @@ class AccountOut(BaseModel):
     account_type: str
     is_active: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class JournalLineOut(BaseModel):
@@ -316,8 +302,7 @@ class JournalLineOut(BaseModel):
     description: str | None = None
     account: AccountOut | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class JournalEntryOut(BaseModel):
@@ -330,8 +315,7 @@ class JournalEntryOut(BaseModel):
     created_at: datetime
     lines: list[JournalLineOut] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TrialBalanceItem(BaseModel):
@@ -361,8 +345,7 @@ class ReconciliationItemOut(BaseModel):
     resolved: bool
     resolution_notes: str | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ReconciliationBatchOut(BaseModel):
@@ -376,6 +359,5 @@ class ReconciliationBatchOut(BaseModel):
     created_at: datetime
     items: list[ReconciliationItemOut] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 

@@ -5,7 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Profiles
@@ -21,8 +21,7 @@ class SalaryComponentOut(SalaryComponentIn):
     id: uuid.UUID
     salary_structure_id: uuid.UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SalaryStructureIn(BaseModel):
@@ -45,8 +44,7 @@ class SalaryStructureOut(BaseModel):
     components: list[SalaryComponentOut] = Field(default_factory=list)
     name: str = "Faculty Salary Structure"
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EmployeePayrollProfileIn(BaseModel):
@@ -68,8 +66,7 @@ class EmployeePayrollProfileOut(EmployeePayrollProfileIn):
     updated_at: datetime
     salary_structures: list[SalaryStructureOut] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Periods
@@ -85,8 +82,7 @@ class PayrollPeriodOut(PayrollPeriodIn):
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Runs & Items
@@ -112,8 +108,7 @@ class PayrollRunItemOut(BaseModel):
     proration_factor: Decimal
     details: dict[str, Any]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PayrollRunOut(BaseModel):
@@ -132,8 +127,7 @@ class PayrollRunOut(BaseModel):
     updated_at: datetime
     items: list[PayrollRunItemOut] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Disbursements
@@ -157,8 +151,7 @@ class DisbursementRecordOut(BaseModel):
     reconciled_at: datetime | None = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DisbursementBatchOut(BaseModel):
@@ -174,8 +167,7 @@ class DisbursementBatchOut(BaseModel):
     created_at: datetime
     records: list[DisbursementRecordOut] = Field(default_factory=list)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DisbursementRetryIn(BaseModel):
@@ -207,6 +199,5 @@ class PayslipOut(BaseModel):
     is_published: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
