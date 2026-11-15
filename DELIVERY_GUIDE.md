@@ -42,6 +42,11 @@ The **Smart Education Platform (SmartEdu)** is an enterprise educational and ins
 3. **Double-Entry General Ledger**: The Finance domain uses an immutable double-entry accounting engine (`Debits == Credits`) for all invoice billings, concessions, payments, and refunds.
 4. **Segregation of Duties (Maker-Checker)**: High-risk financial operations (student refunds, payroll run approvals) prohibit creator self-approval and enforce distinct dual-control authorization.
 5. **Simulated External Transactions**: All payment gateway callbacks (JazzCash, EasyPaisa, Stripe) and bank disbursements (1Link) run deterministic mock adapters. Real financial transfers are disabled for sandbox safety.
+6. **AI-Powered Self-Directed Learning Hub & Gemini RAG**: The Learning Service provides an end-to-end autonomous student study platform with:
+   - **Gemini RAG & pgvector Indexing**: Semantic vector search with `text-embedding-004` (768 dimensions), automatic chapter/topic discovery, SHA-256 deduplication, and strict 100MB per-student storage quotas.
+   - **LangGraph StateGraph MCQ Engine**: Multi-node agentic workflow (`RetrievalNode` -> `DraftQuestionNode` -> `DistractorAuditorNode` -> `NumericalSolverNode` -> `QualityGateNode`) enforcing Bloom's Taxonomy calibration and explicit LaTeX numerical proofs.
+   - **Diagnostic Feedback & Smart Remediation**: Instant scoring, pedagogical "Why is this correct?" rationale citing source materials, collapsible KaTeX derivations, Topic Mastery Profiler (Strong $\ge 75\%$, Moderate $50\text{--}74\%$, Weak $<50\%$), and 1-click weakness-focused test regeneration.
+   - **Strict Multi-Tenant Student Isolation**: Every subject, material, test, attempt, and score is partitioned by `student_id`. Unauthorized cross-student access is blocked at the API layer with 404 responses.
 
 ---
 
@@ -155,6 +160,13 @@ Set-Location -Path tests\e2e
 npx playwright test specs\wave17-finance-payroll.spec.ts
 Set-Location -Path ..\..
 ```
+
+### G. AI-Powered Self-Learning & Multi-Tenant Security Isolation Tests
+Runs end-to-end automated tests verifying multi-tenant student data isolation, Gemini RAG, LangGraph Bloom's taxonomy MCQ engine, quantitative LaTeX formulas, diagnostic diffs, and the topic mastery profiler:
+```powershell
+python tests/test_phase4_e2e_isolation.py
+```
+*Expected Output*: `ALL PHASE 4 SECURITY & DATA ISOLATION TESTS PASSED 100%!`.
 
 ---
 

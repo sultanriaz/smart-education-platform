@@ -102,18 +102,68 @@ The Student workspace (`/app/student`) empowers students to manage their academi
 ### 4.1 Academic Dashboard & Schedule
 - View your enrolled courses, current semester GPA progress, and upcoming classes on the interactive weekly calendar (`/app/student/timetable`).
 
-### 4.2 Learning Materials & Notes
-- Access course syllabi, lecture notes, and downloadable supplementary files uploaded by faculty (`/app/student/learning`).
+### 4.2 AI-Powered Self-Directed Learning Hub & Subject Management
+Navigate to **Learning** in the Student sidebar (`/app/student/learning`):
+- **Subject Workspace & Switcher**:
+  - Switch dynamically between custom enrolled subjects using the header dropdown.
+  - Create new subjects across academic departments (Computer Science, Software Engineering, Law, Health Sciences, Mathematics, Business, etc.) via the **+ Add Subject** modal.
+  - Customize each subject with dedicated color palettes and visual badge icons for rapid identification.
 
-### 4.3 Online Assessments & Quizzes
+### 4.3 Study Material Library, Ingestion & 100MB Storage Quota
+Under the **Study Materials** tab:
+1. **Multi-Format Ingestion**: Drag-and-drop course slides, notes, or textbooks in `.pdf`, `.docx`, `.pptx`, and `.txt` formats.
+2. **SHA-256 Deduplication & Security**: Files are validated by MIME type and cryptographically deduplicated to prevent wasted storage.
+3. **Automated Topic & Syllabus Discovery**: Google Gemini automatically scans newly ingested files, discovering chapter units and topic tags.
+4. **Storage Quota Meter**: A live progress gauge monitors student storage usage against the **100MB per-student quota**.
+5. **Document Inventory**: View file sizes, upload timestamps, extracted topics, and remove outdated materials with 1-click deletion.
+
+### 4.4 LangGraph & Gemini MCQ Assessment Engine
+Under the **Practice Tests** tab:
+1. **Customized Assessment Generation**: Click **Generate New Assessment** to configure:
+   - **Question Count**: 5 to 30 questions.
+   - **Bloom's Taxonomy Calibration**:
+     - *Basic*: Factual recall and foundational definitions.
+     - *Medium*: Applied conceptual scenarios and standard problem-solving.
+     - *Hard*: Analytical synthesis, edge cases, and multi-step reasoning.
+     - *Mixed*: Balanced distribution across all cognitive tiers.
+   - **Topic Targeting**: Select specific extracted topics or leave empty to assess the entire course syllabus.
+2. **Interactive Test Runner**:
+   - Live countdown timer automatically calibrated to test length.
+   - Question navigator grid allowing students to jump between questions and track answered status.
+   - Submission confirmation dialog to prevent accidental early submission.
+
+### 4.5 Real-Time Diagnostic Evaluation, LaTeX Solutions & Feedback
+Upon test completion or review:
+1. **Instant Grading**: Immediate score calculation, overall percentage, and pass/fail determination.
+2. **Pedagogical Rationale**: Detailed "Why is this correct?" rationale citing the specific source document concepts.
+3. **Collapsible "View Solution" for Quantitative Questions**:
+   - Step-by-step arithmetic and algebraic proofs rendered with KaTeX.
+   - Exact mathematical formulas rendered dynamically:
+     $$A = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
+4. **Question Diffs**: Color-coded cards contrasting the student's selected choice with the correct answer.
+
+### 4.6 Topic Mastery Profiler & 1-Click Smart Remediation
+Under the **Mastery & Analytics** tab and Review Screen:
+1. **Cognitive Tier Classification**:
+   - **Strong Topics** ($\ge 75\%$ accuracy): Mastery consolidated.
+   - **Moderate Topics** ($50\text{--}74\%$ accuracy): Recommended for light review.
+   - **Weak Topics** ($< 50\%$ accuracy): Flagged as high-priority remediation targets.
+2. **Historical Score Progression**: Visual bar chart tracking scores across all completed practice tests.
+3. **1-Click Smart Test Regeneration**:
+   - Automatically analyzes past performance and drafts a fresh test heavily weighted on weak areas (**70% weak focus / 30% reinforcement**).
+   - Alternatively choose **Balanced** or **Challenge** modes.
+
+### 4.7 Institutional Course Resources & Activity Log
+Under the **Institutional Resources** tab:
+- Access instructor-published slides, recommended resources based on curriculum section, and view historical download activity.
+
+### 4.8 Online Assessments & Quizzes
 Navigate to **Assessments** (`/app/student/assessments`):
-1. View active, upcoming, and completed quizzes.
-2. Click **Start Attempt** to begin a quiz.
-3. Answer questions before the on-screen countdown timer expires.
-4. Click **Submit** to finalize the attempt.
-5. Review your score and question feedback once results are published.
+1. View active, upcoming, and completed formal university examinations and quizzes.
+2. Click **Start Attempt** to begin an official timed exam.
+3. Submissions are synchronized with instructor gradebooks.
 
-### 4.4 Student Fee Portal & Online Payments
+### 4.9 Student Fee Portal & Online Payments
 Navigate to **Finance** (`/app/student/finance`):
 1. **Invoice Overview**: Inspect current semester tuition fees, due dates, and installment schedules.
 2. **Concessions & Discounts**: View applied merit scholarships or financial aid deductions.
