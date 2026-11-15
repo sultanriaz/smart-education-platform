@@ -127,3 +127,6 @@ playwright-report/
 SmartEdu_*.zip
 SmartEdu_*_Hotfix/
 
+
+# Scratch directory
+scratch/
