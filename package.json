@@ -1,0 +1,13 @@
+{
+  "name": "smart-education-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smart Education Platform — React Frontend & Microservices",
+  "scripts": {
+    "build": "npm --prefix apps/frontend run build",
+    "dev": "npm --prefix apps/frontend run dev",
+    "preview": "npm --prefix apps/frontend run preview",
+    "lint": "npm --prefix apps/frontend run lint",
+    "test": "npm --prefix apps/frontend test"
+  }
+}

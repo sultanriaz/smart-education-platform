@@ -35,6 +35,22 @@ python run.py --with-docker   # Optionally start Docker infrastructure if Docker
 
 ---
 
+## Deploy to Vercel
+
+The platform is pre-configured for one-click deployment to [Vercel](https://vercel.com):
+
+```bash
+# Deploy with Vercel CLI
+npx vercel
+
+# Deploy to production
+npx vercel --prod
+```
+
+For complete instructions and environment variable setup (`VITE_API_BASE_URL`), see [VERCEL_DEPLOYMENT_GUIDE.md](VERCEL_DEPLOYMENT_GUIDE.md).
+
+---
+
 ## Windows PowerShell (Manual Multi-Step / Legacy Runner)
 
 Prerequisites: Python 3.12 (`py -3.12`), Node.js 24/npm, Git, Docker Desktop with the Linux engine running, and Google Chrome for the local browser runner. Run from this repository. Initial dependency and source-image downloads require network access.

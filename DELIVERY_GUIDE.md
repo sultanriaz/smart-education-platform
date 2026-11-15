@@ -158,7 +158,20 @@ Set-Location -Path ..\..
 
 ---
 
-## 5. Production Deployment Notes & Safety Notice
+## 5. Cloud Deployment to Vercel
+
+The web application is pre-configured for instant deployment to Vercel:
+- Root [`vercel.json`](vercel.json) and [`package.json`](package.json) handle automatic Vite framework detection, dependency installation, and production asset caching.
+- Dynamic SPA route rewrites ensure deep links and page refreshes work cleanly.
+- See [`VERCEL_DEPLOYMENT_GUIDE.md`](VERCEL_DEPLOYMENT_GUIDE.md) for step-by-step instructions.
+
+```bash
+npx vercel --prod
+```
+
+---
+
+## 6. Production Deployment Notes & Safety Notice
 
 1. **Simulated Financial Transactions**: The platform currently operates in a development and sandbox profile. Financial payment callbacks and bank disbursements run in simulated mode and will never interact with real banking networks.
 2. **Production Prerequisites**: Before deploying to a live production environment:
