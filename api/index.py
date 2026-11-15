@@ -37,13 +37,13 @@ if libs_dir.exists():
 # 2. Database Connection Normalization (Neon PostgreSQL Support)
 # ==============================================================================
 def resolve_database_url() -> str:
-    """Normalize Neon PostgreSQL URL or fallback to SQLite."""
+    """Normalize Neon PostgreSQL URL or fallback to user's live Neon DB."""
     raw_url = (
         os.environ.get("DATABASE_URL")
         or os.environ.get("POSTGRES_URL")
         or os.environ.get("POSTGRES_PRISMA_URL")
         or os.environ.get("POSTGRES_URL_NON_POOLING")
-        or ""
+        or "postgresql://neondb_owner:npg_oCP9Bh3zNgFG@ep-square-violet-bdeonh6f-pooler.c-8.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
     ).strip()
 
     if raw_url:
@@ -201,12 +201,26 @@ app = FastAPI(
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
-# CORS Middleware (Allows credentials, cookies, and headers)
+# Vercel Path Fix Middleware
+@app.middleware("http")
+async def vercel_path_fix_middleware(request: Request, call_next):
+    matched_path = (
+        request.headers.get("x-matched-path")
+        or request.headers.get("x-vercel-matched-path")
+        or request.headers.get("x-forwarded-uri")
+        or ""
+    )
+    if matched_path and request.scope.get("path") in ("/api/index.py", "/api/index", "/api", "/api/"):
+        request.scope["path"] = matched_path
+    return await call_next(request)
+
+# CORS Middleware (Allows credentials, cookies, and dynamic origins)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

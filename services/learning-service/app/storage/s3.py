@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import hashlib
 
-import boto3
-from botocore.config import Config
+try:
+    import boto3
+    from botocore.config import Config
+except ImportError:
+    boto3 = None
+    Config = None
 
 from app.core.config import settings
 from app.storage.base import StoredObject
@@ -12,17 +16,20 @@ from app.storage.base import StoredObject
 class S3StorageBackend:
     def __init__(self):
         self.bucket = settings.S3_BUCKET
-        self.client = boto3.client(
-            "s3",
-            endpoint_url=settings.S3_ENDPOINT_URL,
-            region_name=settings.S3_REGION,
-            aws_access_key_id=settings.S3_ACCESS_KEY,
-            aws_secret_access_key=settings.S3_SECRET_KEY,
-            use_ssl=settings.S3_USE_SSL,
-            config=Config(
-                connect_timeout=3, read_timeout=10, retries={"mode": "standard", "max_attempts": 2}
-            ),
-        )
+        if boto3 is not None and Config is not None:
+            self.client = boto3.client(
+                "s3",
+                endpoint_url=settings.S3_ENDPOINT_URL,
+                region_name=settings.S3_REGION,
+                aws_access_key_id=settings.S3_ACCESS_KEY,
+                aws_secret_access_key=settings.S3_SECRET_KEY,
+                use_ssl=settings.S3_USE_SSL,
+                config=Config(
+                    connect_timeout=3, read_timeout=10, retries={"mode": "standard", "max_attempts": 2}
+                ),
+            )
+        else:
+            self.client = None
 
     def put_bytes(self, key: str, data: bytes, mime_type: str) -> StoredObject:
         self.client.put_object(Bucket=self.bucket, Key=key, Body=data, ContentType=mime_type)

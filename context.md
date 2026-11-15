@@ -1,9 +1,10 @@
 # Self-Learning Module: AI-Powered Automatic Test Generation & Evaluation
 ## Professional Architecture, Google Gemini Integration & 4-Phase Roadmap
 
-> **Document Version:** 2.0.0  
+> **Document Version:** 2.1.0  
 > **Target System:** SmartEdu Platform — Student Self-Learning & Mastery Engine  
 > **Core AI Engine:** Google Gemini API (`gemini-2.0-flash` / `gemini-1.5-pro` & `text-embedding-004`) via LangGraph & LangChain  
+> **Deployment Architecture:** Vercel Full-Stack Serverless + Neon Managed PostgreSQL (Pooler Mode)  
 > **Key Capabilities:** Dynamic Student-Created Subjects, Multi-Format Ingestion (PDF/DOCX/PPTX), Vector RAG, Bloom's Taxonomy Test Authoring, Step-by-Step LaTeX Numerical Solutions, Adaptive Weak-Topic Regeneration.
 
 ---
