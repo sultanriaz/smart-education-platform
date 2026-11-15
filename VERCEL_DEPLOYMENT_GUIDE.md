@@ -21,9 +21,9 @@ The repository is pre-configured with:
 3. Import your `smart-education-platform` repository.
 4. Vercel will automatically detect the configuration from `vercel.json`:
    - **Framework Preset**: `Vite`
-   - **Build Command**: `npm --prefix apps/frontend run build`
+   - **Build Command**: `npm run build`
    - **Output Directory**: `apps/frontend/dist`
-   - **Install Command**: `npm --prefix apps/frontend install`
+   - **Install Command**: `npm install`
 5. *(Optional)* Under **Environment Variables**, add:
    - `VITE_API_BASE_URL`: The URL of your live API Gateway or backend (e.g. `https://api.yourdomain.com`).
    - If left empty, it will default to same-origin relative URLs (`/api/v1/...`).
