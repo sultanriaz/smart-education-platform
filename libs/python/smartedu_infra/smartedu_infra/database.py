@@ -40,12 +40,14 @@ def build_engine(
     url = settings.database_url
 
     if url.startswith("postgresql"):
-        options = (
-            f"-c statement_timeout={settings.db_statement_timeout_ms} "
-            f"-c application_name={settings.db_application_name}"
-        )
-        connect_args.setdefault("options", options)
-        connect_args.setdefault("connect_timeout", 3)
+        is_pooler = "pooler" in url or "neon.tech" in url or "pgbouncer" in url
+        if not is_pooler:
+            options = (
+                f"-c statement_timeout={settings.db_statement_timeout_ms} "
+                f"-c application_name={settings.db_application_name}"
+            )
+            connect_args.setdefault("options", options)
+        connect_args.setdefault("connect_timeout", 10)
 
     kwargs: dict[str, Any] = {
         "pool_pre_ping": True,
