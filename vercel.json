@@ -1,21 +1,30 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install",
   "buildCommand": "npm run build",
-  "outputDirectory": "apps/frontend/dist",
+  "outputDirectory": "dist",
   "functions": {
     "api/index.py": {
-      "includeFiles": "{services/**,libs/**}",
+      "includeFiles": [
+        "services/**",
+        "libs/**"
+      ],
+      "excludeFiles": [
+        "**/tests/**",
+        "**/.pytest_cache/**",
+        "**/.ruff_cache/**",
+        "**/.venv/**",
+        "**/__pycache__/**"
+      ],
       "maxDuration": 30
     }
   },
   "rewrites": [
     {
-      "source": "/api",
+      "source": "/api/(.*)",
       "destination": "/api/index.py"
     },
     {
-      "source": "/api/(.*)",
+      "source": "/api",
       "destination": "/api/index.py"
     },
     {
