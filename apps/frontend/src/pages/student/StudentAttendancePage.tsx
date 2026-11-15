@@ -67,20 +67,20 @@ export function StudentAttendancePage() {
 
       <Card className="mt-6" title="Attendance history">
         <div className="mb-4 grid gap-3 sm:grid-cols-3">
-          <label className="text-sm font-medium">From
+          <label className="text-sm font-medium text-text">From
             <input aria-label="Attendance from date" type="date" value={dateFrom}
               onChange={(e) => { setDateFrom(e.target.value); setOffset(0); }}
-              className="mt-1 block w-full rounded border border-line bg-panel p-2" />
+              className="mt-1.5 block w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm focus:outline-none" />
           </label>
-          <label className="text-sm font-medium">To
+          <label className="text-sm font-medium text-text">To
             <input aria-label="Attendance to date" type="date" value={dateTo}
               onChange={(e) => { setDateTo(e.target.value); setOffset(0); }}
-              className="mt-1 block w-full rounded border border-line bg-panel p-2" />
+              className="mt-1.5 block w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm focus:outline-none" />
           </label>
-          <label className="text-sm font-medium">Course ID (optional)
-            <input aria-label="Attendance course filter" value={courseId} placeholder="Course UUID"
+          <label className="text-sm font-medium text-text">Course Filter (optional)
+            <input aria-label="Attendance course filter" value={courseId} placeholder="Course code or name"
               onChange={(e) => { setCourseId(e.target.value); setOffset(0); }}
-              className="mt-1 block w-full rounded border border-line bg-panel p-2" />
+              className="mt-1.5 block w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm focus:outline-none" />
           </label>
         </div>
         {records.data?.length ? (

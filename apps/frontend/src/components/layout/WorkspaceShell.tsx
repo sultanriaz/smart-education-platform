@@ -30,8 +30,31 @@ export function WorkspaceShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
   const role = user ? primaryRole(user.roles) : null;
+  const profileMenuRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        profileMenuRef.current.removeAttribute("open");
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const items = useMemo(() => navigation.filter(item => user && hasAnyRole(user.roles, item.roles)).map(item => item.path === "/app" ? { ...item, path: `/app/${role}` } : item), [user, role]);
-  const title = items.find(item => item.path === location.pathname)?.label ?? "Workspace";
+  
+  const title = useMemo(() => {
+    const exact = items.find(item => item.path === location.pathname);
+    if (exact) return exact.label;
+    if (location.pathname.includes("/assessments/")) return "Assessment Attempt";
+    if (location.pathname.includes("/learning")) return "Learning Hub";
+    if (location.pathname.includes("/finance")) return "Fee & Payments";
+    if (location.pathname.includes("/payroll")) return "Payroll";
+    if (location.pathname.includes("/profile")) return "Profile";
+    if (location.pathname.includes("/notifications")) return "Notifications";
+    return "Workspace";
+  }, [items, location.pathname]);
   const name = user?.fullName ?? "Your workspace";
   const initials = name.split(" ").map(word => word[0]).slice(0, 2).join("").toUpperCase();
 
@@ -90,7 +113,7 @@ export function WorkspaceShell() {
             <button className="search-trigger" aria-label="Search pages" onClick={() => { searchDialog.current?.showModal(); searchInput.current?.focus(); }}><Search size={16} /><span>Find a page…</span><kbd>Ctrl K</kbd></button>
             <button className="icon-button" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} onClick={toggleTheme}>{theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}</button>
             <Link to="/app/notifications" className="icon-button notification-button" aria-label={`Notifications${unread.data ? `, ${unread.data} unread` : ""}`}><Bell size={18} />{Boolean(unread.data) && <span className="notification-dot" />}</Link>
-            <details className="profile-menu"><summary aria-label="Account menu"><span className="avatar small">{initials}</span><ChevronDown size={14} /></summary><div><strong>{name}</strong><Link to="/app/profile">Manage profile</Link><button onClick={() => void logout()}>Sign out</button></div></details>
+            <details ref={profileMenuRef} className="profile-menu"><summary aria-label="Account menu"><span className="avatar small">{initials}</span><ChevronDown size={14} /></summary><div><strong>{name}</strong><Link to="/app/profile">Manage profile</Link><button onClick={() => void logout()}>Sign out</button></div></details>
           </div>
         </header>
         <main id="main-content" tabIndex={-1}><div key={location.pathname} className="route-enter"><Outlet /></div></main>

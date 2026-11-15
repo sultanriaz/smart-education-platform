@@ -5,6 +5,7 @@ import { InlineError } from "../../components/ui/InlineError";
 import { DashboardWelcome } from "../../components/ui/DashboardWelcome";
 import { SectionLoader } from "../../components/ui/SectionLoader";
 import { StatCard } from "../../components/ui/StatCard";
+import { Sparkles, BookOpen, CreditCard, Calendar, ClipboardCheck, ArrowUpRight } from "lucide-react";
 import {
   useAssessmentAssignments,
   useAttendanceSummary,
@@ -97,8 +98,80 @@ export function StudentDashboardPage() {
         <Card className="xl:col-span-2" title="Your attendance, over time" description="Small steps make a strong semester.">
           {records.error ? <InlineError message="Attendance history could not be loaded." /> : records.isLoading ? <SectionLoader label="Loading attendance history…" /> : <AttendanceChart records={records.data ?? []} />}
         </Card>
-        <Card title="Make room for progress" description="Everything you need for your next step.">
-          <div className="grid gap-3 mt-5">{([["/app/student/learning", "Browse learning resources"], ["/app/student/assessments", "Check your assessments"], ["/app/student/facilities", "Book a study space"]] as const).map(([to, label]) => <Link key={to} to={to} className="rounded-xl border border-line p-4 text-sm font-medium hover:bg-surface transition">{label} <span aria-hidden="true" className="float-right text-brand-700">↗</span></Link>)}</div>
+        <Card title="Quick Navigation" description="Explore your student modules.">
+          <div className="grid gap-2.5 mt-4">
+            <Link
+              to="/app/student/learning"
+              className="flex items-center justify-between rounded-xl border border-line p-3 hover:border-brand-500 hover:bg-surface transition group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-950/50">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text group-hover:text-brand-600 transition">
+                    AI Self-Learning Hub
+                  </p>
+                  <p className="text-xs text-muted">Adaptive practice & notes</p>
+                </div>
+              </div>
+              <ArrowUpRight size={16} className="text-muted group-hover:text-brand-600 transition" />
+            </Link>
+
+            <Link
+              to="/app/student/finance"
+              className="flex items-center justify-between rounded-xl border border-line p-3 hover:border-brand-500 hover:bg-surface transition group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50">
+                  <CreditCard size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text group-hover:text-emerald-600 transition">
+                    Fee & Payments
+                  </p>
+                  <p className="text-xs text-muted">Invoices & installments</p>
+                </div>
+              </div>
+              <ArrowUpRight size={16} className="text-muted group-hover:text-emerald-600 transition" />
+            </Link>
+
+            <Link
+              to="/app/student/assessments"
+              className="flex items-center justify-between rounded-xl border border-line p-3 hover:border-brand-500 hover:bg-surface transition group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50">
+                  <ClipboardCheck size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text group-hover:text-blue-600 transition">
+                    Academic Quizzes
+                  </p>
+                  <p className="text-xs text-muted">Course exams & scores</p>
+                </div>
+              </div>
+              <ArrowUpRight size={16} className="text-muted group-hover:text-blue-600 transition" />
+            </Link>
+
+            <Link
+              to="/app/student/facilities"
+              className="flex items-center justify-between rounded-xl border border-line p-3 hover:border-brand-500 hover:bg-surface transition group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50 text-purple-600 dark:bg-purple-950/50">
+                  <Calendar size={18} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text group-hover:text-purple-600 transition">
+                    Campus Facilities
+                  </p>
+                  <p className="text-xs text-muted">Book study rooms & labs</p>
+                </div>
+              </div>
+              <ArrowUpRight size={16} className="text-muted group-hover:text-purple-600 transition" />
+            </Link>
+          </div>
         </Card>
       </div>
 

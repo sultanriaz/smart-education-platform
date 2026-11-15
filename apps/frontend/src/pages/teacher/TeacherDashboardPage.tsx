@@ -119,9 +119,9 @@ export function TeacherDashboardPage() {
               ["/app/teacher/attendance", "Take attendance"],
               ["/app/teacher/learning", "Publish resources"],
               ["/app/teacher/assessments", "Manage assessments"],
+              ["/app/teacher/payroll", "My Payslips & Salary"],
               ["/app/teacher/announcements", "Send announcement"],
-              ["/app/teacher/facilities", "Book facility"],
-              ["/app/notifications", "Open inbox"]
+              ["/app/teacher/facilities", "Book facility"]
             ] as const).map(([path, label]) => (
               <Link
                 key={path}

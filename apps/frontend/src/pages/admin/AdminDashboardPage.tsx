@@ -112,22 +112,28 @@ export function AdminDashboardPage() {
       </div>
 
       <Card className="mt-6" title="Administration modules">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {([
-            ["/app/admin/users", "Users & RBAC"],
-            ["/app/admin/academic", "Academic setup"],
-            ["/app/admin/scheduling", "Scheduling"],
-            ["/app/admin/facilities", "Facilities"],
-            ["/app/admin/notifications", "Announcements"],
-            ["/app/admin/reporting", "Reporting"],
-            ["/app/admin/platform", "Platform operations"]
-          ] as const).map(([path, label]) => (
+            ["/app/admin/users", "Users & RBAC", "Accounts, roles & permissions"],
+            ["/app/admin/academic", "Academic Setup", "Curriculum, courses & sections"],
+            ["/app/admin/attendance", "Attendance Mgmt", "Audited sessions & corrections"],
+            ["/app/admin/finance", "Finance & Accounts", "Tuition, general ledger & fees"],
+            ["/app/admin/payroll", "Payroll Mgmt", "Staff salaries, tax & disbursements"],
+            ["/app/admin/scheduling", "Scheduling", "Timetable rules & occurrences"],
+            ["/app/admin/facilities", "Facilities", "Campus spaces & reservations"],
+            ["/app/admin/notifications", "Announcements", "Broadcast messages & logs"],
+            ["/app/admin/reporting", "Reporting", "Institutional analytics & exports"],
+            ["/app/admin/platform", "Platform Operations", "Audit trails & feature flags"]
+          ] as const).map(([path, label, desc]) => (
             <Link
               key={path}
               to={path}
-              className="rounded-xl border border-line bg-panel px-4 py-4 text-sm font-semibold hover:bg-surface"
+              className="rounded-xl border border-line bg-panel p-4 hover:border-brand-500 hover:bg-surface transition group"
             >
-              {label}
+              <p className="text-sm font-semibold text-text group-hover:text-brand-600 transition">
+                {label}
+              </p>
+              <p className="mt-1 text-xs text-muted leading-5">{desc}</p>
             </Link>
           ))}
         </div>

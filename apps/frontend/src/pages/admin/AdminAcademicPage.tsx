@@ -121,6 +121,8 @@ export function AdminAcademicPage() {
     );
   }
 
+  const [activeTab, setActiveTab] = useState<"structure" | "calendar" | "courses" | "enrollment">("structure");
+
   async function perform<T>(action: () => Promise<T>, success: string) {
     try {
       await action();
@@ -140,36 +142,76 @@ export function AdminAcademicPage() {
         description="Manage departments, programs, academic years, semesters, courses, sections, academic profiles, enrollments, and Teacher assignments."
       />
 
+      <div className="flex items-center gap-2 border-b border-line pb-1 mb-6 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setActiveTab("structure")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
+            activeTab === "structure"
+              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
+              : "text-muted hover:text-text hover:bg-panel"
+          }`}
+        >
+          <span>🏢 Campuses & Departments</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("calendar")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
+            activeTab === "calendar"
+              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
+              : "text-muted hover:text-text hover:bg-panel"
+          }`}
+        >
+          <span>📅 Calendar & Semesters</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("courses")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
+            activeTab === "courses"
+              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
+              : "text-muted hover:text-text hover:bg-panel"
+          }`}
+        >
+          <span>📚 Courses & Sections</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("enrollment")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
+            activeTab === "enrollment"
+              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
+              : "text-muted hover:text-text hover:bg-panel"
+          }`}
+        >
+          <span>👥 Profiles & Enrollment</span>
+        </button>
+      </div>
+
+      {activeTab === "structure" && (
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card title="Campuses & bulk enrollment">
+        <Card title="Campuses">
           <form className="space-y-3" onSubmit={event => {
             event.preventDefault();
-            void perform(() => createCampus.mutateAsync(campusForm), "Campus created.");
+            void perform(() => createCampus.mutateAsync(campusForm), "Campus created.").then(ok => ok && setCampusForm({ code: "", name: "", is_active: true }));
           }}>
             <Input label="Campus code" value={campusForm.code} onChange={e => setCampusForm(f => ({...f, code:e.target.value}))} />
             <Input label="Campus name" value={campusForm.name} onChange={e => setCampusForm(f => ({...f, name:e.target.value}))} />
             <Button type="submit" disabled={createCampus.isPending}>Create campus</Button>
           </form>
-          <p className="text-sm text-muted">Existing campuses: {(campuses.data ?? []).map(c => `${c.code} (${c.name})`).join(", ") || "None"}</p>
-          <form className="mt-5 space-y-3" onSubmit={event => {
-            event.preventDefault();
-            const ids = batchStudentIds.split(/[\s,]+/).filter(Boolean);
-            if (!batchSectionId || ids.length < 1 || ids.length > 100) {
-              toast.push("Select a section and 1–100 student profile IDs.", "error"); return;
-            }
-            void perform(() => bulkEnrollment.mutateAsync({section_id:batchSectionId, student_profile_ids:ids}), "Bulk enrollment completed.");
-          }}>
-            <label className="block text-sm font-medium">Target section
-              <select className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5" value={batchSectionId} onChange={e => setBatchSectionId(e.target.value)}>
-                <option value="">Select section</option>
-                {(sections.data ?? []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">Student profile UUIDs (comma or newline separated)
-              <textarea className="mt-2 min-h-24 w-full rounded-xl border border-line bg-panel p-3" value={batchStudentIds} onChange={e => setBatchStudentIds(e.target.value)} />
-            </label>
-            <Button type="submit" disabled={bulkEnrollment.isPending}>Enroll batch atomically</Button>
-          </form>
+          <div className="mt-6 border-t border-line/70 pt-4">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Existing Campuses</h4>
+            <div className="flex flex-wrap gap-2">
+              {(campuses.data ?? []).length > 0 ? (
+                campuses.data?.map(c => (
+                  <Badge key={c.id}>{c.code} · {c.name}</Badge>
+                ))
+              ) : (
+                <p className="text-sm text-muted">No campuses registered yet.</p>
+              )}
+            </div>
+          </div>
         </Card>
         <Card title="Departments & programs">
           <form
@@ -244,10 +286,14 @@ export function AdminAcademicPage() {
             ))}
           </div>
         </Card>
+      </div>
+      )}
 
+      {activeTab === "calendar" && (
+      <div className="grid gap-6 xl:grid-cols-2">
         <Card title="Academic years & semesters">
           <form
-            className="grid gap-3 sm:grid-cols-3"
+            className="grid gap-3 sm:grid-cols-2"
             onSubmit={(event) => {
               event.preventDefault();
               void perform(
@@ -277,11 +323,11 @@ export function AdminAcademicPage() {
               value={yearForm.ends_on}
               onChange={(e) => setYearForm((f) => ({ ...f, ends_on: e.target.value }))}
             />
-            <Button type="submit">Add academic year</Button>
+            <Button className="sm:col-span-2" type="submit">Add academic year</Button>
           </form>
 
           <form
-            className="mt-6 grid gap-3 sm:grid-cols-2"
+            className="mt-6 border-t border-line/70 pt-6 grid gap-3 sm:grid-cols-2"
             onSubmit={(event) => {
               event.preventDefault();
               void perform(
@@ -327,10 +373,50 @@ export function AdminAcademicPage() {
               value={semesterForm.ends_on}
               onChange={(e) => setSemesterForm((f) => ({ ...f, ends_on: e.target.value }))}
             />
-            <Button type="submit">Add semester</Button>
+            <Button className="sm:col-span-2" type="submit">Add semester</Button>
           </form>
         </Card>
 
+        <Card title="Active Academic Calendars">
+          <div className="space-y-6 max-h-[600px] overflow-auto">
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-3">Academic Years</h4>
+              <div className="space-y-2">
+                {(years.data ?? []).map((y) => (
+                  <div key={y.id} className="rounded-xl border border-line bg-surface/40 p-3 text-sm flex justify-between items-center">
+                    <div>
+                      <span className="font-semibold text-text">{y.name}</span>
+                      {y.status && <span className="ml-2"><Badge>{y.status}</Badge></span>}
+                    </div>
+                    <span className="text-xs text-muted">{y.startsOn} → {y.endsOn}</span>
+                  </div>
+                ))}
+                {(years.data ?? []).length === 0 && <p className="text-sm text-muted">No academic years configured.</p>}
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-line/70">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-3">Semesters</h4>
+              <div className="space-y-2">
+                {(semesters.data ?? []).map((s) => (
+                  <div key={s.id} className="rounded-xl border border-line bg-surface/40 p-3 text-sm flex justify-between items-center">
+                    <div>
+                      <span className="font-semibold text-text">{s.name}</span>
+                      {s.status && <span className="ml-2"><Badge>{s.status}</Badge></span>}
+                    </div>
+                    <span className="text-xs text-muted">{s.startsOn} → {s.endsOn}</span>
+                  </div>
+                ))}
+                {(semesters.data ?? []).length === 0 && <p className="text-sm text-muted">No semesters configured.</p>}
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+      )}
+
+      {activeTab === "courses" && (
+      <div className="grid gap-6 xl:grid-cols-2">
         <Card title="Courses">
           <form
             className="space-y-4"
@@ -412,329 +498,374 @@ export function AdminAcademicPage() {
           </div>
         </Card>
 
-        <Card title="Sections">
-          <form
-            className="space-y-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void perform(
-                () =>
-                  createSection.mutateAsync({
-                    code: sectionForm.code,
-                    course_id: sectionForm.course_id,
-                    semester_id: sectionForm.semester_id,
-                    capacity: sectionForm.capacity
-                  }),
-                "Section created."
-              ).then((ok) => ok &&
-                setSectionForm({
-                  code: "",
-                  course_id: "",
-                  semester_id: "",
-                  capacity: 40
-                })
-              );
-            }}
-          >
-            <Input
-              label="Section code"
-              value={sectionForm.code}
-              onChange={(e) => setSectionForm((f) => ({ ...f, code: e.target.value }))}
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-6">
+          <Card title="Sections">
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void perform(
+                  () =>
+                    createSection.mutateAsync({
+                      code: sectionForm.code,
+                      course_id: sectionForm.course_id,
+                      semester_id: sectionForm.semester_id,
+                      capacity: sectionForm.capacity
+                    }),
+                  "Section created."
+                ).then((ok) => ok &&
+                  setSectionForm({
+                    code: "",
+                    course_id: "",
+                    semester_id: "",
+                    capacity: 40
+                  })
+                );
+              }}
+            >
+              <Input
+                label="Section code"
+                value={sectionForm.code}
+                onChange={(e) => setSectionForm((f) => ({ ...f, code: e.target.value }))}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-sm font-medium">
+                  Course
+                  <select
+                    className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                    value={sectionForm.course_id}
+                    onChange={(e) =>
+                      setSectionForm((f) => ({ ...f, course_id: e.target.value }))
+                    }
+                  >
+                    <option value="">Select course</option>
+                    {(courses.data ?? []).map((item) => (
+                      <option key={item.id} value={item.id}>{item.code} · {item.title}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-medium">
+                  Semester
+                  <select
+                    className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                    value={sectionForm.semester_id}
+                    onChange={(e) =>
+                      setSectionForm((f) => ({ ...f, semester_id: e.target.value }))
+                    }
+                  >
+                    <option value="">Select semester</option>
+                    {(semesters.data ?? []).map((item) => (
+                      <option key={item.id} value={item.id}>{item.name}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <Input
+                label="Capacity"
+                type="number"
+                min={1}
+                value={sectionForm.capacity}
+                onChange={(e) =>
+                  setSectionForm((f) => ({
+                    ...f,
+                    capacity: Number(e.target.value) || 1
+                  }))
+                }
+              />
+              <Button type="submit">Add section</Button>
+            </form>
+          </Card>
+
+          <Card title="Current sections">
+            <div className="max-h-72 overflow-auto">
+              {(sections.data ?? []).map((item) => (
+                <div key={item.id} className="border-b border-line/70 px-2 py-3 text-sm">
+                  <span className="font-semibold">{item.name}</span>
+                  <span className="ml-2 text-muted">
+                    course {item.courseId} · semester {item.semesterId}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+      )}
+
+      {activeTab === "enrollment" && (
+      <div className="space-y-6">
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card title="Student & Teacher profiles">
+            <form
+              className="space-y-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void perform(
+                  () =>
+                    createStudent.mutateAsync({
+                      external_user_id: studentForm.external_user_id,
+                      student_number: studentForm.student_number,
+                      program_id: studentForm.program_id,
+                      admission_year_id: studentForm.admission_year_id,
+                      current_semester: studentForm.current_semester
+                    }),
+                  "Student academic profile created."
+                ).then((ok) => ok &&
+                  setStudentForm({
+                    external_user_id: "",
+                    student_number: "",
+                    program_id: "",
+                    admission_year_id: "",
+                    current_semester: 1
+                  })
+                );
+              }}
+            >
+              <h3 className="font-semibold">Student profile</h3>
+              <Input
+                label="Identity user UUID"
+                value={studentForm.external_user_id}
+                onChange={(e) => setStudentForm((f) => ({ ...f, external_user_id: e.target.value }))}
+              />
+              <Input
+                label="Student ID"
+                value={studentForm.student_number}
+                onChange={(e) => setStudentForm((f) => ({ ...f, student_number: e.target.value }))}
+              />
               <label className="block text-sm font-medium">
-                Course
+                Program
                 <select
                   className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                  value={sectionForm.course_id}
+                  value={studentForm.program_id}
+                  onChange={(e) => setStudentForm((f) => ({ ...f, program_id: e.target.value }))}
+                >
+                  <option value="">Select program</option>
+                  {(programs.data ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm font-medium">Admission academic year
+                <select className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                  value={studentForm.admission_year_id}
+                  onChange={(e) => setStudentForm((f) => ({ ...f, admission_year_id: e.target.value }))}>
+                  <option value="">Select admission year</option>
+                  {(years.data ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </label>
+              <Input label="Current semester" type="number" min={1}
+                value={studentForm.current_semester}
+                onChange={(e) => setStudentForm((f) => ({ ...f, current_semester: Number(e.target.value) || 1 }))} />
+              <Button type="submit">Create student profile</Button>
+            </form>
+
+            <form
+              className="mt-6 space-y-3 border-t border-line pt-6"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void perform(
+                  () =>
+                    createTeacher.mutateAsync({
+                      external_user_id: teacherForm.external_user_id,
+                      employee_number: teacherForm.employee_number,
+                      department_id: teacherForm.department_id,
+                      designation: teacherForm.designation
+                    }),
+                  "Teacher academic profile created."
+                ).then((ok) => ok &&
+                  setTeacherForm({
+                    external_user_id: "",
+                    employee_number: "",
+                    department_id: "",
+                    designation: ""
+                  })
+                );
+              }}
+            >
+              <h3 className="font-semibold">Teacher profile</h3>
+              <Input
+                label="Identity user UUID"
+                value={teacherForm.external_user_id}
+                onChange={(e) => setTeacherForm((f) => ({ ...f, external_user_id: e.target.value }))}
+              />
+              <Input
+                label="Employee ID"
+                value={teacherForm.employee_number}
+                onChange={(e) => setTeacherForm((f) => ({ ...f, employee_number: e.target.value }))}
+              />
+              <label className="block text-sm font-medium">
+                Department
+                <select
+                  className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                  value={teacherForm.department_id}
+                  onChange={(e) => setTeacherForm((f) => ({ ...f, department_id: e.target.value }))}
+                >
+                  <option value="">Select department</option>
+                  {(departments.data ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
+                  ))}
+                </select>
+              </label>
+              <Input label="Designation" value={teacherForm.designation}
+                onChange={(e) => setTeacherForm((f) => ({ ...f, designation: e.target.value }))} />
+              <Button type="submit">Create Teacher profile</Button>
+            </form>
+          </Card>
+
+          <Card title="Enrollment & teaching assignment">
+            <form
+              className="space-y-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void perform(
+                  () => createEnrollment.mutateAsync(enrollmentForm),
+                  "Student enrolled."
+                ).then((ok) => ok &&
+                  setEnrollmentForm({ student_profile_id: "", section_id: "" })
+                );
+              }}
+            >
+              <h3 className="font-semibold">Enroll Student</h3>
+              <label className="block text-sm font-medium">
+                Student
+                <select
+                  className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                  value={enrollmentForm.student_profile_id}
                   onChange={(e) =>
-                    setSectionForm((f) => ({ ...f, course_id: e.target.value }))
+                    setEnrollmentForm((f) => ({ ...f, student_profile_id: e.target.value }))
                   }
                 >
-                  <option value="">Select course</option>
-                  {(courses.data ?? []).map((item) => (
-                    <option key={item.id} value={item.id}>{item.code} · {item.title}</option>
+                  <option value="">Select Student</option>
+                  {(students.data ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.studentId} · {item.identityUserId}
+                    </option>
                   ))}
                 </select>
               </label>
               <label className="block text-sm font-medium">
-                Semester
+                Section
                 <select
                   className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                  value={sectionForm.semester_id}
+                  value={enrollmentForm.section_id}
                   onChange={(e) =>
-                    setSectionForm((f) => ({ ...f, semester_id: e.target.value }))
+                    setEnrollmentForm((f) => ({ ...f, section_id: e.target.value }))
                   }
                 >
-                  <option value="">Select semester</option>
-                  {(semesters.data ?? []).map((item) => (
+                  <option value="">Select section</option>
+                  {(sections.data ?? []).map((item) => (
                     <option key={item.id} value={item.id}>{item.name}</option>
                   ))}
                 </select>
               </label>
-            </div>
+              <Button type="submit">Enroll Student</Button>
+            </form>
 
-            <Input
-              label="Capacity"
-              type="number"
-              min={1}
-              value={sectionForm.capacity}
-              onChange={(e) =>
-                setSectionForm((f) => ({
-                  ...f,
-                  capacity: Number(e.target.value) || 1
-                }))
+            <form
+              className="mt-6 space-y-3 border-t border-line pt-6"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void perform(
+                  () => createTeaching.mutateAsync(assignmentForm),
+                  "Teacher assigned to section."
+                ).then((ok) => ok &&
+                  setAssignmentForm({ teacher_profile_id: "", section_id: "" })
+                );
+              }}
+            >
+              <h3 className="font-semibold">Assign Teacher</h3>
+              <label className="block text-sm font-medium">
+                Teacher
+                <select
+                  className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                  value={assignmentForm.teacher_profile_id}
+                  onChange={(e) =>
+                    setAssignmentForm((f) => ({ ...f, teacher_profile_id: e.target.value }))
+                  }
+                >
+                  <option value="">Select Teacher</option>
+                  {(teachers.data ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.employeeId} · {item.identityUserId}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm font-medium">
+                Section
+                <select
+                  className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                  value={assignmentForm.section_id}
+                  onChange={(e) =>
+                    setAssignmentForm((f) => ({ ...f, section_id: e.target.value }))
+                  }
+                >
+                  <option value="">Select section</option>
+                  {(sections.data ?? []).map((item) => (
+                    <option key={item.id} value={item.id}>{item.name}</option>
+                  ))}
+                </select>
+              </label>
+              <Button type="submit">Assign Teacher</Button>
+            </form>
+          </Card>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-2">
+          <Card title="Bulk Student Enrollment">
+            <form className="space-y-3" onSubmit={event => {
+              event.preventDefault();
+              const ids = batchStudentIds.split(/[\s,]+/).filter(Boolean);
+              if (!batchSectionId || ids.length < 1 || ids.length > 100) {
+                toast.push("Select a section and 1–100 student profile IDs.", "error"); return;
               }
-            />
-            <Button type="submit">Add section</Button>
-          </form>
-        </Card>
+              void perform(() => bulkEnrollment.mutateAsync({section_id:batchSectionId, student_profile_ids:ids}), "Bulk enrollment completed.");
+            }}>
+              <label className="block text-sm font-medium">Target section
+                <select className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5" value={batchSectionId} onChange={e => setBatchSectionId(e.target.value)}>
+                  <option value="">Select section</option>
+                  {(sections.data ?? []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </label>
+              <label className="block text-sm font-medium">Student profile UUIDs (comma or newline separated)
+                <textarea className="mt-2 min-h-24 w-full rounded-xl border border-line bg-panel p-3" value={batchStudentIds} onChange={e => setBatchStudentIds(e.target.value)} />
+              </label>
+              <Button type="submit" disabled={bulkEnrollment.isPending}>Enroll batch atomically</Button>
+            </form>
+          </Card>
 
-        <Card title="Student & Teacher profiles">
-          <form
-            className="space-y-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void perform(
-                () =>
-                  createStudent.mutateAsync({
-                    external_user_id: studentForm.external_user_id,
-                    student_number: studentForm.student_number,
-                    program_id: studentForm.program_id,
-                    admission_year_id: studentForm.admission_year_id,
-                    current_semester: studentForm.current_semester
-                  }),
-                "Student academic profile created."
-              ).then((ok) => ok &&
-                setStudentForm({
-                  external_user_id: "",
-                  student_number: "",
-                  program_id: "",
-                  admission_year_id: "",
-                  current_semester: 1
-                })
-              );
-            }}
-          >
-            <h3 className="font-semibold">Student profile</h3>
-            <Input
-              label="Identity user UUID"
-              value={studentForm.external_user_id}
-              onChange={(e) => setStudentForm((f) => ({ ...f, external_user_id: e.target.value }))}
-            />
-            <Input
-              label="Student ID"
-              value={studentForm.student_number}
-              onChange={(e) => setStudentForm((f) => ({ ...f, student_number: e.target.value }))}
-            />
-            <label className="block text-sm font-medium">
-              Program
-              <select
-                className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={studentForm.program_id}
-                onChange={(e) => setStudentForm((f) => ({ ...f, program_id: e.target.value }))}
-              >
-                <option value="">Select program</option>
-                {(programs.data ?? []).map((item) => (
-                  <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">Admission academic year
-              <select className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={studentForm.admission_year_id}
-                onChange={(e) => setStudentForm((f) => ({ ...f, admission_year_id: e.target.value }))}>
-                <option value="">Select admission year</option>
-                {(years.data ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-              </select>
-            </label>
-            <Input label="Current semester" type="number" min={1}
-              value={studentForm.current_semester}
-              onChange={(e) => setStudentForm((f) => ({ ...f, current_semester: Number(e.target.value) || 1 }))} />
-            <Button type="submit">Create student profile</Button>
-          </form>
+          <Card title="Current assignments & enrollments">
+            <div className="max-h-80 overflow-auto text-sm space-y-4">
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Teacher Assignments</h4>
+                <div className="space-y-1">
+                  {(teaching.data ?? []).map((item) => (
+                    <div key={item.id} className="border-b border-line/70 px-2 py-2">
+                      Teacher {item.teacherUserId} → Section {item.sectionId}
+                    </div>
+                  ))}
+                  {(teaching.data ?? []).length === 0 && <p className="text-muted text-xs">No teacher assignments yet.</p>}
+                </div>
+              </div>
 
-          <form
-            className="mt-6 space-y-3 border-t border-line pt-6"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void perform(
-                () =>
-                  createTeacher.mutateAsync({
-                    external_user_id: teacherForm.external_user_id,
-                    employee_number: teacherForm.employee_number,
-                    department_id: teacherForm.department_id,
-                    designation: teacherForm.designation
-                  }),
-                "Teacher academic profile created."
-              ).then((ok) => ok &&
-                setTeacherForm({
-                  external_user_id: "",
-                  employee_number: "",
-                  department_id: "",
-                  designation: ""
-                })
-              );
-            }}
-          >
-            <h3 className="font-semibold">Teacher profile</h3>
-            <Input
-              label="Identity user UUID"
-              value={teacherForm.external_user_id}
-              onChange={(e) => setTeacherForm((f) => ({ ...f, external_user_id: e.target.value }))}
-            />
-            <Input
-              label="Employee ID"
-              value={teacherForm.employee_number}
-              onChange={(e) => setTeacherForm((f) => ({ ...f, employee_number: e.target.value }))}
-            />
-            <label className="block text-sm font-medium">
-              Department
-              <select
-                className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={teacherForm.department_id}
-                onChange={(e) => setTeacherForm((f) => ({ ...f, department_id: e.target.value }))}
-              >
-                <option value="">Select department</option>
-                {(departments.data ?? []).map((item) => (
-                  <option key={item.id} value={item.id}>{item.code} · {item.name}</option>
-                ))}
-              </select>
-            </label>
-            <Input label="Designation" value={teacherForm.designation}
-              onChange={(e) => setTeacherForm((f) => ({ ...f, designation: e.target.value }))} />
-            <Button type="submit">Create Teacher profile</Button>
-          </form>
-        </Card>
-
-        <Card title="Enrollment & teaching assignment">
-          <form
-            className="space-y-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void perform(
-                () => createEnrollment.mutateAsync(enrollmentForm),
-                "Student enrolled."
-              ).then((ok) => ok &&
-                setEnrollmentForm({ student_profile_id: "", section_id: "" })
-              );
-            }}
-          >
-            <h3 className="font-semibold">Enroll Student</h3>
-            <label className="block text-sm font-medium">
-              Student
-              <select
-                className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={enrollmentForm.student_profile_id}
-                onChange={(e) =>
-                  setEnrollmentForm((f) => ({ ...f, student_profile_id: e.target.value }))
-                }
-              >
-                <option value="">Select Student</option>
-                {(students.data ?? []).map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.studentId} · {item.identityUserId}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">
-              Section
-              <select
-                className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={enrollmentForm.section_id}
-                onChange={(e) =>
-                  setEnrollmentForm((f) => ({ ...f, section_id: e.target.value }))
-                }
-              >
-                <option value="">Select section</option>
-                {(sections.data ?? []).map((item) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
-            </label>
-            <Button type="submit">Enroll Student</Button>
-          </form>
-
-          <form
-            className="mt-6 space-y-3 border-t border-line pt-6"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void perform(
-                () => createTeaching.mutateAsync(assignmentForm),
-                "Teacher assigned to section."
-              ).then((ok) => ok &&
-                setAssignmentForm({ teacher_profile_id: "", section_id: "" })
-              );
-            }}
-          >
-            <h3 className="font-semibold">Assign Teacher</h3>
-            <label className="block text-sm font-medium">
-              Teacher
-              <select
-                className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={assignmentForm.teacher_profile_id}
-                onChange={(e) =>
-                  setAssignmentForm((f) => ({ ...f, teacher_profile_id: e.target.value }))
-                }
-              >
-                <option value="">Select Teacher</option>
-                {(teachers.data ?? []).map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.employeeId} · {item.identityUserId}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm font-medium">
-              Section
-              <select
-                className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={assignmentForm.section_id}
-                onChange={(e) =>
-                  setAssignmentForm((f) => ({ ...f, section_id: e.target.value }))
-                }
-              >
-                <option value="">Select section</option>
-                {(sections.data ?? []).map((item) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
-            </label>
-            <Button type="submit">Assign Teacher</Button>
-          </form>
-        </Card>
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Student Enrollments</h4>
+                <div className="space-y-1">
+                  {(enrollments.data ?? []).map((item) => (
+                    <div key={item.id} className="border-b border-line/70 px-2 py-2 flex justify-between items-center">
+                      <span>Student {item.studentUserId} → Section {item.sectionId}</span>
+                      <Badge>{item.status}</Badge>
+                    </div>
+                  ))}
+                  {(enrollments.data ?? []).length === 0 && <p className="text-muted text-xs">No student enrollments yet.</p>}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
-
-      <div className="mt-8 grid gap-6 xl:grid-cols-2">
-        <Card title="Current sections">
-          <div className="max-h-80 overflow-auto">
-            {(sections.data ?? []).map((item) => (
-              <div key={item.id} className="border-b border-line/70 px-2 py-3 text-sm">
-                <span className="font-semibold">{item.name}</span>
-                <span className="ml-2 text-muted">
-                  course {item.courseId} · semester {item.semesterId}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card title="Current assignments">
-          <div className="max-h-80 overflow-auto text-sm">
-            {(teaching.data ?? []).map((item) => (
-              <div key={item.id} className="border-b border-line/70 px-2 py-3">
-                Teacher {item.teacherUserId} → Section {item.sectionId}
-              </div>
-            ))}
-            {(enrollments.data ?? []).map((item) => (
-              <div key={item.id} className="border-b border-line/70 px-2 py-3">
-                Student {item.studentUserId} → Section {item.sectionId} · {item.status}
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
+      )}
     </div>
   );
 }

@@ -248,32 +248,12 @@ export function AdminUsersPage() {
                     </select>
                   </td>
                   <td className="px-2 py-3">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="secondary"
-                        onClick={() => void toggleActive(item.id, !item.isActive)}
-                      >
-                        {item.isActive ? "Deactivate" : "Activate"}
-                      </Button>
-                      {item.isActive ? (
-                        <Button
-                          variant="ghost"
-                          onClick={async () => {
-                            try {
-                              await deactivate.mutateAsync(item.id);
-                              toast.push("User deactivated.", "success");
-                            } catch (error) {
-                              toast.push(
-                                error instanceof Error ? error.message : "Deactivate failed.",
-                                "error"
-                              );
-                            }
-                          }}
-                        >
-                          Disable
-                        </Button>
-                      ) : null}
-                    </div>
+                    <Button
+                      variant={item.isActive ? "secondary" : "primary"}
+                      onClick={() => void toggleActive(item.id, !item.isActive)}
+                    >
+                      {item.isActive ? "Deactivate" : "Activate"}
+                    </Button>
                   </td>
                 </tr>
               ))}

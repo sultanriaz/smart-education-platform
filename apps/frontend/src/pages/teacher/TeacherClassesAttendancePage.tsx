@@ -191,6 +191,11 @@ export function TeacherClassesAttendancePage() {
     }
   };
 
+  const markAllWithStatus = (newStatus: AttendanceEntry["status"]) => {
+    setEntries((prev) => prev.map((e) => ({ ...e, status: newStatus })));
+    toast.push(`Marked all students as ${newStatus}.`, "success");
+  };
+
   return (
     <div className="page-container">
       <PageHeader
@@ -349,6 +354,20 @@ export function TeacherClassesAttendancePage() {
                 <SectionLoader label="Loading attendance sheet…" />
               ) : (
                 <>
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
+                    <div className="flex items-center gap-2">
+                      <Button variant="secondary" onClick={() => markAllWithStatus("PRESENT")}>
+                        ✓ Mark All Present
+                      </Button>
+                      <Button variant="secondary" onClick={() => markAllWithStatus("ABSENT")}>
+                        ✗ Mark All Absent
+                      </Button>
+                    </div>
+                    <span className="text-xs text-muted">
+                      {entries.length} students loaded on roster
+                    </span>
+                  </div>
+
                   <div className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2" role="region" aria-label="Attendance sheet" tabIndex={0}>
                     <table className="w-full min-w-[900px] text-left text-sm">
                       <thead>
