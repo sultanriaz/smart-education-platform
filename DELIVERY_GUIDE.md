@@ -95,16 +95,18 @@ npm run build
 Set-Location -Path ..\..
 ```
 
-### Step 5: Start All Twelve Services & Frontend
-Run the supervisor script to start all 12 microservice APIs, RabbitMQ background workers, and the frontend server:
+### Step 5: Start the Platform (Unified Single Running Point)
+Start all 12 microservice APIs, RabbitMQ background workers, and the frontend server using the unified root runner:
 ```powershell
-python scripts\supervisor.py
+python run.py
 ```
+> **Tip:** You can also check system status at any time with `python run.py --status`, view credentials with `python run.py --credentials`, or stop all running services with `python run.py --stop`.
+
 Once started, the following services will be available:
 - **Frontend Web Portal**: [http://localhost:5173](http://localhost:5173)
 - **API Gateway**: [http://localhost:18080](http://localhost:18080)
 - **Mailpit Webmail**: [http://localhost:18025](http://localhost:18025)
-- **RabbitMQ Management**: [http://localhost:55673](http://localhost:55673) (user: `smartedu` / password configured in `.env`)
+- **RabbitMQ Management**: [http://localhost:55673](http://localhost:55673) (user: `smartedu`)
 - **MinIO S3 Console**: [http://localhost:59001](http://localhost:59001)
 
 ---
