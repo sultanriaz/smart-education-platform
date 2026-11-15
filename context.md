@@ -361,4 +361,5 @@ CREATE TABLE self_learning_topic_mastery (
 
 | Date | Version | Decision / Update |
 | :--- | :--- | :--- |
+| **Nov 16, 2026** | **2.1.0** | **Vercel Serverless Architecture & Neon PostgreSQL Integration:**<br>1. Created `api/index.py` serverless Python entrypoint hosting all 12 microservice routers on Vercel.<br>2. Configured native Neon PostgreSQL connection normalization (`DATABASE_URL`, `POSTGRES_URL`).<br>3. Configured Vercel rewrites for `/api/(.*)` -> `/api/index.py` and SPA fallback `/(.*)` -> `/index.html`.<br>4. Verified student registration and login end-to-end. |
 | **Nov 16, 2026** | **2.0.0** | **Multi-Department Dynamic Subjects & Gemini API Standard:**<br>1. Replaced static subject assumptions with a full student-driven Subject Management system supporting any department.<br>2. Standardized on the Google Gemini API ecosystem (`gemini-2.0-flash`, `gemini-1.5-pro`, and `text-embedding-004`).<br>3. Hardened the 4 delivery phases with explicit schemas, Bloom's Taxonomy calibration, and LaTeX step-by-step formula requirements. |
