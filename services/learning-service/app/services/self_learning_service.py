@@ -9,16 +9,25 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.errors import DomainError
-from app.domain.entities.models import SelfLearningChunk, SelfLearningMaterial, SelfLearningSubject
+from app.domain.entities.models import (
+    SelfLearningChunk,
+    SelfLearningMaterial,
+    SelfLearningQuestion,
+    SelfLearningSubject,
+    SelfLearningTest,
+)
 from app.schemas.self_learning import (
     ChunkOut,
     MaterialOut,
+    QuestionOut,
     SearchRequest,
     SearchResult,
     StorageQuotaOut,
     SubjectCreate,
     SubjectOut,
     SubjectUpdate,
+    TestGenerateRequest,
+    TestOut,
     TopicsOut,
 )
 from app.services.document_parser import (
@@ -29,6 +38,7 @@ from app.services.document_parser import (
     extract_text,
 )
 from app.services.gemini_client import GeminiClient, get_gemini_client
+from app.services.mcq_generator import LangGraphMCQEngine
 from app.storage.base import StorageBackend
 
 logger = logging.getLogger("learning-service.self-learning")
@@ -660,4 +670,109 @@ class SelfLearningService:
             status=m.status,
             created_at=m.created_at,
             chunks_count=chunks_count,
+        )
+
+    # =========================================================================
+    # PHASE 2: LANGGRAPH & GEMINI MCQ ENGINE
+    # =========================================================================
+
+    def generate_test(
+        self, student_id: uuid.UUID, request: TestGenerateRequest
+    ) -> TestOut:
+        """Executes the LangGraph StateGraph MCQ pipeline with Bloom's calibration & numerical solvers."""
+        subject = (
+            self.db.query(SelfLearningSubject)
+            .filter(
+                SelfLearningSubject.id == request.subject_id,
+                SelfLearningSubject.student_id == student_id,
+            )
+            .first()
+        )
+        if not subject:
+            raise SelfLearningError("Subject not found.", status_code=404)
+
+        if request.count < 5 or request.count > 30:
+            raise SelfLearningError("Question count must be between 5 and 30.", status_code=400)
+
+        engine = LangGraphMCQEngine(self.db, self.gemini)
+        test_entity = engine.generate_test(student_id, request)
+        return self._test_to_out(test_entity)
+
+    def get_test(self, student_id: uuid.UUID, test_id: uuid.UUID) -> TestOut:
+        """Retrieve test details with all generated questions and numerical solutions."""
+        test = (
+            self.db.query(SelfLearningTest)
+            .filter(
+                SelfLearningTest.id == test_id,
+                SelfLearningTest.student_id == student_id,
+            )
+            .first()
+        )
+        if not test:
+            raise SelfLearningError("Test not found.", status_code=404)
+
+        return self._test_to_out(test)
+
+    def list_tests(
+        self, student_id: uuid.UUID, subject_id: uuid.UUID | None = None
+    ) -> list[TestOut]:
+        """List tests generated for the student, optionally filtered by subject."""
+        query = self.db.query(SelfLearningTest).filter(
+            SelfLearningTest.student_id == student_id
+        )
+        if subject_id:
+            query = query.filter(SelfLearningTest.subject_id == subject_id)
+
+        tests = query.order_by(SelfLearningTest.created_at.desc()).all()
+        return [self._test_to_out(t) for t in tests]
+
+    def delete_test(self, student_id: uuid.UUID, test_id: uuid.UUID) -> dict[str, Any]:
+        """Delete test and cascade delete its questions."""
+        test = (
+            self.db.query(SelfLearningTest)
+            .filter(
+                SelfLearningTest.id == test_id,
+                SelfLearningTest.student_id == student_id,
+            )
+            .first()
+        )
+        if not test:
+            raise SelfLearningError("Test not found.", status_code=404)
+
+        self.db.delete(test)
+        self.db.commit()
+        return {"deleted": True, "test_id": str(test_id)}
+
+    def _test_to_out(self, t: SelfLearningTest) -> TestOut:
+        qs_out = [
+            QuestionOut(
+                id=q.id,
+                test_id=q.test_id,
+                question_number=q.question_number,
+                question_text=q.question_text,
+                options=q.options,
+                correct_option=q.correct_option,
+                explanation=q.explanation,
+                bloom_level=q.bloom_level,
+                difficulty=q.difficulty,
+                is_quantitative=q.is_quantitative,
+                formula_latex=q.formula_latex,
+                step_by_step_solution=list(q.step_by_step_solution or []),
+                topic_tag=q.topic_tag,
+                created_at=q.created_at,
+            )
+            for q in t.questions
+        ]
+        return TestOut(
+            id=t.id,
+            student_id=t.student_id,
+            subject_id=t.subject_id,
+            title=t.title,
+            difficulty=t.difficulty,
+            target_topics=list(t.target_topics or []),
+            total_questions=t.total_questions,
+            status=t.status,
+            created_at=t.created_at,
+            updated_at=t.updated_at,
+            questions=qs_out,
         )

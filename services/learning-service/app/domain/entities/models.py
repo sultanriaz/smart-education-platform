@@ -8,6 +8,7 @@ from smartedu_infra.runtime import RelayState
 from sqlalchemy import (
     JSON,
     BigInteger,
+    Boolean,
     DateTime,
     Enum,
     ForeignKey,
@@ -229,6 +230,12 @@ class SelfLearningSubject(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+    tests: Mapped[list[SelfLearningTest]] = relationship(
+        "SelfLearningTest",
+        back_populates="subject",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
 
 
 class SelfLearningMaterial(Base):
@@ -295,3 +302,65 @@ class SelfLearningChunk(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     material: Mapped[SelfLearningMaterial] = relationship("SelfLearningMaterial", back_populates="chunks")
+
+
+class SelfLearningTest(Base):
+    """Generated self-learning assessment tests with Bloom's taxonomy calibration."""
+    __tablename__ = "self_learning_tests"
+    __table_args__ = (
+        Index("ix_self_learning_tests_student", "student_id"),
+        Index("ix_self_learning_tests_subject", "subject_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    subject_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("self_learning_subjects.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    difficulty: Mapped[str] = mapped_column(String(30), default="mixed")
+    target_topics: Mapped[list[str]] = mapped_column(JSON, default=list)
+    total_questions: Mapped[int] = mapped_column(Integer, default=10)
+    status: Mapped[str] = mapped_column(String(30), default="COMPLETED")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    subject: Mapped[SelfLearningSubject] = relationship("SelfLearningSubject", back_populates="tests")
+    questions: Mapped[list[SelfLearningQuestion]] = relationship(
+        "SelfLearningQuestion",
+        back_populates="test",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="SelfLearningQuestion.question_number",
+    )
+
+
+class SelfLearningQuestion(Base):
+    """MCQ question item with options, Bloom's level, LaTeX formula, and step-by-step solver."""
+    __tablename__ = "self_learning_questions"
+    __table_args__ = (
+        Index("ix_self_learning_questions_test", "test_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    test_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("self_learning_tests.id", ondelete="CASCADE"), nullable=False
+    )
+    question_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    question_text: Mapped[str] = mapped_column(Text, nullable=False)
+    options: Mapped[dict[str, str]] = mapped_column(JSON, nullable=False)  # {"A": ..., "B": ..., "C": ..., "D": ...}
+    correct_option: Mapped[str] = mapped_column(String(10), nullable=False)
+    explanation: Mapped[str] = mapped_column(Text, nullable=False)
+    bloom_level: Mapped[str] = mapped_column(String(50), default="UNDERSTAND")
+    difficulty: Mapped[str] = mapped_column(String(30), default="medium")
+    is_quantitative: Mapped[bool] = mapped_column(Boolean, default=False)
+    formula_latex: Mapped[str | None] = mapped_column(Text, nullable=True)
+    step_by_step_solution: Mapped[list[str]] = mapped_column(JSON, default=list)
+    topic_tag: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    test: Mapped[SelfLearningTest] = relationship("SelfLearningTest", back_populates="questions")

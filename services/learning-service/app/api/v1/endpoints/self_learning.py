@@ -15,6 +15,8 @@ from app.schemas.self_learning import (
     SubjectCreate,
     SubjectOut,
     SubjectUpdate,
+    TestGenerateRequest,
+    TestOut,
     TopicsOut,
 )
 from app.security.auth import Principal, require_roles
@@ -220,3 +222,69 @@ def get_storage_quota(
 ) -> StorageQuotaOut:
     """Check student storage quota usage (100MB capacity)."""
     return service.get_storage_quota(principal.user_id)
+
+
+# =============================================================================
+# PHASE 2: LANGGRAPH & GEMINI MCQ GENERATION ENGINE ENDPOINTS
+# =============================================================================
+
+@router.post("/tests/generate", response_model=TestOut, status_code=status.HTTP_201_CREATED)
+def generate_test(
+    payload: TestGenerateRequest,
+    principal: Principal = Depends(require_roles("student", "teacher", "admin")),
+    service: SelfLearningService = Depends(get_self_learning_service),
+) -> TestOut:
+    """Generate Bloom's-calibrated MCQs with numerical solvers via LangGraph pipeline.
+
+    Accepts count (5 to 30), difficulty ('basic', 'medium', 'hard', 'mixed'),
+    and optional target topics.
+    """
+    try:
+        return service.generate_test(principal.user_id, payload)
+    except DomainError as exc:
+        raise HTTPException(
+            status_code=getattr(exc, "status_code", 400),
+            detail=str(exc),
+        ) from exc
+
+
+@router.get("/tests", response_model=list[TestOut])
+def list_tests(
+    subject_id: uuid.UUID | None = Query(None, description="Optional subject filter"),
+    principal: Principal = Depends(require_roles("student", "teacher", "admin")),
+    service: SelfLearningService = Depends(get_self_learning_service),
+) -> list[TestOut]:
+    """List all generated tests for current student."""
+    return service.list_tests(principal.user_id, subject_id=subject_id)
+
+
+@router.get("/tests/{test_id}", response_model=TestOut)
+def get_test(
+    test_id: uuid.UUID,
+    principal: Principal = Depends(require_roles("student", "teacher", "admin")),
+    service: SelfLearningService = Depends(get_self_learning_service),
+) -> TestOut:
+    """Retrieve details and all questions for a specific generated test."""
+    try:
+        return service.get_test(principal.user_id, test_id)
+    except DomainError as exc:
+        raise HTTPException(
+            status_code=getattr(exc, "status_code", 404),
+            detail=str(exc),
+        ) from exc
+
+
+@router.delete("/tests/{test_id}")
+def delete_test(
+    test_id: uuid.UUID,
+    principal: Principal = Depends(require_roles("student", "teacher", "admin")),
+    service: SelfLearningService = Depends(get_self_learning_service),
+) -> dict[str, Any]:
+    """Delete a test and all its questions."""
+    try:
+        return service.delete_test(principal.user_id, test_id)
+    except DomainError as exc:
+        raise HTTPException(
+            status_code=getattr(exc, "status_code", 404),
+            detail=str(exc),
+        ) from exc

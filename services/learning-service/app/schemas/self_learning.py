@@ -97,3 +97,57 @@ class StorageQuotaOut(BaseModel):
     total_quota_bytes: int
     used_percentage: float
     materials_count: int
+
+
+# =============================================================================
+# PHASE 2: LANGGRAPH & GEMINI MCQ ENGINE SCHEMAS
+# =============================================================================
+
+class QuestionItem(BaseModel):
+    question_number: int = Field(..., ge=1)
+    question_text: str = Field(..., min_length=5)
+    options: dict[str, str] = Field(
+        ...,
+        description="Four distinct options with keys 'A', 'B', 'C', 'D'",
+    )
+    correct_option: str = Field(..., pattern=r"^[ABCD]$")
+    explanation: str = Field(..., min_length=5, description="Pedagogical explanation of why the correct option is right")
+    bloom_level: str = Field(default="UNDERSTAND", description="Bloom's Taxonomy Level: REMEMBER, UNDERSTAND, APPLY, ANALYZE, EVALUATE, CREATE")
+    difficulty: str = Field(default="medium", description="Difficulty calibration: basic, medium, hard")
+    is_quantitative: bool = Field(default=False)
+    formula_latex: str | None = Field(None, description="Explicit LaTeX formula for quantitative/algorithmic questions")
+    step_by_step_solution: list[str] = Field(default_factory=list, description="Step-by-step intermediate proof or solution steps")
+    topic_tag: str | None = None
+
+
+class QuestionOut(QuestionItem):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    test_id: uuid.UUID
+    created_at: datetime
+
+
+class TestGenerateRequest(BaseModel):
+    subject_id: uuid.UUID
+    count: int = Field(default=10, ge=5, le=30, description="Number of MCQs to generate (5 to 30)")
+    difficulty: str = Field(default="mixed", description="Difficulty: 'basic', 'medium', 'hard', or 'mixed'")
+    topics: list[str] | None = Field(default=None, description="Optional topic or chapter filters")
+    title: str | None = Field(default=None, description="Optional custom test title")
+
+
+class TestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    student_id: uuid.UUID
+    subject_id: uuid.UUID
+    title: str
+    difficulty: str
+    target_topics: list[str] = Field(default_factory=list)
+    total_questions: int
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    questions: list[QuestionOut] = Field(default_factory=list)
+
