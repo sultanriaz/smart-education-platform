@@ -25,7 +25,15 @@ def client_ip(request: Request) -> str | None:
 
 
 def login_guard():
-    return LoginSecurityGuard(login_lockout_store())
+    try:
+        import os
+        if not os.environ.get("REDIS_URL") and not os.environ.get("REDIS_CACHE_URL"):
+            from smartedu_security.lockout import MemoryLockoutStore
+            return LoginSecurityGuard(MemoryLockoutStore())
+        return LoginSecurityGuard(login_lockout_store())
+    except Exception:
+        from smartedu_security.lockout import MemoryLockoutStore
+        return LoginSecurityGuard(MemoryLockoutStore())
 
 
 def browser_pair(response, pair):

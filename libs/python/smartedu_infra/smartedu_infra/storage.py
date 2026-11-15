@@ -4,9 +4,14 @@ from dataclasses import dataclass
 from pathlib import PurePosixPath
 from typing import BinaryIO
 
-import boto3
-from botocore.client import Config
-from botocore.exceptions import ClientError
+try:
+    import boto3
+    from botocore.client import Config
+    from botocore.exceptions import ClientError
+except ImportError:
+    boto3 = None
+    Config = None
+    ClientError = Exception
 
 from .settings import ObjectStorageSettings
 
