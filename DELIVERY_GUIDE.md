@@ -68,15 +68,12 @@ Expand-Archive -Path SmartEdu_Client_Delivery_Wave17.zip -DestinationPath C:\Sma
 Set-Location -Path C:\SmartEdu
 ```
 
-### Step 2: Start Supporting Docker Infrastructure
-Ensure Docker Engine is running, then initialize the infrastructure services (PostgreSQL, RabbitMQ, Redis, MinIO, Mailpit, API Gateway):
-```powershell
-docker compose -f infra/docker-compose.local.yml up -d
-```
-Verify that all containers are healthy:
-```powershell
-docker compose -f infra/docker-compose.local.yml ps
-```
+### Step 2: Infrastructure (Optional / General Standalone Mode)
+- **Without Docker (Default Standalone Mode)**: No Docker installation or setup is required. The platform includes a native Python API Gateway and runs directly on host Python and Node.js. Simply skip to Step 3.
+- **With Docker (Containerized Supporting Infrastructure)**: If Docker Engine is available, you can optionally start the local databases and queue containers:
+  ```powershell
+  docker compose -f docker-compose.local.yml up -d
+  ```
 
 ### Step 3: Set Up Python Virtual Environment
 Initialize Python dependencies and install shared libraries in editable mode:

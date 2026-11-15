@@ -6,25 +6,31 @@ The local demonstration uses PostgreSQL, two authenticated Redis instances, Rabb
 
 ---
 
-## Quickstart: Single Root Running Point
+## Quickstart: Single Root Running Point (General / Non-Docker)
 
-Start the entire platform (Infrastructure + 12 Microservices + RabbitMQ Workers + React Frontend) using the unified root runner:
+Start the entire platform natively on host Python and Node.js without requiring Docker:
 
 ```bash
 python run.py
 ```
 
+`run.py` automatically:
+- Starts the built-in native Python API Gateway on port `18080` (with full CORS & reverse proxy routing).
+- Starts all 12 FastAPI microservices on ports `8001–8012`.
+- Starts the React frontend on port `5173`.
+- Auto-recovers from process failures and terminates cleanly on `Ctrl+C`.
+
 ### Common Commands:
 ```bash
-python run.py                 # Start entire platform (Infra + Services + Frontend)
+python run.py                 # Start entire platform (Gateway + 12 Services + Frontend)
 python run.py --status        # Check health and status of all services and ports
 python run.py --credentials   # Display active demo credentials and URLs
-python run.py --stop          # Stop all running microservices and frontend processes
+python run.py --stop          # Stop all running microservices, gateway, and frontend
 python run.py --test          # Run the 38-case live integration regression suite
-python run.py --services-only # Run 12 microservices and event workers only
+python run.py --services-only # Run 12 microservices only (without frontend)
 python run.py --frontend-only # Run frontend preview server only
-python run.py --infra-only    # Start Docker infrastructure containers only
-python run.py --skip-docker   # Start services and frontend without Docker check
+python run.py --gateway-only  # Run native Python API Gateway only (port 18080)
+python run.py --with-docker   # Optionally start Docker infrastructure if Docker is installed
 ```
 
 ---
