@@ -246,6 +246,7 @@ def init_database_tables():
                 sys.modules.pop(k, None)
 
         import app.db.base  # noqa: F401
+        from sqlalchemy import text
         from app.db.base import Base
         from app.db.session import SessionLocal, engine
         from app.domain.entities.role import Role
@@ -253,6 +254,13 @@ def init_database_tables():
         from app.security.password import hash_password
 
         # Create all tables on the connected Neon DB if not already present
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+                conn.commit()
+        except Exception as e:
+            logger.debug("pgvector extension check note: %s", e)
+
         Base.metadata.create_all(bind=engine)
 
         for s_dir, mod_name in [

@@ -22,6 +22,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
 
+try:
+    from pgvector.sqlalchemy import Vector
+except ImportError:
+    Vector = None
+
 
 def utcnow() -> datetime:
     return datetime.now(UTC)
@@ -193,3 +198,100 @@ class FileOperationAudit(Base):
     operation: Mapped[str] = mapped_column(String(24), nullable=False)
     checksum_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class SelfLearningSubject(Base):
+    """Student-curated subjects across departments for personalized learning."""
+    __tablename__ = "self_learning_subjects"
+    __table_args__ = (
+        UniqueConstraint("student_id", "name", name="uq_self_learning_student_subject"),
+        Index("ix_self_learning_subjects_student", "student_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    department: Mapped[str] = mapped_column(String(150), nullable=False, default="General")
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    color_hex: Mapped[str] = mapped_column(String(16), default="#4F46E5")
+    icon_name: Mapped[str] = mapped_column(String(50), default="book-open")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    materials: Mapped[list[SelfLearningMaterial]] = relationship(
+        "SelfLearningMaterial",
+        back_populates="subject",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+class SelfLearningMaterial(Base):
+    """Ingested multi-format documents (PDF, DOCX, PPTX, TXT) associated with a student subject."""
+    __tablename__ = "self_learning_materials"
+    __table_args__ = (
+        Index("ix_self_learning_materials_student", "student_id"),
+        Index("ix_self_learning_materials_subject", "subject_id"),
+        Index("ix_self_learning_materials_hash", "student_id", "file_hash"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    subject_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("self_learning_subjects.id", ondelete="CASCADE"), nullable=False
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    file_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    storage_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    extracted_topics: Mapped[list[str]] = mapped_column(JSON, default=list)
+    status: Mapped[str] = mapped_column(String(30), default="PROCESSED")
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    subject: Mapped[SelfLearningSubject] = relationship("SelfLearningSubject", back_populates="materials")
+    chunks: Mapped[list[SelfLearningChunk]] = relationship(
+        "SelfLearningChunk",
+        back_populates="material",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+class SelfLearningChunk(Base):
+    """Vectorized semantic chunks with text-embedding-004 (768 dimensions) for RAG."""
+    __tablename__ = "self_learning_chunks"
+    __table_args__ = (
+        Index("ix_self_learning_chunks_lookup", "student_id", "subject_id"),
+        Index("ix_self_learning_chunks_material", "material_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    material_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("self_learning_materials.id", ondelete="CASCADE"), nullable=False
+    )
+    subject_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("self_learning_subjects.id", ondelete="CASCADE"), nullable=False
+    )
+    student_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    topic_tag: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding = mapped_column(Vector(768) if Vector is not None else JSON, nullable=True)
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    material: Mapped[SelfLearningMaterial] = relationship("SelfLearningMaterial", back_populates="chunks")

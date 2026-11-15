@@ -51,6 +51,14 @@ class Settings(BaseSettings):
 
     RECOMMENDATION_RECENT_DAYS: int = 14
 
+    # Gemini & Self-Learning RAG settings
+    GEMINI_API_KEY: str | None = None
+    GEMINI_EMBEDDING_MODEL: str = "text-embedding-004"
+    GEMINI_CHAT_MODEL: str = "gemini-2.0-flash"
+    STUDENT_STORAGE_QUOTA_BYTES: int = 100 * 1024 * 1024  # 100MB per student
+    CHUNK_SIZE_CHARS: int = 2000
+    CHUNK_OVERLAP_CHARS: int = 200
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

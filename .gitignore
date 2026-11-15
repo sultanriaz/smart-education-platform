@@ -29,6 +29,7 @@ celerybeat-schedule.dir
 # Database (Local SQLite fallbacks, if any)
 *.db
 *.sqlite3
+data/
 
 # ==========================================
 # Frontend: React, Vite, TypeScript
