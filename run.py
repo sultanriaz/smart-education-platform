@@ -76,7 +76,7 @@ ROUTE_MAP = {
 }
 
 FRONTEND_PORT = 5173
-GATEWAY_PORT = 18080
+GATEWAY_PORT = int(os.environ.get("GATEWAY_PORT", os.environ.get("PORT", 18080)))
 
 
 # ==============================================================================
