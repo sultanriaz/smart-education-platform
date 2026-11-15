@@ -13,10 +13,14 @@ from app.schemas.self_learning import (
     SearchResult,
     StorageQuotaOut,
     SubjectCreate,
+    SubjectMasteryOut,
     SubjectOut,
     SubjectUpdate,
     TestGenerateRequest,
     TestOut,
+    TestRegenerateRequest,
+    TestResultOut,
+    TestSubmitRequest,
     TopicsOut,
 )
 from app.security.auth import Principal, require_roles
@@ -283,6 +287,85 @@ def delete_test(
     """Delete a test and all its questions."""
     try:
         return service.delete_test(principal.user_id, test_id)
+    except DomainError as exc:
+        raise HTTPException(
+            status_code=getattr(exc, "status_code", 404),
+            detail=str(exc),
+        ) from exc
+
+
+# =============================================================================
+# PHASE 3: EVALUATION, FEEDBACK, MASTERY & REGENERATION ENDPOINTS
+# =============================================================================
+
+@router.post("/tests/{test_id}/submit", response_model=TestResultOut)
+def submit_test(
+    test_id: uuid.UUID,
+    payload: TestSubmitRequest,
+    principal: Principal = Depends(require_roles("student", "teacher", "admin")),
+    service: SelfLearningService = Depends(get_self_learning_service),
+) -> TestResultOut:
+    """Real-time Grader: Evaluates student answers, provides pedagogical diffs,
+
+    computes percentage score, and profiles per-topic performance.
+    """
+    try:
+        return service.submit_test(principal.user_id, test_id, payload)
+    except DomainError as exc:
+        raise HTTPException(
+            status_code=getattr(exc, "status_code", 400),
+            detail=str(exc),
+        ) from exc
+
+
+@router.get("/tests/{test_id}/result", response_model=TestResultOut)
+def get_test_result(
+    test_id: uuid.UUID,
+    principal: Principal = Depends(require_roles("student", "teacher", "admin")),
+    service: SelfLearningService = Depends(get_self_learning_service),
+) -> TestResultOut:
+    """Retrieve the latest graded diagnostic result for a test."""
+    try:
+        return service.get_test_result(principal.user_id, test_id)
+    except DomainError as exc:
+        raise HTTPException(
+            status_code=getattr(exc, "status_code", 404),
+            detail=str(exc),
+        ) from exc
+
+
+@router.post("/tests/{test_id}/regenerate", response_model=TestOut, status_code=status.HTTP_201_CREATED)
+def regenerate_test(
+    test_id: uuid.UUID,
+    payload: TestRegenerateRequest,
+    principal: Principal = Depends(require_roles("student", "teacher", "admin")),
+    service: SelfLearningService = Depends(get_self_learning_service),
+) -> TestOut:
+    """Smart Test Regeneration: Analyzes past test results and generates a new test
+
+    with weighted focus on weak topics (70% weak / 30% strong in 'weak_focus' mode).
+    """
+    try:
+        return service.regenerate_test(principal.user_id, test_id, payload)
+    except DomainError as exc:
+        raise HTTPException(
+            status_code=getattr(exc, "status_code", 400),
+            detail=str(exc),
+        ) from exc
+
+
+@router.get("/subjects/{subject_id}/mastery", response_model=SubjectMasteryOut)
+def get_subject_mastery(
+    subject_id: uuid.UUID,
+    principal: Principal = Depends(require_roles("student", "teacher", "admin")),
+    service: SelfLearningService = Depends(get_self_learning_service),
+) -> SubjectMasteryOut:
+    """Topic Mastery Profiler: Aggregates student's cumulative subject performance,
+
+    classifying topics into Strong (>=75%), Moderate (50-74%), and Weak (<50%).
+    """
+    try:
+        return service.get_subject_mastery(principal.user_id, subject_id)
     except DomainError as exc:
         raise HTTPException(
             status_code=getattr(exc, "status_code", 404),

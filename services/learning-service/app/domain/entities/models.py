@@ -11,6 +11,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Enum,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -337,6 +338,13 @@ class SelfLearningTest(Base):
         lazy="selectin",
         order_by="SelfLearningQuestion.question_number",
     )
+    submissions: Mapped[list[SelfLearningTestSubmission]] = relationship(
+        "SelfLearningTestSubmission",
+        back_populates="test",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by="SelfLearningTestSubmission.created_at.desc()",
+    )
 
 
 class SelfLearningQuestion(Base):
@@ -364,3 +372,36 @@ class SelfLearningQuestion(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     test: Mapped[SelfLearningTest] = relationship("SelfLearningTest", back_populates="questions")
+
+
+class SelfLearningTestSubmission(Base):
+    """Graded submission for a self-learning test attempt with real-time feedback & diffs."""
+    __tablename__ = "self_learning_test_submissions"
+    __table_args__ = (
+        Index("ix_self_learning_submissions_test", "test_id"),
+        Index("ix_self_learning_submissions_student", "student_id"),
+        Index("ix_self_learning_submissions_subject", "subject_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    test_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("self_learning_tests.id", ondelete="CASCADE"), nullable=False
+    )
+    student_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), nullable=False)
+    subject_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("self_learning_subjects.id", ondelete="CASCADE"), nullable=False
+    )
+    score: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_questions: Mapped[int] = mapped_column(Integer, nullable=False)
+    percentage: Mapped[float] = mapped_column(Float, nullable=False)
+    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    answers: Mapped[dict] = mapped_column(JSON, default=dict)
+    detailed_results: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    topic_breakdown: Mapped[dict] = mapped_column(JSON, default=dict)
+    time_taken_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )
+
+    test: Mapped[SelfLearningTest] = relationship("SelfLearningTest", back_populates="submissions")
+    subject: Mapped[SelfLearningSubject] = relationship("SelfLearningSubject")

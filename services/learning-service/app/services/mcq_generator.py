@@ -14,6 +14,7 @@ from app.domain.entities.models import (
     SelfLearningQuestion,
     SelfLearningSubject,
     SelfLearningTest,
+    SelfLearningTestSubmission,
 )
 from app.schemas.self_learning import QuestionItem, TestGenerateRequest
 from app.services.gemini_client import GeminiClient, get_gemini_client
@@ -634,3 +635,97 @@ class LangGraphMCQEngine:
             len(test_entity.questions),
         )
         return test_entity
+
+    def plan_and_regenerate_test(
+        self,
+        student_id: uuid.UUID,
+        original_test: SelfLearningTest,
+        submission: SelfLearningTestSubmission | None = None,
+        mode: str = "weak_focus",
+        count: int | None = None,
+        title: str | None = None,
+    ) -> SelfLearningTest:
+        """Smart Test Regeneration: Analyzes past test results and applies weighted allocation.
+
+        Focuses heavily on weak topics (<50%) or challenge questions.
+        """
+        target_count = count if (count and 5 <= count <= 30) else original_test.total_questions
+        mode = mode.lower() if mode else "weak_focus"
+
+        weak_topics: list[str] = []
+        moderate_topics: list[str] = []
+        strong_topics: list[str] = []
+
+        if submission and submission.topic_breakdown:
+            for item in submission.topic_breakdown:
+                t_name = item.get("topic")
+                t_status = item.get("status")
+                if t_status == "Weak":
+                    weak_topics.append(t_name)
+                elif t_status == "Moderate":
+                    moderate_topics.append(t_name)
+                elif t_status == "Strong":
+                    strong_topics.append(t_name)
+
+        planned_topics: list[str] = []
+        planned_difficulty = original_test.difficulty
+
+        if mode == "weak_focus":
+            if weak_topics:
+                # 70% weak topics, 30% moderate/strong topics
+                weak_target = max(1, int(target_count * 0.7))
+                other_target = target_count - weak_target
+
+                # Weight weak topics heavily
+                for _ in range(weak_target):
+                    planned_topics.append(weak_topics[len(planned_topics) % len(weak_topics)])
+
+                others = moderate_topics or strong_topics or weak_topics
+                for _ in range(other_target):
+                    planned_topics.append(others[len(planned_topics) % len(others)])
+
+                planned_difficulty = "mixed"
+                planned_title = (
+                    title.strip()
+                    if title and title.strip()
+                    else f"{original_test.title} (Remediation: Focus on Weak Topics)"
+                )
+            else:
+                planned_topics = original_test.target_topics or []
+                planned_title = (
+                    title.strip()
+                    if title and title.strip()
+                    else f"{original_test.title} (Reinforcement Practice)"
+                )
+        elif mode == "challenge":
+            planned_difficulty = "hard"
+            planned_topics = strong_topics or moderate_topics or original_test.target_topics or []
+            planned_title = (
+                title.strip()
+                if title and title.strip()
+                else f"{original_test.title} (Advanced Challenge Mode)"
+            )
+        else:  # balanced
+            planned_topics = original_test.target_topics or []
+            planned_difficulty = original_test.difficulty
+            planned_title = (
+                title.strip()
+                if title and title.strip()
+                else f"{original_test.title} (Balanced Review)"
+            )
+
+        req = TestGenerateRequest(
+            subject_id=original_test.subject_id,
+            count=target_count,
+            difficulty=planned_difficulty,
+            topics=list(dict.fromkeys(planned_topics)) if planned_topics else None,
+            title=planned_title,
+        )
+
+        logger.info(
+            "Executing Smart Test Regeneration: Mode=%s, WeakTopics=%s, TargetCount=%d",
+            mode,
+            weak_topics,
+            target_count,
+        )
+        return self.generate_test(student_id, req)

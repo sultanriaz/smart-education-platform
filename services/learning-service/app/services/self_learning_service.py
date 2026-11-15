@@ -15,19 +15,27 @@ from app.domain.entities.models import (
     SelfLearningQuestion,
     SelfLearningSubject,
     SelfLearningTest,
+    SelfLearningTestSubmission,
 )
 from app.schemas.self_learning import (
     ChunkOut,
     MaterialOut,
+    QuestionEvaluationDetail,
     QuestionOut,
     SearchRequest,
     SearchResult,
     StorageQuotaOut,
     SubjectCreate,
+    SubjectMasteryOut,
     SubjectOut,
     SubjectUpdate,
     TestGenerateRequest,
     TestOut,
+    TestRegenerateRequest,
+    TestResultOut,
+    TestSubmitRequest,
+    TopicMasteryDetail,
+    TopicScore,
     TopicsOut,
 )
 from app.services.document_parser import (
@@ -775,4 +783,353 @@ class SelfLearningService:
             created_at=t.created_at,
             updated_at=t.updated_at,
             questions=qs_out,
+        )
+
+    # =========================================================================
+    # PHASE 3: EVALUATION, FEEDBACK, MASTERY & SMART REGENERATION
+    # =========================================================================
+
+    def submit_test(
+        self,
+        student_id: uuid.UUID,
+        test_id: uuid.UUID,
+        payload: TestSubmitRequest,
+    ) -> TestResultOut:
+        """Real-time Grader: Evaluates student answers, generates diffs,
+
+        cites pedagogical rationale, renders LaTeX formulas, and saves submission.
+        """
+        test = (
+            self.db.query(SelfLearningTest)
+            .filter(
+                SelfLearningTest.id == test_id,
+                SelfLearningTest.student_id == student_id,
+            )
+            .first()
+        )
+        if not test:
+            raise SelfLearningError("Test not found.", status_code=404)
+
+        questions = sorted(test.questions, key=lambda q: q.question_number)
+        if not questions:
+            raise SelfLearningError("Test has no questions to evaluate.", status_code=400)
+
+        score = 0
+        detailed_results: list[dict[str, Any]] = []
+        topic_stats: dict[str, dict[str, int]] = {}
+
+        # Build answer map: support lookup by str(q.id) and str(q.question_number)
+        raw_answers = payload.answers or {}
+
+        for q in questions:
+            q_id_str = str(q.id)
+            q_num_str = str(q.question_number)
+
+            selected_opt: str | None = None
+            if q_id_str in raw_answers:
+                selected_opt = str(raw_answers[q_id_str]).strip().upper()
+            elif q_num_str in raw_answers:
+                selected_opt = str(raw_answers[q_num_str]).strip().upper()
+
+            is_correct = selected_opt == q.correct_option
+            if is_correct:
+                score += 1
+
+            topic = q.topic_tag or "General"
+            if topic not in topic_stats:
+                topic_stats[topic] = {"correct": 0, "total": 0}
+            topic_stats[topic]["total"] += 1
+            if is_correct:
+                topic_stats[topic]["correct"] += 1
+
+            # Pedagogical rationale citing source materials
+            feedback = (
+                f"Why is this correct? According to the curriculum documentation on '{topic}', "
+                f"Option {q.correct_option} is the accurate formulation: {q.explanation}"
+            )
+
+            detail = {
+                "question_id": str(q.id),
+                "question_number": q.question_number,
+                "question_text": q.question_text,
+                "options": q.options,
+                "selected_option": selected_opt,
+                "correct_option": q.correct_option,
+                "is_correct": is_correct,
+                "explanation": feedback,
+                "bloom_level": q.bloom_level,
+                "difficulty": q.difficulty,
+                "is_quantitative": q.is_quantitative,
+                "formula_latex": q.formula_latex,
+                "step_by_step_solution": list(q.step_by_step_solution or []),
+                "topic_tag": topic,
+            }
+            detailed_results.append(detail)
+
+        total_questions = len(questions)
+        pct = round((score / total_questions) * 100, 2)
+        passed = pct >= 50.0
+
+        # Topic Breakdown
+        topic_breakdown: list[dict[str, Any]] = []
+        for t_name, s_data in topic_stats.items():
+            t_pct = round((s_data["correct"] / s_data["total"]) * 100, 2)
+            if t_pct >= 75.0:
+                t_status = "Strong"
+            elif t_pct >= 50.0:
+                t_status = "Moderate"
+            else:
+                t_status = "Weak"
+
+            topic_breakdown.append(
+                {
+                    "topic": t_name,
+                    "correct": s_data["correct"],
+                    "total": s_data["total"],
+                    "percentage": t_pct,
+                    "status": t_status,
+                }
+            )
+
+        submission = SelfLearningTestSubmission(
+            test_id=test.id,
+            student_id=student_id,
+            subject_id=test.subject_id,
+            score=score,
+            total_questions=total_questions,
+            percentage=pct,
+            passed=passed,
+            answers=raw_answers,
+            detailed_results=detailed_results,
+            topic_breakdown=topic_breakdown,
+            time_taken_seconds=payload.time_taken_seconds,
+        )
+        self.db.add(submission)
+        self.db.commit()
+        self.db.refresh(submission)
+
+        logger.info(
+            "Graded Test '%s': Score %d/%d (%.2f%%) - Passed: %s",
+            test.title,
+            score,
+            total_questions,
+            pct,
+            passed,
+        )
+        return self._submission_to_out(submission)
+
+    def get_test_result(self, student_id: uuid.UUID, test_id: uuid.UUID) -> TestResultOut:
+        """Retrieve the latest graded result for a specific test."""
+        sub = (
+            self.db.query(SelfLearningTestSubmission)
+            .filter(
+                SelfLearningTestSubmission.test_id == test_id,
+                SelfLearningTestSubmission.student_id == student_id,
+            )
+            .order_by(SelfLearningTestSubmission.created_at.desc())
+            .first()
+        )
+        if not sub:
+            raise SelfLearningError("No submission found for this test.", status_code=404)
+
+        return self._submission_to_out(sub)
+
+    def get_subject_mastery(
+        self, student_id: uuid.UUID, subject_id: uuid.UUID
+    ) -> SubjectMasteryOut:
+        """Topic Mastery Profiler: Aggregates student's cumulative performance across all tests
+
+        and classifies topics into Strong (>=75%), Moderate (50-74%), and Weak (<50%).
+        """
+        subject = (
+            self.db.query(SelfLearningSubject)
+            .filter(
+                SelfLearningSubject.id == subject_id,
+                SelfLearningSubject.student_id == student_id,
+            )
+            .first()
+        )
+        if not subject:
+            raise SelfLearningError("Subject not found.", status_code=404)
+
+        submissions = (
+            self.db.query(SelfLearningTestSubmission)
+            .filter(
+                SelfLearningTestSubmission.subject_id == subject_id,
+                SelfLearningTestSubmission.student_id == student_id,
+            )
+            .all()
+        )
+
+        topic_aggregation: dict[str, dict[str, int]] = {}
+
+        # 1. Aggregate from test submissions
+        for sub in submissions:
+            for item in sub.detailed_results or []:
+                t_name = item.get("topic_tag") or "General"
+                if t_name not in topic_aggregation:
+                    topic_aggregation[t_name] = {"attempted": 0, "correct": 0}
+                topic_aggregation[t_name]["attempted"] += 1
+                if item.get("is_correct"):
+                    topic_aggregation[t_name]["correct"] += 1
+
+        # 2. Also ensure extracted topics from subject materials are represented
+        materials = (
+            self.db.query(SelfLearningMaterial)
+            .filter(
+                SelfLearningMaterial.subject_id == subject_id,
+                SelfLearningMaterial.student_id == student_id,
+            )
+            .all()
+        )
+        for mat in materials:
+            for t in mat.extracted_topics or []:
+                if t not in topic_aggregation:
+                    topic_aggregation[t] = {"attempted": 0, "correct": 0}
+
+        topics_detail: list[TopicMasteryDetail] = []
+        strong_count = 0
+        moderate_count = 0
+        weak_count = 0
+        total_attempted_sum = 0
+        total_correct_sum = 0
+
+        for t_name, counts in topic_aggregation.items():
+            att = counts["attempted"]
+            corr = counts["correct"]
+            total_attempted_sum += att
+            total_correct_sum += corr
+
+            pct = round((corr / att) * 100, 2) if att > 0 else 0.0
+
+            if pct >= 75.0:
+                status = "Strong"
+                recom = "Demonstrates strong conceptual mastery. Ready for advanced synthesis or challenge problems."
+                strong_count += 1
+            elif pct >= 50.0:
+                status = "Moderate"
+                recom = "Approaching mastery. Review application problems and step-by-step proofs."
+                moderate_count += 1
+            else:
+                status = "Weak"
+                recom = "Needs targeted diagnostic review on foundational concepts and core formulas."
+                weak_count += 1
+
+            topics_detail.append(
+                TopicMasteryDetail(
+                    topic=t_name,
+                    total_attempted=att,
+                    total_correct=corr,
+                    mastery_percentage=pct,
+                    status=status,
+                    recommendation=recom,
+                )
+            )
+
+        overall_pct = (
+            round((total_correct_sum / total_attempted_sum) * 100, 2)
+            if total_attempted_sum > 0
+            else 0.0
+        )
+
+        return SubjectMasteryOut(
+            subject_id=subject_id,
+            student_id=student_id,
+            overall_mastery_percentage=overall_pct,
+            total_tests_taken=len(submissions),
+            total_questions_attempted=total_attempted_sum,
+            strong_topics_count=strong_count,
+            moderate_topics_count=moderate_count,
+            weak_topics_count=weak_count,
+            topics=topics_detail,
+        )
+
+    def regenerate_test(
+        self,
+        student_id: uuid.UUID,
+        test_id: uuid.UUID,
+        payload: TestRegenerateRequest,
+    ) -> TestOut:
+        """Smart Test Regeneration: Analyzes past test results and applies weighted allocation.
+
+        Heavily focuses on weak topics (70% weak / 30% strong in 'weak_focus' mode).
+        """
+        test = (
+            self.db.query(SelfLearningTest)
+            .filter(
+                SelfLearningTest.id == test_id,
+                SelfLearningTest.student_id == student_id,
+            )
+            .first()
+        )
+        if not test:
+            raise SelfLearningError("Test not found.", status_code=404)
+
+        latest_submission = (
+            self.db.query(SelfLearningTestSubmission)
+            .filter(
+                SelfLearningTestSubmission.test_id == test_id,
+                SelfLearningTestSubmission.student_id == student_id,
+            )
+            .order_by(SelfLearningTestSubmission.created_at.desc())
+            .first()
+        )
+
+        engine = LangGraphMCQEngine(self.db, self.gemini)
+        regenerated_test = engine.plan_and_regenerate_test(
+            student_id=student_id,
+            original_test=test,
+            submission=latest_submission,
+            mode=payload.mode,
+            count=payload.count,
+            title=payload.title,
+        )
+        return self._test_to_out(regenerated_test)
+
+    def _submission_to_out(self, sub: SelfLearningTestSubmission) -> TestResultOut:
+        details = [
+            QuestionEvaluationDetail(
+                question_id=uuid.UUID(d["question_id"]) if isinstance(d["question_id"], str) else d["question_id"],
+                question_number=d["question_number"],
+                question_text=d["question_text"],
+                options=d["options"],
+                selected_option=d.get("selected_option"),
+                correct_option=d["correct_option"],
+                is_correct=d["is_correct"],
+                explanation=d["explanation"],
+                bloom_level=d.get("bloom_level", "UNDERSTAND"),
+                difficulty=d.get("difficulty", "medium"),
+                is_quantitative=d.get("is_quantitative", False),
+                formula_latex=d.get("formula_latex"),
+                step_by_step_solution=list(d.get("step_by_step_solution") or []),
+                topic_tag=d.get("topic_tag"),
+            )
+            for d in (sub.detailed_results or [])
+        ]
+
+        breakdown = [
+            TopicScore(
+                topic=b["topic"],
+                correct=b["correct"],
+                total=b["total"],
+                percentage=b["percentage"],
+                status=b["status"],
+            )
+            for b in (sub.topic_breakdown or [])
+        ]
+
+        return TestResultOut(
+            id=sub.id,
+            test_id=sub.test_id,
+            student_id=sub.student_id,
+            subject_id=sub.subject_id,
+            score=sub.score,
+            total_questions=sub.total_questions,
+            percentage=sub.percentage,
+            passed=sub.passed,
+            answers=dict(sub.answers or {}),
+            detailed_results=details,
+            topic_breakdown=breakdown,
+            time_taken_seconds=sub.time_taken_seconds,
+            created_at=sub.created_at,
         )

@@ -151,3 +151,88 @@ class TestOut(BaseModel):
     updated_at: datetime
     questions: list[QuestionOut] = Field(default_factory=list)
 
+
+# =============================================================================
+# PHASE 3: EVALUATION, FEEDBACK, MASTERY & REGENERATION SCHEMAS
+# =============================================================================
+
+class TestSubmitRequest(BaseModel):
+    answers: dict[str, str] = Field(
+        ...,
+        description="Map of question_id (UUID str) or question_number to chosen option ('A', 'B', 'C', 'D')",
+    )
+    time_taken_seconds: int | None = Field(None, ge=0)
+
+
+class QuestionEvaluationDetail(BaseModel):
+    question_id: uuid.UUID
+    question_number: int
+    question_text: str
+    options: dict[str, str]
+    selected_option: str | None
+    correct_option: str
+    is_correct: bool
+    explanation: str = Field(description="Why is this correct? Pedagogical rationale citing source materials")
+    bloom_level: str
+    difficulty: str
+    is_quantitative: bool
+    formula_latex: str | None = Field(None, description="Renderable LaTeX formula")
+    step_by_step_solution: list[str] = Field(default_factory=list, description="Step-by-step arithmetic/algebraic derivation")
+    topic_tag: str | None = None
+
+
+class TopicScore(BaseModel):
+    topic: str
+    correct: int
+    total: int
+    percentage: float
+    status: str = Field(description="'Strong' (>=75%), 'Moderate' (50-74%), or 'Weak' (<50%)")
+
+
+class TestResultOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    test_id: uuid.UUID
+    student_id: uuid.UUID
+    subject_id: uuid.UUID
+    score: int
+    total_questions: int
+    percentage: float
+    passed: bool
+    answers: dict[str, str]
+    detailed_results: list[QuestionEvaluationDetail]
+    topic_breakdown: list[TopicScore]
+    time_taken_seconds: int | None = None
+    created_at: datetime
+
+
+class TopicMasteryDetail(BaseModel):
+    topic: str
+    total_attempted: int
+    total_correct: int
+    mastery_percentage: float
+    status: str = Field(description="'Strong' (>=75%), 'Moderate' (50-74%), or 'Weak' (<50%)")
+    recommendation: str
+
+
+class SubjectMasteryOut(BaseModel):
+    subject_id: uuid.UUID
+    student_id: uuid.UUID
+    overall_mastery_percentage: float
+    total_tests_taken: int
+    total_questions_attempted: int
+    strong_topics_count: int
+    moderate_topics_count: int
+    weak_topics_count: int
+    topics: list[TopicMasteryDetail]
+
+
+class TestRegenerateRequest(BaseModel):
+    mode: str = Field(
+        default="weak_focus",
+        description="Regeneration strategy: 'weak_focus' (70% weak topics / 30% strong), 'balanced', or 'challenge'",
+    )
+    count: int | None = Field(default=None, ge=5, le=30, description="Optional question count (default is original test count)")
+    title: str | None = Field(default=None, description="Optional custom title for regenerated test")
+
