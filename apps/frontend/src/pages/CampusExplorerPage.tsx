@@ -25,136 +25,7 @@ import { useAuth } from "../features/auth/useAuth";
 import { primaryRole } from "../features/auth/permissions";
 import { DynamicSpaceFinder } from "../components/facilities/DynamicSpaceFinder";
 import { SmartTransitFleetTelemetry } from "../components/transit/SmartTransitFleetTelemetry";
-
-// Static campus data matching the real university profile
-const CAMPUS_BLOCKS = [
-  {
-    block: "A Block",
-    name: "Engineering & Natural Sciences Block",
-    floors: [
-      {
-        floor: "Ground Floor",
-        rooms: [
-          { room: "A-01", type: "Physics Lab", capacity: 45 },
-          { room: "A-02", type: "Lecture Hall", capacity: 70 },
-          { room: "A-03", type: "Faculty Lounge", capacity: 25 }
-        ]
-      },
-      {
-        floor: "1st Floor",
-        rooms: [
-          { room: "A-101", type: "Computer Lab 1", capacity: 50 },
-          { room: "A-102", type: "Smart Classroom", capacity: 60 },
-          { room: "A-103", type: "Hardware Lab", capacity: 40 }
-        ]
-      },
-      {
-        floor: "2nd Floor",
-        rooms: [
-          { room: "A-201", type: "Lecture Hall", capacity: 65 },
-          { room: "A-202", type: "Lecture Hall", capacity: 65 },
-          { room: "A-203", type: "Seminar Room", capacity: 55 }
-        ]
-      },
-      {
-        floor: "3rd Floor",
-        rooms: [
-          { room: "A-301", type: "Faculty Offices (CS)", capacity: 20 },
-          { room: "A-302", type: "HOD Computer Science", capacity: 15 },
-          { room: "A-303", type: "Dean Academic Office", capacity: 20 }
-        ]
-      }
-    ]
-  },
-  {
-    block: "C Block",
-    name: "Computer Science & IT Block",
-    floors: [
-      {
-        floor: "Ground Floor",
-        rooms: [
-          { room: "C-01", type: "Software Engineering Lab", capacity: 55 },
-          { room: "C-02", type: "AI & Robotics Lab", capacity: 45 },
-          { room: "C-03", type: "Lecture Theater 1", capacity: 120 }
-        ]
-      },
-      {
-        floor: "1st Floor",
-        rooms: [
-          { room: "C-101", type: "Classroom BCS-5A", capacity: 65 },
-          { room: "C-102", type: "Classroom BCS-5B", capacity: 65 },
-          { room: "C-103", type: "Graduate Research Lab", capacity: 35 }
-        ]
-      },
-      {
-        floor: "2nd Floor",
-        rooms: [
-          { room: "C-201", type: "Classroom BCS-7A", capacity: 65 },
-          { room: "C-204", type: "Classroom BCS-7C", capacity: 60 },
-          { room: "C-205", type: "Data Science Lab", capacity: 45 }
-        ]
-      }
-    ]
-  },
-  {
-    block: "D Block",
-    name: "Management Sciences & Humanities Block",
-    floors: [
-      {
-        floor: "Ground Floor",
-        rooms: [
-          { room: "D-01", type: "Central Library & E-Resource Center", capacity: 250 },
-          { room: "D-02", type: "Auditorium Hall", capacity: 350 }
-        ]
-      },
-      {
-        floor: "1st Floor",
-        rooms: [
-          { room: "D-101", type: "BBA Lecture Room", capacity: 60 },
-          { room: "D-102", type: "Incubation Center", capacity: 40 }
-        ]
-      }
-    ]
-  }
-];
-
-const FACULTY_DIRECTORY = [
-  {
-    name: "Prof. Dr. Saleem Farooq Shaukat",
-    role: "Campus Director",
-    department: "Executive Administration",
-    office: "Directorate, Admin Block Ground Floor",
-    email: "director@cuisahiwal.edu.pk"
-  },
-  {
-    name: "Dr. Munir Ahmad",
-    role: "Associate Professor / Batch Advisor",
-    department: "Computer Science",
-    office: "A Block, 3rd Floor, Room A-301",
-    email: "drmunir@cuisahiwal.edu.pk"
-  },
-  {
-    name: "Dr. Majid Hussain",
-    role: "Head of Department (HOD)",
-    department: "Computer Science",
-    office: "A Block, 3rd Floor, Room A-302",
-    email: "hod-cs@cuisahiwal.edu.pk"
-  },
-  {
-    name: "Dr. Muhammad Asim",
-    role: "Assistant Professor",
-    department: "Computer Science",
-    office: "C Block, 2nd Floor, Room C-203",
-    email: "masim@cuisahiwal.edu.pk"
-  },
-  {
-    name: "Dr. Raja Rizwan",
-    role: "In-charge Student Affairs",
-    department: "Management Sciences",
-    office: "D Block, 1st Floor, Room D-104",
-    email: "studentaffairs@cuisahiwal.edu.pk"
-  }
-];
+import { CampusHubWayfindingEngine } from "../components/campushub/CampusHubWayfindingEngine";
 
 const SPORTS_WEEK_EVENTS = [
   {
@@ -214,7 +85,6 @@ export function CampusExplorerPage() {
     setActiveTab(tab);
     setSearchParams(tab === "overview" ? {} : { tab });
   };
-  const [facultySearch, setFacultySearch] = useState("");
   const [selectedSportDay, setSelectedSportDay] = useState(0);
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
 
@@ -228,13 +98,6 @@ export function CampusExplorerPage() {
       // ignore
     }
   };
-
-  const filteredFaculty = FACULTY_DIRECTORY.filter(
-    (f) =>
-      f.name.toLowerCase().includes(facultySearch.toLowerCase()) ||
-      f.department.toLowerCase().includes(facultySearch.toLowerCase()) ||
-      f.role.toLowerCase().includes(facultySearch.toLowerCase())
-  );
 
   const role = user ? primaryRole(user.roles) : null;
 
@@ -536,93 +399,15 @@ export function CampusExplorerPage() {
 
         {/* ================= SECTION 2: CAMPUS HUB & DIRECTORY ================= */}
         {activeTab === "hub" && (
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold">Campus Hub & Directory</h2>
+              <h2 className="text-xl font-bold">Campus Hub, Directory & Spatial Wayfinding</h2>
               <p className="text-xs text-muted mt-1">
-                Find faculty members, departmental offices, classroom layouts, and research facilities.
+                Faculty directory, administrative queue tickets, equipped classrooms & labs, library seat telemetry, and interactive vector floor blueprints.
               </p>
             </div>
 
-            {/* Search Faculty */}
-            <div className="rounded-2xl border border-line bg-panel p-4 shadow-2xs">
-              <div className="flex items-center gap-3">
-                <Search size={18} className="text-muted" />
-                <input
-                  type="text"
-                  placeholder="Search faculty by name, department, or office (e.g. Dr. Munir, Computer Science, A-301)..."
-                  value={facultySearch}
-                  onChange={(e) => setFacultySearch(e.target.value)}
-                  className="w-full bg-transparent text-sm text-ink placeholder:text-muted focus:outline-hidden"
-                />
-              </div>
-            </div>
-
-            {/* Faculty List Grid */}
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted mb-3">Faculty & Office Directory</h3>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredFaculty.map((f, i) => (
-                  <div key={i} className="rounded-xl border border-line bg-panel p-4 shadow-2xs">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-semibold text-sm text-ink">{f.name}</p>
-                        <p className="text-xs text-brand-600 font-medium">{f.role}</p>
-                      </div>
-                      <span className="rounded-lg bg-surface px-2 py-0.5 text-[11px] font-medium text-muted">
-                        {f.department}
-                      </span>
-                    </div>
-                    <div className="mt-3 space-y-1 text-xs text-muted">
-                      <p className="flex items-center gap-1.5">
-                        <MapPin size={13} className="text-brand-600 shrink-0" />
-                        <span>{f.office}</span>
-                      </p>
-                      <p className="font-mono text-[11px] text-muted">{f.email}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Classrooms Block-wise Directory */}
-            <div className="mt-8">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted mb-3">Classrooms & Laboratories (Block-wise)</h3>
-              <div className="grid gap-6 lg:grid-cols-3">
-                {CAMPUS_BLOCKS.map((blk) => (
-                  <div key={blk.block} className="rounded-2xl border border-line bg-panel p-5 shadow-2xs space-y-4">
-                    <div className="border-b border-line pb-3">
-                      <span className="inline-block rounded-md bg-brand-500/10 px-2 py-0.5 text-xs font-bold text-brand-600">
-                        {blk.block}
-                      </span>
-                      <h4 className="font-bold text-sm text-ink mt-1">{blk.name}</h4>
-                    </div>
-
-                    <div className="space-y-4">
-                      {blk.floors.map((flr) => (
-                        <div key={flr.floor}>
-                          <p className="text-xs font-bold text-muted mb-1.5">{flr.floor}</p>
-                          <div className="space-y-1.5">
-                            {flr.rooms.map((r) => (
-                              <div
-                                key={r.room}
-                                className="flex items-center justify-between rounded-lg border border-line/60 bg-surface/50 px-2.5 py-1.5 text-xs"
-                              >
-                                <div>
-                                  <span className="font-mono font-semibold text-ink">{r.room}</span>
-                                  <span className="text-muted ml-2">{r.type}</span>
-                                </div>
-                                <span className="text-[11px] text-muted">{r.capacity} seats</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <CampusHubWayfindingEngine initialTab="faculty" />
           </div>
         )}
 
