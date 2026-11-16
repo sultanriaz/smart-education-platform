@@ -392,6 +392,12 @@ async def vercel_path_fix_middleware(request: Request, call_next):
         clean_path = matched_path.split("?")[0]
         if request.scope.get("path") in ("/api/index.py", "/api/index", "/api", "/api/"):
             request.scope["path"] = clean_path
+
+    # Normalize trailing slash to match route handlers without 307/308 redirects
+    curr_path = request.scope.get("path", "")
+    if len(curr_path) > 1 and curr_path.endswith("/"):
+        request.scope["path"] = curr_path.rstrip("/")
+
     return await call_next(request)
 
 # CORS Middleware (Allows credentials, cookies, and dynamic origins)
@@ -500,3 +506,19 @@ async def access_status_endpoint(request: Request):
         except Exception:
             pass
     return {"active": True, "user_id": uid, "eligible": True}
+
+
+# Global OPTIONS catch-all for CORS preflights and methods probing
+@app.options("/{full_path:path}")
+async def global_options_catchall(full_path: str, request: Request):
+    origin = request.headers.get("origin") or "*"
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key, Accept, Origin",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "86400",
+        },
+    )

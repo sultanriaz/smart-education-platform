@@ -86,7 +86,7 @@ class TemplateOut(BaseModel):
 
 class DirectRecipient(BaseModel):
     user_id: uuid.UUID
-    email: EmailStr | None = None
+    email: str | None = None
 
 
 class CampaignTarget(BaseModel):

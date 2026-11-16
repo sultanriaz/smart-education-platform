@@ -54,7 +54,28 @@ def register(payload: UserRegister, request: Request, db: Session = Depends(get_
         ) from exc
 
 
+@router.options("/login")
+@router.options("/login/")
+async def login_options():
+    return Response(
+        status_code=status.HTTP_200_OK,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
+            "Access-Control-Allow-Credentials": "true",
+        },
+    )
+
+
+@router.get("/login")
+@router.get("/login/")
+async def login_get_help():
+    return {"message": "Please send a POST request with {'email': '...', 'password': '...'} to authenticate."}
+
+
 @router.post("/login")
+@router.post("/login/")
 async def login(
     payload: LoginRequest,
     request: Request,
@@ -81,7 +102,22 @@ async def login(
     return browser_pair(response, pair)
 
 
+@router.options("/refresh")
+@router.options("/refresh/")
+async def refresh_options():
+    return Response(
+        status_code=status.HTTP_200_OK,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+            "Access-Control-Allow-Credentials": "true",
+        },
+    )
+
+
 @router.post("/refresh")
+@router.post("/refresh/")
 def refresh(request: Request, response: Response, db: Session = Depends(get_db)):
     token = refresh_token_from_cookie(request, security_settings())
     try:
@@ -90,7 +126,22 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
 
+@router.options("/logout")
+@router.options("/logout/")
+async def logout_options():
+    return Response(
+        status_code=status.HTTP_200_OK,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+            "Access-Control-Allow-Credentials": "true",
+        },
+    )
+
+
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/logout/", status_code=status.HTTP_204_NO_CONTENT)
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     token = refresh_token_from_cookie(request, security_settings())
     AuthService(db).logout(token)

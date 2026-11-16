@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class NonEmptyName(BaseModel):
@@ -16,7 +16,7 @@ class NonEmptyName(BaseModel):
 
 
 class UserRegister(NonEmptyName):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
     full_name: str = Field(min_length=2, max_length=160)
     password: str = Field(min_length=8, max_length=128)
 
@@ -40,7 +40,7 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
     full_name: str
     is_active: bool
     is_verified: bool

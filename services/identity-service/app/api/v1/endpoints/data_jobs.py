@@ -27,7 +27,7 @@ Export = Annotated[object, Depends(internal_auth_dependency(internal_token_verif
 
 
 class ImportUser(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
     full_name: str = Field(min_length=2, max_length=160)
     role: Literal["student", "teacher"] = "student"
 

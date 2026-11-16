@@ -14,7 +14,7 @@ from app.sprint16 import internal_token_signer
 
 class IdentityUser(BaseModel):
     id: uuid.UUID
-    email: EmailStr | None = None
+    email: str | None = None
     roles: list[str] = []
 
 

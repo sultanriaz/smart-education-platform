@@ -23,7 +23,7 @@ from .service import IdentitySecurityService, InvalidOrExpiredToken
 
 
 class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
 
 
 class ResetPasswordRequest(BaseModel):
@@ -32,7 +32,7 @@ class ResetPasswordRequest(BaseModel):
 
 
 class VerificationRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
 
 
 class VerificationConfirmRequest(BaseModel):
