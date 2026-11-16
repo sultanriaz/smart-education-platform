@@ -42,7 +42,28 @@ def browser_pair(response, pair):
     return public_access_token_payload(pair.access_token, expires_in=pair.expires_in)
 
 
+@router.options("/register")
+@router.options("/register/")
+async def register_options():
+    return Response(
+        status_code=status.HTTP_200_OK,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
+            "Access-Control-Allow-Credentials": "true",
+        },
+    )
+
+
+@router.get("/register")
+@router.get("/register/")
+async def register_get_help():
+    return {"message": "Please send a POST request with {'email': '...', 'full_name': '...', 'password': '...'} to register."}
+
+
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
+@router.post("/register/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def register(payload: UserRegister, request: Request, db: Session = Depends(get_db)):
     try:
         return AuthService(db).register(payload, client_ip(request))
@@ -109,11 +130,17 @@ async def refresh_options():
         status_code=status.HTTP_200_OK,
         headers={
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+            "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
             "Access-Control-Allow-Credentials": "true",
         },
     )
+
+
+@router.get("/refresh")
+@router.get("/refresh/")
+async def refresh_get_help():
+    return {"message": "Please send a POST request with authentication cookies to refresh your session."}
 
 
 @router.post("/refresh")
@@ -133,11 +160,17 @@ async def logout_options():
         status_code=status.HTTP_200_OK,
         headers={
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+            "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
             "Access-Control-Allow-Credentials": "true",
         },
     )
+
+
+@router.get("/logout")
+@router.get("/logout/")
+async def logout_get_help():
+    return {"message": "Please send a POST request to logout."}
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

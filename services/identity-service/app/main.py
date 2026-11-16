@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.endpoints.health import router as health_router
@@ -37,9 +37,18 @@ install_sprint16(app)
 
 install_sprint18(app)
 
+# Trailing slash normalizer
+@app.middleware("http")
+async def trailing_slash_middleware(request: Request, call_next):
+    curr_path = request.scope.get("path", "")
+    if len(curr_path) > 1 and curr_path.endswith("/"):
+        request.scope["path"] = curr_path.rstrip("/")
+    return await call_next(request)
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"^https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,3 +68,18 @@ app.include_router(
     ),
     prefix=settings.API_V1_PREFIX,
 )
+
+
+@app.options("/{full_path:path}")
+async def global_options_catchall(full_path: str, request: Request):
+    origin = request.headers.get("origin") or "*"
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key, Accept, Origin",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "86400",
+        },
+    )

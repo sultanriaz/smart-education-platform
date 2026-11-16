@@ -23,6 +23,7 @@ type RequestOptions = RequestInit & {
 const mutatingMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const idempotencyExcludedPathPrefixes = [
   "/api/v1/identity/auth/login",
+  "/api/v1/identity/auth/register",
   "/api/v1/identity/auth/refresh",
   "/api/v1/identity/auth/logout",
   "/api/v1/identity/auth/password/",
