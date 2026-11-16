@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../features/auth/useAuth";
 import { primaryRole } from "../features/auth/permissions";
+import { DynamicSpaceFinder } from "../components/facilities/DynamicSpaceFinder";
 
 // Static campus data matching the real university profile
 const CAMPUS_BLOCKS = [
@@ -231,8 +232,6 @@ export function CampusExplorerPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "hub" | "free_slots" | "transport" | "sports">("overview");
   const [facultySearch, setFacultySearch] = useState("");
   const [selectedSportDay, setSelectedSportDay] = useState(0);
-  const [selectedSlotDay, setSelectedSlotDay] = useState("Wednesday");
-  const [selectedSlot, setSelectedSlot] = useState("Slot 2 (10:15 - 11:45)");
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
 
   const toggleTheme = () => {
@@ -645,160 +644,15 @@ export function CampusExplorerPage() {
 
         {/* ================= SECTION 3: FREE SLOTS FINDER ================= */}
         {activeTab === "free_slots" && (
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold">Free Slots & Room Availability</h2>
+              <h2 className="text-xl font-bold">Dynamic Space Finder & Free Slots Navigator</h2>
               <p className="text-xs text-muted mt-1">
-                Filter available lecture rooms and study halls block-wise for group studies, makeup lectures, or events.
+                Filter available lecture rooms, labs, and study pods block-wise with equipment telemetry and live availability.
               </p>
             </div>
 
-            {/* Slot Filter Bar */}
-            <div className="rounded-2xl border border-line bg-panel p-4 shadow-2xs flex flex-wrap items-center gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Select Day</label>
-                <select
-                  value={selectedSlotDay}
-                  onChange={(e) => setSelectedSlotDay(e.target.value)}
-                  className="rounded-xl border border-line bg-surface px-3 py-1.5 text-xs text-ink focus:outline-hidden"
-                >
-                  {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-muted mb-1">Select Lecture Slot</label>
-                <select
-                  value={selectedSlot}
-                  onChange={(e) => setSelectedSlot(e.target.value)}
-                  className="rounded-xl border border-line bg-surface px-3 py-1.5 text-xs text-ink focus:outline-hidden"
-                >
-                  {[
-                    "Slot 1 (08:30 - 10:00)",
-                    "Slot 2 (10:15 - 11:45)",
-                    "Slot 3 (12:00 - 01:30)",
-                    "Slot 4 (02:00 - 03:30)",
-                    "Slot 5 (03:45 - 05:15)"
-                  ].map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="ml-auto text-xs text-muted self-end py-1.5">
-                Showing availability for: <strong className="text-brand-600">{selectedSlotDay}</strong> · {selectedSlot}
-              </div>
-            </div>
-
-            {/* Available Rooms Block-wise Cards */}
-            <div className="grid gap-6 md:grid-cols-3">
-              {/* A Block Free Rooms */}
-              <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs space-y-3">
-                <div className="flex items-center justify-between border-b border-line pb-2.5">
-                  <div>
-                    <h3 className="font-bold text-ink">A Block</h3>
-                    <p className="text-xs text-muted">Engineering & Science</p>
-                  </div>
-                  <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600">
-                    3 Rooms Free
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-sm text-ink">Room A-102</p>
-                      <p className="text-xs text-muted">1st Floor · Smart Classroom</p>
-                    </div>
-                    <span className="text-xs font-medium text-emerald-600">Capacity: 60</span>
-                  </div>
-
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-sm text-ink">Room A-202</p>
-                      <p className="text-xs text-muted">2nd Floor · Lecture Hall</p>
-                    </div>
-                    <span className="text-xs font-medium text-emerald-600">Capacity: 65</span>
-                  </div>
-
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-sm text-ink">Room A-203</p>
-                      <p className="text-xs text-muted">2nd Floor · Seminar Room</p>
-                    </div>
-                    <span className="text-xs font-medium text-emerald-600">Capacity: 55</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* C Block Free Rooms */}
-              <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs space-y-3">
-                <div className="flex items-center justify-between border-b border-line pb-2.5">
-                  <div>
-                    <h3 className="font-bold text-ink">C Block</h3>
-                    <p className="text-xs text-muted">Computer Science & IT</p>
-                  </div>
-                  <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600">
-                    2 Rooms Free
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-sm text-ink">Room C-102</p>
-                      <p className="text-xs text-muted">1st Floor · Standard Classroom</p>
-                    </div>
-                    <span className="text-xs font-medium text-emerald-600">Capacity: 65</span>
-                  </div>
-
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-sm text-ink">Room C-201</p>
-                      <p className="text-xs text-muted">2nd Floor · Lecture Room</p>
-                    </div>
-                    <span className="text-xs font-medium text-emerald-600">Capacity: 65</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* D Block Free Rooms */}
-              <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs space-y-3">
-                <div className="flex items-center justify-between border-b border-line pb-2.5">
-                  <div>
-                    <h3 className="font-bold text-ink">D Block</h3>
-                    <p className="text-xs text-muted">Library & Management</p>
-                  </div>
-                  <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600">
-                    2 Rooms Free
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-sm text-ink">Room D-101</p>
-                      <p className="text-xs text-muted">1st Floor · Lecture Room</p>
-                    </div>
-                    <span className="text-xs font-medium text-emerald-600">Capacity: 60</span>
-                  </div>
-
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-sm text-ink">Library Study Hall B</p>
-                      <p className="text-xs text-muted">Ground Floor · Silent Wing</p>
-                    </div>
-                    <span className="text-xs font-medium text-emerald-600">Capacity: 80</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <DynamicSpaceFinder mode="public" />
           </div>
         )}
 

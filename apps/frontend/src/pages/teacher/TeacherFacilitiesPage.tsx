@@ -14,6 +14,8 @@ import {
   useTeacherBookings,
   useTeacherFacilities
 } from "../../features/teacher/hooks";
+import { DynamicSpaceFinder } from "../../components/facilities/DynamicSpaceFinder";
+import { Sparkles, Building2 } from "lucide-react";
 
 export function TeacherFacilitiesPage() {
   const facilities = useTeacherFacilities();
@@ -22,21 +24,41 @@ export function TeacherFacilitiesPage() {
   const cancelBooking = useCancelTeacherBooking();
   const toast = useToast();
 
+  const [activeTab, setActiveTab] = useState<"space_finder" | "formal_bookings">("space_finder");
+
   const [facilityId, setFacilityId] = useState("");
   const [facilitySearch, setFacilitySearch] = useState("");
   const [checking, setChecking] = useState(false);
   const [availability, setAvailability] = useState<string | null>(null);
+
   async function checkAvailability() {
-    if (!facilityId || !startsAt || !endsAt) { toast.push("Select a facility and both times.", "error"); return; }
-    const from = new Date(startsAt); const to = new Date(endsAt);
-    if (!(to > from)) { toast.push("End must be after start.", "error"); return; }
+    if (!facilityId || !startsAt || !endsAt) {
+      toast.push("Select a facility and both times.", "error");
+      return;
+    }
+    const from = new Date(startsAt);
+    const to = new Date(endsAt);
+    if (!(to > from)) {
+      toast.push("End must be after start.", "error");
+      return;
+    }
     try {
       setChecking(true);
       const params = new URLSearchParams({ starts_at: from.toISOString(), ends_at: to.toISOString() });
-      const result = await apiRequest<{ available: boolean; conflicts: unknown[] }>(`/api/v1/facilities/facilities/${encodeURIComponent(facilityId)}/availability?${params}`);
-      setAvailability(result.available ? "Available for this time window" : `Not available: ${result.conflicts.length} conflicting reservations`);
-    } catch (error) { setAvailability(null); toast.push(error instanceof Error ? error.message : "Availability check failed", "error"); }
-    finally { setChecking(false); }
+      const result = await apiRequest<{ available: boolean; conflicts: unknown[] }>(
+        `/api/v1/facilities/facilities/${encodeURIComponent(facilityId)}/availability?${params}`
+      );
+      setAvailability(
+        result.available
+          ? "Available for this time window"
+          : `Not available: ${result.conflicts.length} conflicting reservations`
+      );
+    } catch (error) {
+      setAvailability(null);
+      toast.push(error instanceof Error ? error.message : "Availability check failed", "error");
+    } finally {
+      setChecking(false);
+    }
   }
 
   const [purpose, setPurpose] = useState("");
@@ -48,7 +70,7 @@ export function TeacherFacilitiesPage() {
   if (facilities.isLoading || bookings.isLoading) {
     return (
       <div className="page-container">
-        <SectionLoader label="Loading facilities…" />
+        <SectionLoader label="Loading faculty spaces & facilities…" />
       </div>
     );
   }
@@ -56,7 +78,7 @@ export function TeacherFacilitiesPage() {
   if (facilities.error || bookings.error) {
     return (
       <div className="page-container">
-        <PageHeader eyebrow="Teacher" title="Facility bookings" />
+        <PageHeader eyebrow="Teacher" title="Faculty Facility & Space Booking" />
         <InlineError message="Facility booking data could not be loaded." />
       </div>
     );
@@ -100,139 +122,204 @@ export function TeacherFacilitiesPage() {
 
     try {
       await cancelBooking.mutateAsync({ bookingId, reason });
-      setCancelReasons((current) => ({ ...current, [bookingId]: "" }));
+      setCancelReasons((prev) => ({ ...prev, [bookingId]: "" }));
       toast.push("Booking cancelled.", "success");
     } catch (error) {
-      toast.push(
-        error instanceof Error ? error.message : "Cancellation failed.",
-        "error"
-      );
+      toast.push(error instanceof Error ? error.message : "Cancellation failed.", "error");
     }
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container space-y-6">
       <PageHeader
-        eyebrow="Teacher"
-        title="Facility bookings"
-        description="Request rooms, labs, halls, and other bookable campus facilities for teaching activities."
+        eyebrow="Faculty Operations"
+        title="Dynamic Space Finder & Free Slots Navigator"
+        description="Inspect block-by-block classroom telemetry, find free lecture slots for makeup classes, or reserve labs for examinations and viva sessions."
       />
 
-      <div className="my-4 space-y-3">
-        <Input label="Search facilities" value={facilitySearch} onChange={e => setFacilitySearch(e.target.value)} placeholder="Name, code, building, or type" />
-        <Button variant="secondary" onClick={() => void checkAvailability()} disabled={checking || !facilityId || !startsAt || !endsAt}>{checking ? "Checking…" : "Check slot availability"}</Button>
-        {availability && <p className="text-sm" role="status">{availability}</p>}
-      </div>
+      {/* Top Workspace Tabs */}
+      <div className="flex border-b border-line gap-2">
+        <button
+          onClick={() => setActiveTab("space_finder")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition ${
+            activeTab === "space_finder"
+              ? "border-brand-600 text-brand-600"
+              : "border-transparent text-muted hover:text-ink"
+          }`}
+        >
+          <Sparkles size={16} />
+          <span>Dynamic Space Finder (Live Free Slots)</span>
+        </button>
 
-      <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-        <Card title="New booking request">
-          <form className="space-y-4" onSubmit={(event) => void submit(event)}>
-            <label className="block text-sm font-medium">
-              Facility
-              <select
-                className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
-                value={facilityId}
-                onChange={(event) => setFacilityId(event.target.value)}
-              >
-                <option value="">Select facility</option>
-                {(facilities.data ?? [])
-                  .filter((facility) => facility.isBookable)
-                  .map((facility) => (
-                    <option key={facility.id} value={facility.id}>
-                      {facility.name}
-                      {facility.capacity ? ` · capacity ${facility.capacity}` : ""}
-                    </option>
-                  ))}
-              </select>
-            </label>
-
-            <Input
-              label="Purpose"
-              value={purpose}
-              onChange={(event) => setPurpose(event.target.value)}
-            />
-
-            <Input
-              label="Attendees"
-              type="number"
-              min={1}
-              value={attendees}
-              onChange={(event) =>
-                setAttendees(Math.max(1, Number(event.target.value) || 1))
-              }
-            />
-
-            <Input
-              label="Starts"
-              type="datetime-local"
-              value={startsAt}
-              onChange={(event) => setStartsAt(event.target.value)}
-            />
-
-            <Input
-              label="Ends"
-              type="datetime-local"
-              value={endsAt}
-              onChange={(event) => setEndsAt(event.target.value)}
-            />
-
-            <Button type="submit" disabled={createBooking.isPending}>
-              {createBooking.isPending ? "Submitting…" : "Request booking"}
-            </Button>
-          </form>
-        </Card>
-
-        <Card title="My bookings">
-          {bookings.data?.length ? (
-            <div className="space-y-4">
-              {bookings.data.map((booking) => (
-                <div key={booking.id} className="rounded-xl border border-line p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">{booking.purpose}</p>
-                      <p className="mt-1 text-xs text-muted">
-                        {new Date(booking.startsAt).toLocaleString()}
-                        {" – "}
-                        {new Date(booking.endsAt).toLocaleString()}
-                      </p>
-                      <p className="mt-1 text-xs text-muted">
-                        {booking.attendees} attendee
-                        {booking.attendees === 1 ? "" : "s"}
-                      </p>
-                    </div>
-                    <Badge>{booking.status}</Badge>
-                  </div>
-
-                  {["PENDING", "APPROVED"].includes(booking.status) ? (
-                    <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                      <input
-                        className="min-w-0 flex-1 rounded-xl border border-line px-3 py-2 text-sm"
-                        placeholder="Cancellation reason"
-                        value={cancelReasons[booking.id] ?? ""}
-                        onChange={(event) =>
-                          setCancelReasons((current) => ({
-                            ...current,
-                            [booking.id]: event.target.value
-                          }))
-                        }
-                      />
-                      <Button
-                        variant="secondary"
-                        onClick={() => void cancel(booking.id)}
-                        disabled={cancelBooking.isPending}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted">You have no facility bookings yet.</p>
+        <button
+          onClick={() => setActiveTab("formal_bookings")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition ${
+            activeTab === "formal_bookings"
+              ? "border-brand-600 text-brand-600"
+              : "border-transparent text-muted hover:text-ink"
+          }`}
+        >
+          <Building2 size={16} />
+          <span>Formal Faculty Reservations & Ledger</span>
+          {bookings.data && bookings.data.length > 0 && (
+            <span className="rounded-full bg-surface px-2 py-0.5 text-2xs font-bold text-muted border border-line">
+              {bookings.data.length}
+            </span>
           )}
-        </Card>
+        </button>
       </div>
+
+      {/* TAB 1: DYNAMIC SPACE FINDER FOR FACULTY */}
+      {activeTab === "space_finder" && (
+        <DynamicSpaceFinder
+          mode="teacher"
+          onBookingSuccess={(res) => {
+            toast.push(`Room ${res.roomCode} locked for faculty session!`, "success");
+          }}
+        />
+      )}
+
+      {/* TAB 2: FORMAL FACILITY BOOKINGS & LEDGER */}
+      {activeTab === "formal_bookings" && (
+        <div className="space-y-6">
+          <div className="my-2 space-y-3">
+            <Input
+              label="Search facilities"
+              value={facilitySearch}
+              onChange={(e) => setFacilitySearch(e.target.value)}
+              placeholder="Name, code, building, or type"
+            />
+            <Button
+              variant="secondary"
+              onClick={() => void checkAvailability()}
+              disabled={checking || !facilityId || !startsAt || !endsAt}
+            >
+              {checking ? "Checking…" : "Check slot availability"}
+            </Button>
+            {availability && (
+              <p className="text-sm font-semibold text-brand-600" role="status">
+                {availability}
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[1fr_1.25fr]">
+            <Card title="Reserve faculty space">
+              <form className="space-y-4" onSubmit={(event) => void submit(event)}>
+                <Input
+                  label="Attendees"
+                  type="number"
+                  min={1}
+                  required
+                  value={attendees}
+                  onChange={(event) => setAttendees(Number(event.target.value))}
+                />
+                <label className="block text-sm font-medium">
+                  Facility
+                  <select
+                    className="mt-2 block w-full rounded-xl border border-line bg-panel px-3 py-2.5 text-sm"
+                    value={facilityId}
+                    onChange={(event) => setFacilityId(event.target.value)}
+                  >
+                    <option value="">Select a facility</option>
+                    {(facilities.data ?? [])
+                      .filter((item) => item.isBookable)
+                      .map((facility) => (
+                        <option key={facility.id} value={facility.id}>
+                          {facility.name}
+                          {facility.capacity ? ` · capacity ${facility.capacity}` : ""}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+
+                <Input
+                  label="Starts"
+                  type="datetime-local"
+                  value={startsAt}
+                  onChange={(event) => setStartsAt(event.target.value)}
+                />
+                <Input
+                  label="Ends"
+                  type="datetime-local"
+                  value={endsAt}
+                  onChange={(event) => setEndsAt(event.target.value)}
+                />
+
+                <label className="block text-sm font-medium">
+                  Purpose
+                  <textarea
+                    className="mt-2 min-h-24 w-full rounded-xl border border-line bg-panel px-3 py-2.5 text-sm"
+                    value={purpose}
+                    onChange={(event) => setPurpose(event.target.value)}
+                    placeholder="Describe why you need this facility (e.g. Makeup Lecture, Lab Exam)."
+                  />
+                </label>
+
+                <Button type="submit" disabled={createBooking.isPending}>
+                  {createBooking.isPending ? "Submitting…" : "Submit faculty booking"}
+                </Button>
+              </form>
+            </Card>
+
+            <Card title="My Faculty Bookings">
+              {bookings.data?.length ? (
+                <div className="space-y-4">
+                  {bookings.data.map((booking) => (
+                    <div key={booking.id} className="rounded-xl border border-line p-4 space-y-3">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-ink">
+                            {booking.facilityId}
+                          </p>
+                          <p className="mt-1 text-xs text-muted">
+                            {new Date(booking.startsAt).toLocaleString()}
+                            {" – "}
+                            {new Date(booking.endsAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <Badge>{booking.status}</Badge>
+                      </div>
+
+                      {booking.purpose ? (
+                        <p className="text-sm text-muted">{booking.purpose}</p>
+                      ) : null}
+
+                      {["PENDING", "APPROVED"].includes(booking.status) ? (
+                        <div className="pt-2 border-t border-line/60 space-y-2">
+                          <Input
+                            label="Reason for cancellation"
+                            value={cancelReasons[booking.id] ?? ""}
+                            onChange={(event) =>
+                              setCancelReasons((prev) => ({
+                                ...prev,
+                                [booking.id]: event.target.value
+                              }))
+                            }
+                            placeholder="State reason (e.g. Rescheduled lecture)"
+                          />
+                          <Button
+                            variant="secondary"
+                            onClick={() => void cancel(booking.id)}
+                            disabled={
+                              cancelBooking.isPending ||
+                              ((cancelReasons[booking.id]?.trim().length ?? 0) < 3)
+                            }
+                          >
+                            Cancel booking
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted">No faculty bookings recorded.</p>
+              )}
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
