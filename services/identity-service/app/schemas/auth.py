@@ -1,8 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 
 class LoginRequest(BaseModel):
-    email: str = Field(min_length=3, max_length=255)
+    email: str = Field(
+        min_length=1,
+        max_length=255,
+        validation_alias=AliasChoices("identifier", "email"),
+    )
     password: str = Field(min_length=1, max_length=128)
 
 

@@ -320,21 +320,46 @@ def init_database_tables():
                 db.commit()
                 logger.info("Successfully seeded default RBAC roles.")
 
-            # Seed default admin user if missing
-            admin_email = "admin@smartedu.local"
-            if not db.query(User).filter_by(email=admin_email).first():
-                admin_role = db.query(Role).filter_by(name="admin").first()
-                if admin_role:
-                    admin_user = User(
-                        email=admin_email,
-                        full_name="Platform Administrator",
-                        password_hash=hash_password("AdminPass123!"),
-                        roles=[admin_role],
+            # Seed default users across all core roles
+            admin_role = db.query(Role).filter_by(name="admin").first()
+            teacher_role = db.query(Role).filter_by(name="teacher").first()
+            student_role = db.query(Role).filter_by(name="student").first()
+
+            seed_accounts = [
+                # Admin
+                ("admin@smartedu.local", "Platform Administrator", "AdminPass123!", admin_role),
+                # Faculty / Teacher
+                ("teacher@smartedu.local", "Dr. Munir Ahmad (BCS Faculty)", "TeacherPass123!", teacher_role),
+                ("teacher@demo.example.edu", "Dr. Munir Ahmad (BCS Faculty)", "TeacherPass123!", teacher_role),
+                ("teacher@demo.example.edu", "Dr. Munir Ahmad (BCS Faculty)", "Q7!Oa8xZ24L2aX0dEnj8TuSWGEoDgN-vY8KxEVrnts6cbAaZ", teacher_role),
+                # Student (Roll: BCS-155)
+                ("student@smartedu.local", "Muhammad Ali (BCS-155)", "StudentPass123!", student_role),
+                ("student@demo.example.edu", "Muhammad Ali (BCS-155)", "StudentPass123!", student_role),
+                ("student@demo.example.edu", "Muhammad Ali (BCS-155)", "Q7!vEpzlshyGXIddiaOLN7GT73b1cUc71pLVJ1ybXGm5dUaZ", student_role),
+            ]
+
+            for s_email, s_name, s_pass, s_role in seed_accounts:
+                if not s_role:
+                    continue
+                existing = db.query(User).filter_by(email=s_email).first()
+                if not existing:
+                    new_u = User(
+                        email=s_email,
+                        full_name=s_name,
+                        password_hash=hash_password(s_pass),
+                        roles=[s_role],
                         is_active=True,
+                        is_verified=True,
                     )
-                    db.add(admin_user)
+                    db.add(new_u)
                     db.commit()
-                    logger.info("Successfully seeded default admin: %s", admin_email)
+                    logger.info("Successfully seeded user: %s", s_email)
+                else:
+                    if s_role not in existing.roles:
+                        existing.roles.append(s_role)
+                    existing.is_verified = True
+                    existing.is_active = True
+                    db.commit()
     except Exception as exc:
         logger.warning("Database auto-init note: %s", exc)
 

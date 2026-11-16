@@ -10,7 +10,11 @@ export async function login(input: LoginInput): Promise<TokenPair> {
       auth: false,
       retryOnUnauthorized: false,
       credentials: "include",
-      body: JSON.stringify(input)
+      body: JSON.stringify({
+        email: input.email,
+        identifier: input.identifier || input.email,
+        password: input.password
+      })
     }
   );
   return normalizeTokenPair(payload);

@@ -52,7 +52,7 @@ class AuthService:
     def login(self, email: str, password: str, ip_address: str | None = None) -> TokenPair:
         pair = None
         with transaction(self.db):
-            user = self.users.get_by_email(email.lower())
+            user = self.users.get_by_identifier(email)
             if (
                 user is None
                 or not user.is_active

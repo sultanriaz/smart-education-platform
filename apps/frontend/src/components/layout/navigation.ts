@@ -8,6 +8,7 @@ export type NavItem = {
 
 export const navigation: NavItem[] = [
   { label: "Dashboard", path: "/app", roles: ["student", "teacher", "admin"] },
+  { label: "Campus Hub & Transit", path: "/explore", roles: ["student", "teacher", "admin"] },
 
   { label: "My attendance", path: "/app/student/attendance", roles: ["student"] },
   { label: "My timetable", path: "/app/student/timetable", roles: ["student"] },
