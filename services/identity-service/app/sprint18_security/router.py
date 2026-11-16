@@ -92,8 +92,29 @@ def build_identity_security_router(
             settings=settings,
         )
 
+    SEC_CORS_HEADERS = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
+        "Access-Control-Allow-Credentials": "true",
+    }
+
+    @router.options("/password/forgot")
+    @router.options("/password/forgot/")
+    async def forgot_password_options():
+        return Response(status_code=200, headers=SEC_CORS_HEADERS)
+
+    @router.get("/password/forgot")
+    @router.get("/password/forgot/")
+    async def forgot_password_get():
+        return {"message": "Please send a POST request with {'email': '...'} to request password reset."}
+
     @router.post(
         "/password/forgot",
+        status_code=status.HTTP_202_ACCEPTED,
+    )
+    @router.post(
+        "/password/forgot/",
         status_code=status.HTTP_202_ACCEPTED,
     )
     async def forgot_password(
@@ -113,8 +134,22 @@ def build_identity_security_router(
         await run_in_threadpool(service(db).request_password_reset, str(body.email))
         return GENERIC_ACCEPTED
 
+    @router.options("/password/reset")
+    @router.options("/password/reset/")
+    async def reset_password_options():
+        return Response(status_code=200, headers=SEC_CORS_HEADERS)
+
+    @router.get("/password/reset")
+    @router.get("/password/reset/")
+    async def reset_password_get():
+        return {"message": "Please send a POST request with {'token': '...', 'new_password': '...'} to reset password."}
+
     @router.post(
         "/password/reset",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+    @router.post(
+        "/password/reset/",
         status_code=status.HTTP_204_NO_CONTENT,
     )
     async def reset_password(
@@ -149,8 +184,22 @@ def build_identity_security_router(
             ) from exc
         return Response(status_code=status.HTTP_204_NO_CONTENT, headers=no_store_headers())
 
+    @router.options("/email/verification/request")
+    @router.options("/email/verification/request/")
+    async def request_verification_options():
+        return Response(status_code=200, headers=SEC_CORS_HEADERS)
+
+    @router.get("/email/verification/request")
+    @router.get("/email/verification/request/")
+    async def request_verification_get():
+        return {"message": "Please send a POST request with {'email': '...'} to request email verification."}
+
     @router.post(
         "/email/verification/request",
+        status_code=status.HTTP_202_ACCEPTED,
+    )
+    @router.post(
+        "/email/verification/request/",
         status_code=status.HTTP_202_ACCEPTED,
     )
     async def request_verification(
@@ -170,8 +219,22 @@ def build_identity_security_router(
         await run_in_threadpool(service(db).request_email_verification, str(body.email))
         return GENERIC_ACCEPTED
 
+    @router.options("/email/verification/confirm")
+    @router.options("/email/verification/confirm/")
+    async def confirm_verification_options():
+        return Response(status_code=200, headers=SEC_CORS_HEADERS)
+
+    @router.get("/email/verification/confirm")
+    @router.get("/email/verification/confirm/")
+    async def confirm_verification_get():
+        return {"message": "Please send a POST request with {'token': '...'} to confirm email verification."}
+
     @router.post(
         "/email/verification/confirm",
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+    @router.post(
+        "/email/verification/confirm/",
         status_code=status.HTTP_204_NO_CONTENT,
     )
     async def confirm_verification(
@@ -197,3 +260,31 @@ def build_identity_security_router(
         return Response(status_code=status.HTTP_204_NO_CONTENT, headers=no_store_headers())
 
     return router
+
+
+def get_security_router() -> APIRouter:
+    import os
+    from app.db.session import get_db
+    from app.sprint18 import security_settings
+    from app.sprint18_security.adapters import (
+        AccountAdapter,
+        SecurityAuditAdapter,
+        SecurityNotificationAdapter,
+    )
+
+    limiter = None
+    try:
+        if os.environ.get("REDIS_URL") or os.environ.get("REDIS_CACHE_URL"):
+            from app.sprint18 import identity_rate_limiter
+            limiter = identity_rate_limiter()
+    except Exception:
+        limiter = None
+
+    return build_identity_security_router(
+        get_db=get_db,
+        account_adapter_factory=AccountAdapter,
+        notification_sink_factory=SecurityNotificationAdapter,
+        audit_sink_factory=SecurityAuditAdapter,
+        rate_limiter=limiter,
+        settings=security_settings(),
+    )

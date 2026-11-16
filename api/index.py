@@ -68,6 +68,13 @@ os.environ["TRUSTED_FRONTEND_ORIGINS"] = "*"
 os.environ["CORS_ORIGINS"] = '["*"]'
 os.environ["IDENTITY_SERVICE_BASE_URL"] = "http://localhost:8001"
 os.environ["JWT_JWKS_URL"] = "http://localhost:8001/.well-known/jwks.json"
+os.environ["SECURITY_TOKEN_PEPPER"] = os.environ.get("SECURITY_TOKEN_PEPPER", "smartedu-serverless-pepper-key-2026")
+if not os.environ.get("SECURITY_NOTIFICATION_ENCRYPTION_KEY"):
+    import base64
+    import hashlib
+    os.environ["SECURITY_NOTIFICATION_ENCRYPTION_KEY"] = base64.urlsafe_b64encode(
+        hashlib.sha256(b"smartedu-serverless-sec-notification-key-2026").digest()
+    ).decode()
 
 # ==============================================================================
 # 3. Deterministic RSA Key & In-Memory JWKS Infrastructure
