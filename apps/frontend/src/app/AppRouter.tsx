@@ -34,6 +34,7 @@ const StudentAttendancePage = lazy(() => import("../pages/student/StudentAttenda
 const StudentDashboardPage = lazy(() => import("../pages/student/StudentDashboardPage").then(module => ({ default: module.StudentDashboardPage })));
 const StudentCourseDetailPage = lazy(() => import("../pages/student/StudentCourseDetailPage").then(module => ({ default: module.StudentCourseDetailPage })));
 const StudentFacilitiesPage = lazy(() => import("../pages/student/StudentFacilitiesPage").then(module => ({ default: module.StudentFacilitiesPage })));
+const StudentTransitPage = lazy(() => import("../pages/student/StudentTransitPage").then(module => ({ default: module.StudentTransitPage })));
 const StudentFinancePage = lazy(() => import("../pages/student/StudentFinancePage").then(module => ({ default: module.StudentFinancePage })));
 const StudentLearningPage = lazy(() => import("../pages/student/StudentLearningPage").then(module => ({ default: module.StudentLearningPage })));
 const StudentTimetablePage = lazy(() => import("../pages/student/StudentTimetablePage").then(module => ({ default: module.StudentTimetablePage })));
@@ -80,6 +81,7 @@ export function AppRouter() {
               element={<StudentAssessmentAttemptPage />}
             />
             <Route path="student/facilities" element={<StudentFacilitiesPage />} />
+            <Route path="student/transit" element={<StudentTransitPage />} />
             <Route path="student/finance" element={<StudentFinancePage />} />
           </Route>
 
@@ -97,6 +99,7 @@ export function AppRouter() {
               element={<TeacherAnnouncementsPage />}
             />
             <Route path="teacher/facilities" element={<TeacherFacilitiesPage />} />
+            <Route path="teacher/transit" element={<StudentTransitPage />} />
             <Route path="teacher/payroll" element={<TeacherPayrollPage />} />
           </Route>
 

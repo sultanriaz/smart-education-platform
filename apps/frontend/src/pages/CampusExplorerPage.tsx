@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   GraduationCap,
   Bus,
@@ -24,6 +24,7 @@ import {
 import { useAuth } from "../features/auth/useAuth";
 import { primaryRole } from "../features/auth/permissions";
 import { DynamicSpaceFinder } from "../components/facilities/DynamicSpaceFinder";
+import { SmartTransitFleetTelemetry } from "../components/transit/SmartTransitFleetTelemetry";
 
 // Static campus data matching the real university profile
 const CAMPUS_BLOCKS = [
@@ -155,41 +156,6 @@ const FACULTY_DIRECTORY = [
   }
 ];
 
-const BUS_SCHEDULES = [
-  {
-    busNo: "Bus #04",
-    route: "Farid Town & Girls Hostel Express",
-    departure: "07:30 AM",
-    stops: [
-      { stop: "Farid Town Point", arrivalTime: "07:45 AM" },
-      { stop: "Jinnah Hall Chowk", arrivalTime: "07:55 AM" },
-      { stop: "Girls Hostel", arrivalTime: "08:10 AM" },
-      { stop: "Campus Main Gate", arrivalTime: "08:25 AM" }
-    ]
-  },
-  {
-    busNo: "Bus #07",
-    route: "High Court & College Road Shuttle",
-    departure: "07:35 AM",
-    stops: [
-      { stop: "High Court Chowk", arrivalTime: "07:50 AM" },
-      { stop: "College Road Point", arrivalTime: "08:00 AM" },
-      { stop: "Arifwala By-pass", arrivalTime: "08:15 AM" },
-      { stop: "Campus Main Gate", arrivalTime: "08:25 AM" }
-    ]
-  },
-  {
-    busNo: "Bus #12",
-    route: "City Terminal & Chichawatni Feeder",
-    departure: "07:15 AM",
-    stops: [
-      { stop: "Chichawatni Station", arrivalTime: "07:25 AM" },
-      { stop: "Harappa Station Point", arrivalTime: "07:50 AM" },
-      { stop: "Campus Main Gate", arrivalTime: "08:25 AM" }
-    ]
-  }
-];
-
 const SPORTS_WEEK_EVENTS = [
   {
     day: "Day 1 (Monday)",
@@ -229,7 +195,25 @@ const SPORTS_WEEK_EVENTS = [
 
 export function CampusExplorerPage() {
   const { user, state } = useAuth();
-  const [activeTab, setActiveTab] = useState<"overview" | "hub" | "free_slots" | "transport" | "sports">("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab") as ("overview" | "hub" | "free_slots" | "transport" | "sports") | null;
+  const [activeTab, setActiveTab] = useState<"overview" | "hub" | "free_slots" | "transport" | "sports">(() => {
+    if (tabParam && ["overview", "hub", "free_slots", "transport", "sports"].includes(tabParam)) {
+      return tabParam;
+    }
+    return "overview";
+  });
+
+  useEffect(() => {
+    if (tabParam && ["overview", "hub", "free_slots", "transport", "sports"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  const selectTab = (tab: "overview" | "hub" | "free_slots" | "transport" | "sports") => {
+    setActiveTab(tab);
+    setSearchParams(tab === "overview" ? {} : { tab });
+  };
   const [facultySearch, setFacultySearch] = useState("");
   const [selectedSportDay, setSelectedSportDay] = useState(0);
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
@@ -336,7 +320,7 @@ export function CampusExplorerPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                  onClick={() => selectTab(tab.id as typeof activeTab)}
                   className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition ${
                     isActive
                       ? "bg-brand-600 text-white shadow-xs"
@@ -388,7 +372,7 @@ export function CampusExplorerPage() {
 
               {/* Free Slots Card */}
               <div
-                onClick={() => setActiveTab("free_slots")}
+                onClick={() => selectTab("free_slots")}
                 className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
@@ -411,7 +395,7 @@ export function CampusExplorerPage() {
 
               {/* Timetable Card */}
               <div
-                onClick={() => setActiveTab("hub")}
+                onClick={() => selectTab("hub")}
                 className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
@@ -434,7 +418,7 @@ export function CampusExplorerPage() {
 
               {/* Campus Hub Card */}
               <div
-                onClick={() => setActiveTab("hub")}
+                onClick={() => selectTab("hub")}
                 className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
@@ -457,7 +441,7 @@ export function CampusExplorerPage() {
 
               {/* Transport Service Card */}
               <div
-                onClick={() => setActiveTab("transport")}
+                onClick={() => selectTab("transport")}
                 className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
@@ -480,7 +464,7 @@ export function CampusExplorerPage() {
 
               {/* Sports Week Card */}
               <div
-                onClick={() => setActiveTab("sports")}
+                onClick={() => selectTab("sports")}
                 className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
@@ -658,53 +642,15 @@ export function CampusExplorerPage() {
 
         {/* ================= SECTION 4: TRANSPORT SERVICE ================= */}
         {activeTab === "transport" && (
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold">University Transport Service</h2>
+              <h2 className="text-xl font-bold">Smart Transit & Fleet Telemetry</h2>
               <p className="text-xs text-muted mt-1">
-                Real-time planned routes, shuttle timings, bus numbers, and arrival estimations across Sahiwal stops.
+                Real-time city route networks (Farid Town Point, Mall Road, Canal Line), intra-day campus shuttles, driver telemetry, and live disruption notices.
               </p>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-3">
-              {BUS_SCHEDULES.map((bus) => (
-                <div key={bus.busNo} className="rounded-2xl border border-line bg-panel p-5 shadow-2xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between border-b border-line pb-3">
-                      <div>
-                        <span className="font-mono font-bold text-brand-600 text-sm">{bus.busNo}</span>
-                        <h3 className="font-bold text-ink text-sm mt-0.5">{bus.route}</h3>
-                      </div>
-                      <span className="rounded-md bg-surface px-2 py-1 text-xs font-semibold text-muted">
-                        Dep: {bus.departure}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                      <p className="text-xs font-bold text-muted uppercase tracking-wider">Stop Arrival Schedule</p>
-                      <div className="space-y-2 relative pl-4 border-l-2 border-brand-500/40">
-                        {bus.stops.map((s, idx) => (
-                          <div key={idx} className="relative">
-                            <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-brand-600 ring-4 ring-panel" />
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-medium text-ink">{s.stop}</span>
-                              <span className="font-mono text-muted">{s.arrivalTime}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 pt-3 border-t border-line text-xs text-muted flex items-center justify-between">
-                    <span>Terminal: Campus North Bay</span>
-                    <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                      <CheckCircle2 size={12} /> On Schedule
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <SmartTransitFleetTelemetry initialCategory="CITY_ROUTE" />
           </div>
         )}
 

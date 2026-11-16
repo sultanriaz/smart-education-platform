@@ -312,7 +312,7 @@ export function StudentDashboardPage() {
       {/* ================= 4. QUICK ACTION DOCK ================= */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link
-          to="/explore"
+          to="/app/student/facilities"
           className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-brand-500 transition flex items-center gap-3.5 group"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
@@ -325,7 +325,7 @@ export function StudentDashboardPage() {
         </Link>
 
         <Link
-          to="/explore"
+          to="/app/student/transit"
           className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-brand-500 transition flex items-center gap-3.5 group"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600">
@@ -351,7 +351,7 @@ export function StudentDashboardPage() {
         </Link>
 
         <Link
-          to="/explore"
+          to="/app/student/transit"
           className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-brand-500 transition flex items-center gap-3.5 group"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600">
