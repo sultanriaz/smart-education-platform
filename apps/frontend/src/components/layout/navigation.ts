@@ -17,6 +17,7 @@ export const navigation: NavItem[] = [
   { label: "Facilities", path: "/app/student/facilities", roles: ["student"] },
   { label: "Smart Transit & Fleet", path: "/app/student/transit", roles: ["student"] },
   { label: "Campus Hub & Directory", path: "/app/student/hub", roles: ["student"] },
+  { label: "Campus Life & Events", path: "/app/student/events", roles: ["student"] },
   { label: "Fee & Payments", path: "/app/student/finance", roles: ["student"] },
 
   { label: "Classes & attendance", path: "/app/teacher/attendance", roles: ["teacher"] },
@@ -27,6 +28,7 @@ export const navigation: NavItem[] = [
   { label: "Facility bookings", path: "/app/teacher/facilities", roles: ["teacher"] },
   { label: "Smart Transit & Fleet", path: "/app/teacher/transit", roles: ["teacher"] },
   { label: "Campus Hub & Directory", path: "/app/teacher/hub", roles: ["teacher"] },
+  { label: "Campus Life & Events", path: "/app/teacher/events", roles: ["teacher"] },
   { label: "My Payslips", path: "/app/teacher/payroll", roles: ["teacher"] },
 
   { label: "Users & RBAC", path: "/app/admin/users", roles: ["admin"] },

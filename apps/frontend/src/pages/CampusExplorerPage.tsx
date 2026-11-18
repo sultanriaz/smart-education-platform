@@ -26,43 +26,7 @@ import { primaryRole } from "../features/auth/permissions";
 import { DynamicSpaceFinder } from "../components/facilities/DynamicSpaceFinder";
 import { SmartTransitFleetTelemetry } from "../components/transit/SmartTransitFleetTelemetry";
 import { CampusHubWayfindingEngine } from "../components/campushub/CampusHubWayfindingEngine";
-
-const SPORTS_WEEK_EVENTS = [
-  {
-    day: "Day 1 (Monday)",
-    matches: [
-      { sport: "Cricket Gala (Opening Match)", ground: "Main Oval Cricket Ground", time: "10:00 AM – 01:00 PM" },
-      { sport: "Table Tennis Singles (Men)", ground: "Gymnasium Hall 1", time: "11:30 AM – 02:00 PM" }
-    ]
-  },
-  {
-    day: "Day 2 (Tuesday)",
-    matches: [
-      { sport: "Football Championship (BCS vs BSE)", ground: "Sports Complex Football Field", time: "11:00 AM – 01:00 PM" },
-      { sport: "Badminton Tournament (Girls)", ground: "Student Activity Center", time: "02:00 PM – 04:30 PM" }
-    ]
-  },
-  {
-    day: "Day 3 (Wednesday)",
-    matches: [
-      { sport: "Cricket Semi-Finals", ground: "Main Oval Cricket Ground", time: "09:30 AM – 01:00 PM" },
-      { sport: "Volleyball Invitational", ground: "Outdoor Volleyball Court", time: "02:30 PM – 04:30 PM" }
-    ]
-  },
-  {
-    day: "Day 4 (Thursday)",
-    matches: [
-      { sport: "Athletics 100m & 400m Sprints", ground: "Athletics Track", time: "10:30 AM – 12:30 PM" },
-      { sport: "Basketball Finals", ground: "Hard-court Basketball Arena", time: "02:00 PM – 04:00 PM" }
-    ]
-  },
-  {
-    day: "Day 5 (Friday)",
-    matches: [
-      { sport: "Cricket Grand Final & Awards Ceremony", ground: "Main Oval Cricket Ground", time: "02:30 PM – 05:30 PM" }
-    ]
-  }
-];
+import { MarqueeEventsPortal } from "../components/events/MarqueeEventsPortal";
 
 export function CampusExplorerPage() {
   const { user, state } = useAuth();
@@ -85,7 +49,6 @@ export function CampusExplorerPage() {
     setActiveTab(tab);
     setSearchParams(tab === "overview" ? {} : { tab });
   };
-  const [selectedSportDay, setSelectedSportDay] = useState(0);
   const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
 
   const toggleTheme = () => {
@@ -176,7 +139,7 @@ export function CampusExplorerPage() {
               { id: "hub", label: "Campus Hub & Directory", icon: Users },
               { id: "free_slots", label: "Free Slots & Rooms", icon: Clock },
               { id: "transport", label: "Transport Service", icon: Bus },
-              { id: "sports", label: "Sports Week 2026", icon: Trophy }
+              { id: "sports", label: "Campus Life & Marquee Gala", icon: Trophy }
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -439,62 +402,17 @@ export function CampusExplorerPage() {
           </div>
         )}
 
-        {/* ================= SECTION 5: SPORTS WEEK ================= */}
+        {/* ================= SECTION 5: CAMPUS LIFE & MARQUEE GALA ================= */}
         {activeTab === "sports" && (
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold">Annual Sports Week & Gala 2026</h2>
+              <h2 className="text-xl font-bold">Campus Life, Marquee Events & Sports Olympiad</h2>
               <p className="text-xs text-muted mt-1">
-                Daily match schedules, venue grounds, and game timing for all departmental competitions.
+                Live athletic fixtures, knockout elimination brackets, department trophy standings, plus Fall Hackathon and Winter Career Fair modes.
               </p>
             </div>
 
-            {/* Day Selector Buttons */}
-            <div className="flex flex-wrap gap-2">
-              {SPORTS_WEEK_EVENTS.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedSportDay(idx)}
-                  className={`rounded-xl px-4 py-2 text-xs font-semibold transition ${
-                    selectedSportDay === idx
-                      ? "bg-brand-600 text-white shadow-xs"
-                      : "bg-panel text-muted hover:text-ink border border-line"
-                  }`}
-                >
-                  {item.day}
-                </button>
-              ))}
-            </div>
-
-            {/* Day Fixtures */}
-            <div className="rounded-2xl border border-line bg-panel p-6 shadow-2xs">
-              <h3 className="font-bold text-base text-ink mb-4">
-                Schedule for {SPORTS_WEEK_EVENTS[selectedSportDay]?.day ?? "Day 1"}
-              </h3>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                {(SPORTS_WEEK_EVENTS[selectedSportDay]?.matches ?? []).map((m, i) => (
-                  <div key={i} className="rounded-xl border border-line bg-surface/50 p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm text-ink">{m.sport}</span>
-                      <span className="rounded-md bg-brand-500/10 px-2 py-0.5 text-xs font-semibold text-brand-600">
-                        Official Fixture
-                      </span>
-                    </div>
-                    <div className="space-y-1 text-xs text-muted">
-                      <p className="flex items-center gap-1.5">
-                        <MapPin size={13} className="text-brand-600 shrink-0" />
-                        <span>{m.ground}</span>
-                      </p>
-                      <p className="flex items-center gap-1.5">
-                        <Clock size={13} className="text-brand-600 shrink-0" />
-                        <span>{m.time}</span>
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <MarqueeEventsPortal initialMode="SPORTS_GALA" />
           </div>
         )}
       </main>
