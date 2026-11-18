@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FileQuestion,
   Play,
-  RotateCcw,
   Plus,
   Trash2,
   Sparkles,
-  Calendar,
   CheckCircle2,
   X,
+  Brain,
+  Sigma,
+  Layers,
 } from "lucide-react";
 import type { SelfLearningMaterial, SelfLearningTest, TestGeneratePayload } from "../types";
 
@@ -20,6 +21,8 @@ interface PracticeTestsTabProps {
   onViewResult: (test: SelfLearningTest) => void;
   onDeleteTest: (testId: string) => Promise<void>;
   isGenerating?: boolean;
+  preselectedTopic?: string | null;
+  onClearPreselectedTopic?: () => void;
 }
 
 export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
@@ -30,6 +33,8 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
   onViewResult,
   onDeleteTest,
   isGenerating = false,
+  preselectedTopic = null,
+  onClearPreselectedTopic,
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [count, setCount] = useState(10);
@@ -38,6 +43,16 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
   const [testTitle, setTestTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (preselectedTopic) {
+      setSelectedTopics([preselectedTopic]);
+      setTestTitle(`Targeted Gap Drill: ${preselectedTopic}`);
+      setDifficulty("medium");
+      setModalOpen(true);
+      onClearPreselectedTopic?.();
+    }
+  }, [preselectedTopic, onClearPreselectedTopic]);
 
   // Collect all unique extracted topics from subject materials
   const allTopics: string[] = [];
@@ -80,9 +95,9 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
       {/* Header with Generate Button */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-bold">Personalized Assessment Engine</h3>
+          <h3 className="text-lg font-bold">Bloom&apos;s Taxonomy Test Generator</h3>
           <p className="text-xs text-muted">
-            Generate Bloom's-calibrated practice tests powered by LangGraph and Google Gemini.
+            Generate custom practice tests calibrated across Recall, Analytical Synthesis, and Numerical Solvers with LaTeX proofs.
           </p>
         </div>
 
@@ -94,6 +109,45 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
           <Plus className="h-4 w-4" />
           <span>Generate New Assessment</span>
         </button>
+      </div>
+
+      {/* Bloom's Taxonomy Pillars Overview */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-line bg-panel p-3.5 flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+            <Layers className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-ink">1. Recall &amp; Comprehension</p>
+            <p className="text-[11px] text-muted mt-0.5">
+              Core definitions, theorems, and syllabus concepts grounded in your uploaded documents.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-line bg-panel p-3.5 flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600">
+            <Brain className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-ink">2. Analytical Synthesis</p>
+            <p className="text-[11px] text-muted mt-0.5">
+              Multi-step evaluation, edge-case debugging, and distractor-audited synthesis items.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-line bg-panel p-3.5 flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600">
+            <Sigma className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-ink">3. Numerical Solvers (LaTeX)</p>
+            <p className="text-[11px] text-muted mt-0.5">
+              Quantitative derivations verified with KaTeX governing formulas and step-by-step proofs.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Test Inventory */}

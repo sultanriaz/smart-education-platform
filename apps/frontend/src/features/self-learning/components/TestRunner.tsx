@@ -8,6 +8,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import type { QuestionOut, SelfLearningTest } from "../types";
+import { RichMathText } from "./KaTeXViewer";
 
 interface TestRunnerProps {
   test: SelfLearningTest;
@@ -128,19 +129,33 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
         {/* Left: Active Question Card */}
         <div className="lg:col-span-3 space-y-4">
           <div className="rounded-2xl border border-line bg-panel p-6 shadow-xs">
-            <div className="flex items-center justify-between text-xs text-muted pb-3 border-b border-line">
-              <span>
-                Question {currentIndex + 1} of {questions.length}
-              </span>
-              <span className="rounded-full bg-surface px-2.5 py-0.5 border border-line font-medium">
-                Bloom's: {currentQuestion.bloom_level}
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted pb-3 border-b border-line">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-ink">
+                  Question {currentIndex + 1} of {questions.length}
+                </span>
+                {currentQuestion.topic_tag && (
+                  <span className="rounded-md bg-surface px-2 py-0.5 border border-line">
+                    {currentQuestion.topic_tag}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {currentQuestion.is_quantitative && (
+                  <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-indigo-600 dark:text-indigo-300 font-bold">
+                    Numerical Solver (LaTeX)
+                  </span>
+                )}
+                <span className="rounded-full bg-surface px-2.5 py-0.5 border border-line font-medium">
+                  Bloom&apos;s: {currentQuestion.bloom_level}
+                </span>
+              </div>
             </div>
 
             {/* Question Text */}
-            <p className="mt-4 text-base font-semibold leading-relaxed">
-              {currentQuestion.question_text}
-            </p>
+            <div className="mt-4 text-base font-semibold leading-relaxed">
+              <RichMathText text={currentQuestion.question_text} />
+            </div>
 
             {/* Options List */}
             <div className="mt-6 space-y-3">
@@ -169,7 +184,9 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
                     >
                       {key}
                     </span>
-                    <span className="mt-0.5 leading-snug">{optText}</span>
+                    <span className="mt-0.5 leading-snug break-words">
+                      <RichMathText text={optText} />
+                    </span>
                   </button>
                 );
               })}

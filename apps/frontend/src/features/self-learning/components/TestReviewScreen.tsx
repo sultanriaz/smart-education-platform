@@ -13,7 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import type { TestResultOut } from "../types";
-import { KaTeXViewer } from "./KaTeXViewer";
+import { KaTeXViewer, RichMathText } from "./KaTeXViewer";
 
 interface TestReviewScreenProps {
   result: TestResultOut;
@@ -80,23 +80,43 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
           </div>
 
           {/* 1-Click Smart Regeneration */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               onClick={onBackToDashboard}
-              className="rounded-xl border border-line bg-panel px-4 py-2.5 text-sm font-semibold hover:bg-surface transition"
+              className="rounded-xl border border-line bg-panel px-4 py-2.5 text-xs font-semibold hover:bg-surface transition"
             >
-              Back to Overview
+              Back to Studio
+            </button>
+
+            <button
+              type="button"
+              disabled={isRegenerating}
+              onClick={() => onRegenerateSmartTest("balanced")}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-panel px-3.5 py-2.5 text-xs font-semibold hover:border-brand-500 hover:text-brand-600 disabled:opacity-50 transition"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Balanced Retest</span>
+            </button>
+
+            <button
+              type="button"
+              disabled={isRegenerating}
+              onClick={() => onRegenerateSmartTest("challenge")}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-500/10 px-3.5 py-2.5 text-xs font-bold text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 disabled:opacity-50 transition"
+            >
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span>Challenge Mode</span>
             </button>
 
             <button
               type="button"
               disabled={isRegenerating}
               onClick={() => onRegenerateSmartTest("weak_focus")}
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-brand-700 disabled:opacity-50 transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 disabled:opacity-50 transition"
             >
               <Sparkles className="h-4 w-4" />
-              <span>{isRegenerating ? "Regenerating..." : "1-Click Smart Remediation"}</span>
+              <span>{isRegenerating ? "Regenerating…" : "1-Click Smart Regenerate (Gaps)"}</span>
             </button>
           </div>
         </div>
@@ -207,7 +227,9 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
               </div>
 
               {/* Question Text */}
-              <p className="mt-3 text-sm font-semibold leading-relaxed">{q.question_text}</p>
+              <div className="mt-3 text-sm font-semibold leading-relaxed">
+                <RichMathText text={q.question_text} />
+              </div>
 
               {/* Options diff */}
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -233,19 +255,30 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
                       className={`flex items-start gap-2.5 rounded-xl border p-3 text-xs leading-snug ${styleClass}`}
                     >
                       <span className="font-bold shrink-0">{key}.</span>
-                      <span className="truncate">{optText}</span>
+                      <span className="break-words whitespace-normal">
+                        <RichMathText text={optText} />
+                      </span>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Pedagogical Feedback / Rationale */}
-              <div className="mt-4 rounded-xl border border-line bg-surface p-3.5 text-xs leading-relaxed">
-                <div className="flex items-center gap-1.5 font-bold text-brand-600 mb-1">
-                  <BookOpen className="h-3.5 w-3.5" />
-                  <span>Pedagogical Analysis & Source Reference</span>
+              {/* Pedagogical Feedback / Document-Cited Rationale */}
+              <div className="mt-4 rounded-xl border border-line bg-surface p-3.5 text-xs leading-relaxed space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 font-bold text-brand-600">
+                    <BookOpen className="h-3.5 w-3.5" />
+                    <span>Document-Cited Diagnostic Explanation</span>
+                  </div>
+                  {q.topic_tag && (
+                    <span className="rounded-md bg-brand-500/10 px-2 py-0.5 text-[11px] font-semibold text-brand-700 dark:text-brand-300">
+                      Cited Topic: {q.topic_tag}
+                    </span>
+                  )}
                 </div>
-                <p className="text-text">{q.explanation}</p>
+                <p className="text-text">
+                  <RichMathText text={q.explanation} />
+                </p>
               </div>
 
               {/* Collapsible View Solution for Quantitative Questions */}
@@ -256,7 +289,7 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
                     onClick={() => toggleSolution(q.question_id)}
                     className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition"
                   >
-                    <span>{isSolutionOpen ? "Hide Step-by-Step Proof" : "View Solution & Formula Proof"}</span>
+                    <span>{isSolutionOpen ? "Hide Step-by-Step LaTeX Proof" : "View Solution & LaTeX Formula Proof"}</span>
                     {isSolutionOpen ? (
                       <ChevronUp className="h-3.5 w-3.5" />
                     ) : (
@@ -280,10 +313,10 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
                           <p className="text-xs font-semibold text-brand-700 uppercase tracking-wide mb-1.5">
                             Intermediate Derivation Proof:
                           </p>
-                          <ol className="list-decimal list-inside space-y-1 text-xs text-text">
+                          <ol className="list-decimal list-inside space-y-1.5 text-xs text-text">
                             {q.step_by_step_solution.map((step, idx) => (
                               <li key={idx} className="leading-relaxed">
-                                {step}
+                                <RichMathText text={step} />
                               </li>
                             ))}
                           </ol>

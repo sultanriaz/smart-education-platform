@@ -154,6 +154,7 @@ export function StudentLearningPage() {
   // Active view mode: workspace tabs vs test runner vs test review
   type TabType = "materials" | "tests" | "mastery" | "institutional";
   const [activeTab, setActiveTab] = useState<TabType>("materials");
+  const [preselectedTopic, setPreselectedTopic] = useState<string | null>(null);
 
   // Runner & Review state
   const [activeRunningTest, setActiveRunningTest] = useState<SelfLearningTest | null>(null);
@@ -355,6 +356,35 @@ export function StudentLearningPage() {
     }
   };
 
+  const handleSmartRegenerateGaps = async (weakTopics: string[]) => {
+    if (!activeSubject) return;
+    setIsRegenerating(true);
+    try {
+      let generated: SelfLearningTest;
+      if (tests.length > 0 && tests[0]) {
+        generated = await regenerateTest(tests[0].id, {
+          mode: "weak_focus",
+          count: 10,
+        });
+      } else {
+        generated = await generateTest({
+          subject_id: activeSubject.id,
+          count: 10,
+          difficulty: "medium",
+          topics: weakTopics.length > 0 ? weakTopics : undefined,
+          title: `Smart Gap Remediation (${weakTopics.slice(0, 2).join(", ") || activeSubject.name})`,
+        });
+      }
+      setTests((prev) => [generated, ...prev]);
+      setActiveRunningTest(generated);
+      toast.push("1-Click Smart Remediation test ready! Focusing on your knowledge gaps.", "success");
+    } catch (err) {
+      toast.push(err instanceof Error ? err.message : "Smart regeneration failed.", "error");
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
   const visibleResources = (resources.data ?? []).filter((r) =>
     `${r.title} ${r.description ?? ""}`.toLowerCase().includes(search.toLowerCase())
   );
@@ -410,9 +440,9 @@ export function StudentLearningPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">
         <div>
           <PageHeader
-            eyebrow="AI-Powered Self-Learning"
-            title="Subject Hub & Visual Analytics"
-            description="Manage dynamic course subjects, ingest study materials with Gemini RAG, and master topics through adaptive practice tests."
+            eyebrow="Gemini RAG & LangGraph Studio"
+            title="AI Self-Learning & Adaptive Assessment Studio"
+            description="Ingest syllabus handouts (.pdf, .docx, .pptx), generate Bloom's Taxonomy tests with LaTeX numerical proofs, and track topic mastery via radar analytics."
           />
         </div>
 
@@ -440,7 +470,7 @@ export function StudentLearningPage() {
           }`}
         >
           <FolderOpen className="h-4 w-4" />
-          <span>Study Materials ({materials.length})</span>
+          <span>Subject Ingestion Vault ({materials.length})</span>
         </button>
 
         <button
@@ -453,7 +483,7 @@ export function StudentLearningPage() {
           }`}
         >
           <FileQuestion className="h-4 w-4" />
-          <span>Practice Tests ({tests.length})</span>
+          <span>Bloom&apos;s Test Generator ({tests.length})</span>
         </button>
 
         <button
@@ -466,7 +496,7 @@ export function StudentLearningPage() {
           }`}
         >
           <BarChart2 className="h-4 w-4" />
-          <span>Mastery & Analytics</span>
+          <span>Diagnostic &amp; Mastery Profiler</span>
         </button>
 
         <button
@@ -515,6 +545,8 @@ export function StudentLearningPage() {
               onViewResult={handleViewResult}
               onDeleteTest={handleDeleteTest}
               isGenerating={isGenerating}
+              preselectedTopic={preselectedTopic}
+              onClearPreselectedTopic={() => setPreselectedTopic(null)}
             />
           )}
 
@@ -523,8 +555,11 @@ export function StudentLearningPage() {
               mastery={mastery}
               tests={tests}
               onTakeTestForTopic={(topic) => {
+                setPreselectedTopic(topic);
                 setActiveTab("tests");
               }}
+              onSmartRegenerateGaps={handleSmartRegenerateGaps}
+              isRegenerating={isRegenerating}
             />
           )}
 
