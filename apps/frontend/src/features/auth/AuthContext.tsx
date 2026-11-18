@@ -15,7 +15,8 @@ import {
   login as loginRequest,
   logout as logoutRequest
 } from "./auth-api";
-import type { AuthUser, LoginInput } from "./types";
+import { hasAnyRole } from "./permissions";
+import type { AppRole, AuthUser, LoginInput } from "./types";
 
 const IDLE_TIMEOUT_MS = 10 * 60 * 1000;
 
@@ -64,13 +65,30 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [reloadUser, clearSession]);
 
   const login = useCallback(
-    async (input: LoginInput) => {
+    async (input: LoginInput, requiredRole?: AppRole) => {
       clearSession();
       const tokens = await loginRequest(input);
       tokenStore.setAccessToken(tokens.accessToken);
-      await reloadUser();
+      const currentUser = await getCurrentUser();
+      if (requiredRole && !hasAnyRole(currentUser.roles, [requiredRole])) {
+        try {
+          await logoutRequest();
+        } catch {
+          // ignore
+        }
+        clearSession();
+        throw new Error(
+          requiredRole === "teacher"
+            ? "Access denied: Only valid Faculty credentials can sign in here."
+            : requiredRole === "student"
+            ? "Access denied: Only valid Student credentials can sign in here."
+            : "Access denied: Insufficient permissions for this portal."
+        );
+      }
+      setUser(currentUser);
+      setState("authenticated");
     },
-    [reloadUser, clearSession]
+    [clearSession]
   );
 
   useEffect(() => tokenStore.onClear(clearSession), [clearSession]);

@@ -27,25 +27,29 @@ import { DynamicSpaceFinder } from "../components/facilities/DynamicSpaceFinder"
 import { SmartTransitFleetTelemetry } from "../components/transit/SmartTransitFleetTelemetry";
 import { CampusHubWayfindingEngine } from "../components/campushub/CampusHubWayfindingEngine";
 import { MarqueeEventsPortal } from "../components/events/MarqueeEventsPortal";
+import { TimetableHub } from "../components/timetable/TimetableHub";
+
+type ExplorerTab = "overview" | "hub" | "free_slots" | "timetable" | "transport" | "sports";
+const VALID_TABS: ExplorerTab[] = ["overview", "hub", "free_slots", "timetable", "transport", "sports"];
 
 export function CampusExplorerPage() {
   const { user, state } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tabParam = searchParams.get("tab") as ("overview" | "hub" | "free_slots" | "transport" | "sports") | null;
-  const [activeTab, setActiveTab] = useState<"overview" | "hub" | "free_slots" | "transport" | "sports">(() => {
-    if (tabParam && ["overview", "hub", "free_slots", "transport", "sports"].includes(tabParam)) {
+  const tabParam = searchParams.get("tab") as ExplorerTab | null;
+  const [activeTab, setActiveTab] = useState<ExplorerTab>(() => {
+    if (tabParam && VALID_TABS.includes(tabParam)) {
       return tabParam;
     }
     return "overview";
   });
 
   useEffect(() => {
-    if (tabParam && ["overview", "hub", "free_slots", "transport", "sports"].includes(tabParam)) {
+    if (tabParam && VALID_TABS.includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
 
-  const selectTab = (tab: "overview" | "hub" | "free_slots" | "transport" | "sports") => {
+  const selectTab = (tab: ExplorerTab) => {
     setActiveTab(tab);
     setSearchParams(tab === "overview" ? {} : { tab });
   };
@@ -135,18 +139,19 @@ export function CampusExplorerPage() {
           {/* Quick Tab Switcher */}
           <div className="mt-8 flex flex-wrap gap-2 border-b border-line pb-px">
             {[
-              { id: "overview", label: "Dashboard Modules", icon: Building },
-              { id: "hub", label: "Campus Hub & Directory", icon: Users },
-              { id: "free_slots", label: "Free Slots & Rooms", icon: Clock },
+              { id: "overview", label: "Main Dashboard", icon: Building },
+              { id: "free_slots", label: "Free Slots", icon: Clock },
+              { id: "timetable", label: "Timetable", icon: Calendar },
+              { id: "hub", label: "Campus Hub", icon: Users },
               { id: "transport", label: "Transport Service", icon: Bus },
-              { id: "sports", label: "Campus Life & Marquee Gala", icon: Trophy }
+              { id: "sports", label: "Sports Week", icon: Trophy }
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => selectTab(tab.id as typeof activeTab)}
+                  onClick={() => selectTab(tab.id as ExplorerTab)}
                   className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition ${
                     isActive
                       ? "bg-brand-600 text-white shadow-xs"
@@ -164,88 +169,91 @@ export function CampusExplorerPage() {
 
       {/* Main Content Area */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        {/* ================= SECTION 1: OVERVIEW MODULES ================= */}
+        {/* ================= SECTION 1: MAIN DASHBOARD MODULES ================= */}
         {activeTab === "overview" && (
           <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold">University Modules</h2>
-              <p className="text-xs text-muted mt-1">Select a module to view live schedules, directions, or access your workspace.</p>
+              <h2 className="text-xl font-bold">Main Dashboard</h2>
+              <p className="text-xs text-muted mt-1">Select any module card below to open its screen.</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Student Portal Card */}
-              <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group">
+              {/* 1. Student Portal */}
+              <Link
+                to={state === "authenticated" && role === "student" ? "/app/student" : "/login/student"}
+                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+              >
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 mb-4 group-hover:scale-105 transition">
                     <GraduationCap size={24} />
                   </div>
                   <h3 className="font-bold text-base text-ink">Student Portal</h3>
                   <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Attendance progress bar, enrolled courses (Compiler, OS, SE), assignments, lecture hub & quiz marks.
+                    Sign in with Department &amp; Reg No to view subjects, attendance bars, assignments, quizzes, marks &amp; resources.
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-brand-600">Enter with Reg No</span>
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:underline"
-                  >
-                    <span>Sign In</span>
+                  <span className="text-xs font-semibold text-brand-600">Student Login</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-600">
+                    <span>Open</span>
                     <ArrowRight size={13} />
-                  </Link>
+                  </span>
                 </div>
-              </div>
+              </Link>
 
-              {/* Free Slots Card */}
-              <div
+              {/* 2. Free Slots */}
+              <button
+                type="button"
                 onClick={() => selectTab("free_slots")}
-                className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 mb-4 group-hover:scale-105 transition">
                     <Clock size={24} />
                   </div>
-                  <h3 className="font-bold text-base text-ink">Free Slots Finder</h3>
+                  <h3 className="font-bold text-base text-ink">Free Slots</h3>
                   <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Block-wise available rooms (A Block, C Block, D Block) filtered by day and lecture slot with capacity.
+                    Free slots for the week filtered by day and lecture slot, grouped block-wise with student capacity.
                   </p>
                 </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-amber-600">Public Explorer</span>
+                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
+                  <span className="text-xs font-semibold text-amber-600">Block-Wise Rooms</span>
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600">
                     <span>View Slots</span>
                     <ChevronRight size={14} />
                   </span>
                 </div>
-              </div>
+              </button>
 
-              {/* Timetable Card */}
-              <div
-                onClick={() => selectTab("hub")}
-                className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+              {/* 3. Timetable */}
+              <button
+                type="button"
+                onClick={() => selectTab("timetable")}
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 mb-4 group-hover:scale-105 transition">
                     <Calendar size={24} />
                   </div>
-                  <h3 className="font-bold text-base text-ink">Timetable Schedule</h3>
+                  <h3 className="font-bold text-base text-ink">Timetable</h3>
                   <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Weekly student & teacher lecture schedule, lecture slots, teachers, classrooms, and section rosters.
+                    Student &amp; Teacher weekly timetables with lecture counts per day, slots, subjects, classrooms &amp; sections.
                   </p>
                 </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-emerald-600">Student & Faculty</span>
+                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
+                  <span className="text-xs font-semibold text-emerald-600">Student &amp; Teacher</span>
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600">
                     <span>Inspect</span>
                     <ChevronRight size={14} />
                   </span>
                 </div>
-              </div>
+              </button>
 
-              {/* Campus Hub Card */}
-              <div
+              {/* 4. Campus Hub */}
+              <button
+                type="button"
                 onClick={() => selectTab("hub")}
-                className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 mb-4 group-hover:scale-105 transition">
@@ -253,22 +261,23 @@ export function CampusExplorerPage() {
                   </div>
                   <h3 className="font-bold text-base text-ink">Campus Hub</h3>
                   <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Directory for classrooms by floor/block, faculty offices, HODs, library, and lab directories.
+                    Lab Directory, Classrooms, Faculty &amp; Teachers, Office Directory, Library, and Campus Statistics.
                   </p>
                 </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-purple-600">Directory</span>
+                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
+                  <span className="text-xs font-semibold text-purple-600">6 Directories</span>
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-600">
                     <span>Explore</span>
                     <ChevronRight size={14} />
                   </span>
                 </div>
-              </div>
+              </button>
 
-              {/* Transport Service Card */}
-              <div
+              {/* 5. Transport Service */}
+              <button
+                type="button"
                 onClick={() => selectTab("transport")}
-                className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-950/60 mb-4 group-hover:scale-105 transition">
@@ -276,87 +285,102 @@ export function CampusExplorerPage() {
                   </div>
                   <h3 className="font-bold text-base text-ink">Transport Service</h3>
                   <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Planned bus routes, shuttle arrival times at Farid Town, High Court, and live stop sequences.
+                    Planned Routes and Shuttle Schedule with bus numbers, locations, and complete stop arrival times.
                   </p>
                 </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-cyan-600">Live Routes</span>
+                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
+                  <span className="text-xs font-semibold text-cyan-600">Routes &amp; Shuttles</span>
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-cyan-600">
                     <span>View Bus Info</span>
                     <ChevronRight size={14} />
                   </span>
                 </div>
-              </div>
+              </button>
 
-              {/* Sports Week Card */}
-              <div
+              {/* 6. Faculty */}
+              <Link
+                to={state === "authenticated" && role === "teacher" ? "/app/teacher" : "/login/faculty"}
+                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 mb-4 group-hover:scale-105 transition">
+                    <Lock size={24} />
+                  </div>
+                  <h3 className="font-bold text-base text-ink">Faculty</h3>
+                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
+                    Dedicated teacher-only login for faculty schedules, attendance marking, grading, and room reservations.
+                  </p>
+                </div>
+                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-indigo-600">Teachers Only</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600">
+                    <span>Faculty Sign In</span>
+                    <ArrowRight size={13} />
+                  </span>
+                </div>
+              </Link>
+
+              {/* 7. Sports Week */}
+              <button
+                type="button"
                 onClick={() => selectTab("sports")}
-                className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 mb-4 group-hover:scale-105 transition">
                     <Trophy size={24} />
                   </div>
-                  <h3 className="font-bold text-base text-ink">Sports Week 2026</h3>
+                  <h3 className="font-bold text-base text-ink">Sports Week</h3>
                   <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Daily game fixtures, match timings, ground locations (Main Oval, Football Complex, Gym Hall).
+                    Day-by-day game schedules with ground locations, match timings, scoreboards, and top day selector.
                   </p>
                 </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
+                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
                   <span className="text-xs font-semibold text-rose-600">Day-by-Day</span>
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-600">
                     <span>Fixtures</span>
                     <ChevronRight size={14} />
                   </span>
                 </div>
-              </div>
+              </button>
 
-              {/* Faculty Portal Card */}
-              <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group">
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 mb-4 group-hover:scale-105 transition">
-                    <Lock size={24} />
-                  </div>
-                  <h3 className="font-bold text-base text-ink">Faculty Workspace</h3>
-                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Dedicated instructor portal for lecture timetable, instant class attendance, grading, and room booking.
-                  </p>
-                </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-indigo-600">Teacher Login</span>
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:underline"
-                  >
-                    <span>Faculty Sign In</span>
-                    <ArrowRight size={13} />
-                  </Link>
-                </div>
-              </div>
-
-              {/* AI Self Assessment Card */}
-              <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group">
+              {/* 8. Self Assessment */}
+              <Link
+                to="/app/student/learning"
+                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+              >
                 <div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950/60 mb-4 group-hover:scale-105 transition">
                     <Sparkles size={24} />
                   </div>
-                  <h3 className="font-bold text-base text-ink">AI Self-Assessment</h3>
+                  <h3 className="font-bold text-base text-ink">Self Assessment</h3>
                   <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Adaptive test generation from lecture notes, KaTeX formula solutions, and smart topic mastery profiler.
+                    AI practice test generator from uploaded study notes, KaTeX numerical proofs, and topic mastery radar.
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
                   <span className="text-xs font-semibold text-violet-600">Adaptive AI</span>
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-violet-600 hover:underline"
-                  >
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-violet-600">
                     <span>Practice Now</span>
                     <ArrowRight size={13} />
-                  </Link>
+                  </span>
                 </div>
-              </div>
+              </Link>
             </div>
+          </div>
+        )}
+
+        {/* ================= SECTION: TIMETABLE ================= */}
+        {activeTab === "timetable" && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold">Timetable</h2>
+              <p className="text-xs text-muted mt-1">
+                Choose Student or Teacher to inspect the full weekly schedule with lecture counts, slots, classrooms, and sections.
+              </p>
+            </div>
+
+            <TimetableHub />
           </div>
         )}
 

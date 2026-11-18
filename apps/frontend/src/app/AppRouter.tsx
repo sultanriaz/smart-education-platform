@@ -9,6 +9,8 @@ const ForgotPasswordPage = lazy(() => import("../pages/ForgotPasswordPage").then
 const ResetPasswordPage = lazy(() => import("../pages/ResetPasswordPage").then(module => ({ default: module.ResetPasswordPage })));
 const VerifyEmailPage = lazy(() => import("../pages/VerifyEmailPage").then(module => ({ default: module.VerifyEmailPage })));
 const LoginPage = lazy(() => import("../pages/LoginPage").then(module => ({ default: module.LoginPage })));
+const StudentLoginPage = lazy(() => import("../pages/StudentLoginPage").then(module => ({ default: module.StudentLoginPage })));
+const FacultyLoginPage = lazy(() => import("../pages/FacultyLoginPage").then(module => ({ default: module.FacultyLoginPage })));
 const CampusExplorerPage = lazy(() => import("../pages/CampusExplorerPage").then(module => ({ default: module.CampusExplorerPage })));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage").then(module => ({ default: module.NotFoundPage })));
 const NotificationsPage = lazy(() => import("../pages/NotificationsPage").then(module => ({ default: module.NotificationsPage })));
@@ -56,6 +58,8 @@ export function AppRouter() {
       <Route path="/" element={<CampusExplorerPage />} />
       <Route path="/explore" element={<CampusExplorerPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/login/student" element={<StudentLoginPage />} />
+      <Route path="/login/faculty" element={<FacultyLoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />

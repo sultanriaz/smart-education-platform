@@ -43,7 +43,10 @@ export function StudentCourseDetailPage() {
     return getCourseById(activeCourseId) || COURSES_CATALOG[0]!;
   });
 
-  const [activeTab, setActiveTab] = useState<"overview" | "coursework" | "attendance" | "lectureHub">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "coursework" | "attendance" | "lectureHub">("coursework");
+  const [activeCard, setActiveCard] = useState<
+    "assignments" | "quizzes" | "attendance" | "marks" | "notifications" | "resources" | "lectureHub" | "courseInfo"
+  >("assignments");
 
   // Assignment Dropbox state
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
@@ -260,6 +263,7 @@ export function StudentCourseDetailPage() {
             <button
               type="button"
               onClick={() => {
+                setActiveCard("attendance");
                 setActiveTab("attendance");
                 setIsExcuseModalOpen(true);
               }}
@@ -271,28 +275,101 @@ export function StudentCourseDetailPage() {
         )}
       </div>
 
-      {/* ================= 4 CONSOLIDATED WORKSPACE TABS ================= */}
-      <div className="flex rounded-2xl border border-line bg-panel p-1.5 text-xs sm:text-sm font-bold shadow-2xs overflow-x-auto gap-1">
+      {/* ================= 8 SUBJECT DETAIL CARDS ================= */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
         {[
-          { id: "overview", label: "1. Overview & Syllabus", icon: BookOpen },
-          { id: "coursework", label: "2. Coursework & Assessments", icon: FileText },
-          { id: "attendance", label: "3. Attendance & Progress", icon: CheckCircle2 },
-          { id: "lectureHub", label: "4. Lecture Hub & Resources", icon: Video }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+          {
+            id: "assignments" as const,
+            tab: "coursework" as const,
+            label: "Assignments",
+            metric: `${currentCourse.coursework.assignments.length} Tasks`,
+            icon: FileText,
+            color: "text-blue-600 bg-blue-500/10"
+          },
+          {
+            id: "quizzes" as const,
+            tab: "coursework" as const,
+            label: "Quizzes",
+            metric: `${currentCourse.coursework.quizzes.length} Quizzes`,
+            icon: HelpCircle,
+            color: "text-violet-600 bg-violet-500/10"
+          },
+          {
+            id: "attendance" as const,
+            tab: "attendance" as const,
+            label: "Attendance",
+            metric: `${currentCourse.attendance.percentage}%`,
+            icon: CheckCircle2,
+            color: "text-emerald-600 bg-emerald-500/10"
+          },
+          {
+            id: "marks" as const,
+            tab: "coursework" as const,
+            label: "Marks",
+            metric: currentCourse.standing.estimatedGrade,
+            icon: Percent,
+            color: "text-amber-600 bg-amber-500/10"
+          },
+          {
+            id: "notifications" as const,
+            tab: "overview" as const,
+            label: "Notifications",
+            metric: `${currentCourse.overview.announcements.length} Alerts`,
+            icon: Bell,
+            color: "text-rose-600 bg-rose-500/10"
+          },
+          {
+            id: "resources" as const,
+            tab: "lectureHub" as const,
+            label: "Resources",
+            metric: `${currentCourse.lectureHub.materials.length} Files`,
+            icon: Download,
+            color: "text-cyan-600 bg-cyan-500/10"
+          },
+          {
+            id: "lectureHub" as const,
+            tab: "lectureHub" as const,
+            label: "Lecture Hub",
+            metric: `${currentCourse.lectureHub.recordings.length} Videos`,
+            icon: Video,
+            color: "text-indigo-600 bg-indigo-500/10"
+          },
+          {
+            id: "courseInfo" as const,
+            tab: "overview" as const,
+            label: "Course Information",
+            metric: `${currentCourse.creditHours} Cr. Hrs`,
+            icon: Info,
+            color: "text-teal-600 bg-teal-500/10"
+          }
+        ].map((card) => {
+          const Icon = card.icon;
+          const isSelected = activeCard === card.id;
           return (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex-1 min-w-[170px] inline-flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 transition ${
-                isActive
-                  ? "bg-brand-600 text-white shadow-xs font-extrabold"
-                  : "text-muted hover:text-ink hover:bg-surface"
+              key={card.id}
+              type="button"
+              onClick={() => {
+                setActiveCard(card.id);
+                setActiveTab(card.tab);
+              }}
+              className={`rounded-2xl border p-4 text-left transition shadow-2xs flex flex-col justify-between gap-2.5 group ${
+                isSelected
+                  ? "border-brand-600 bg-panel ring-2 ring-brand-500/30 shadow-sm"
+                  : "border-line bg-panel hover:border-brand-500/60"
               }`}
             >
-              <Icon size={16} />
-              <span>{tab.label}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${card.color}`}>
+                  <Icon size={18} />
+                </span>
+                <span className="rounded-md bg-surface border border-line px-2 py-0.5 text-[11px] font-bold text-muted">
+                  {card.metric}
+                </span>
+              </div>
+              <p className={`text-sm font-bold ${isSelected ? "text-brand-600" : "text-ink group-hover:text-brand-600"}`}>
+                {card.label}
+              </p>
             </button>
           );
         })}

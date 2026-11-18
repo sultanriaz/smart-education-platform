@@ -92,6 +92,27 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
     });
   }, [filterDay, filterSport, filterDept]);
 
+  // Ordered sports week days for grouping & top selector
+  const SPORTS_DAYS = [
+    "Day 1 (Monday)",
+    "Day 2 (Tuesday)",
+    "Day 3 (Wednesday)",
+    "Day 4 (Thursday)",
+    "Day 5 (Friday)"
+  ] as const;
+
+  // Group filtered fixtures chronologically by day
+  const fixturesByDay = useMemo(() => {
+    const groups: { day: string; matches: TournamentMatch[] }[] = [];
+    for (const day of SPORTS_DAYS) {
+      const dayMatches = filteredFixtures.filter((m) => m.day === day);
+      if (dayMatches.length > 0) {
+        groups.push({ day, matches: dayMatches });
+      }
+    }
+    return groups;
+  }, [filteredFixtures]);
+
   // Live match count
   const liveCount = SPORTS_FIXTURES.filter((m) => m.status === "LIVE_NOW").length;
 
@@ -244,6 +265,35 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
           {/* SUB-VIEW 1: FIXTURES & RESULTS */}
           {sportsSubTab === "fixtures" && (
             <div className="space-y-6">
+              {/* Top Day Selector Pills */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFilterDay("All")}
+                  className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
+                    filterDay === "All"
+                      ? "bg-rose-600 text-white shadow-xs"
+                      : "bg-panel text-muted border border-line hover:text-ink"
+                  }`}
+                >
+                  All Days (Full Week)
+                </button>
+                {SPORTS_DAYS.map((day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => setFilterDay(day)}
+                    className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
+                      filterDay === day
+                        ? "bg-rose-600 text-white shadow-xs"
+                        : "bg-panel text-muted border border-line hover:text-ink"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+
               {/* Filter Bar */}
               <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs space-y-4">
                 <div className="flex flex-wrap items-center gap-4 text-xs">
@@ -322,9 +372,22 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                 </div>
               </div>
 
-              {/* Match Fixture Cards Grid */}
-              <div className="grid gap-5 md:grid-cols-2">
-                {filteredFixtures.map((match) => {
+              {/* Match Fixture Cards Grouped by Day */}
+              <div className="space-y-8">
+                {fixturesByDay.map((group) => (
+                  <div key={group.day} className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-line pb-2">
+                      <h3 className="font-extrabold text-base text-ink flex items-center gap-2">
+                        <Calendar size={16} className="text-rose-600" />
+                        <span>{group.day}</span>
+                      </h3>
+                      <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-bold text-rose-600">
+                        {group.matches.length} {group.matches.length === 1 ? "Game" : "Games"} Scheduled
+                      </span>
+                    </div>
+
+                    <div className="grid gap-5 md:grid-cols-2">
+                      {group.matches.map((match) => {
                   const isLive = match.status === "LIVE_NOW";
                   const isSubscribed = followedMatches[match.id];
 
@@ -452,6 +515,9 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                     </div>
                   );
                 })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}

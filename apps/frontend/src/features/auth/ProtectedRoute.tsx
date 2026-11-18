@@ -13,7 +13,13 @@ export function ProtectedRoute({ roles = [] }: { roles?: AppRole[] }) {
   }
 
   if (state === "anonymous" || !user) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    const loginPath =
+      roles.length === 1 && roles[0] === "teacher"
+        ? "/login/faculty"
+        : roles.length === 1 && roles[0] === "student"
+        ? "/login/student"
+        : "/login";
+    return <Navigate to={loginPath} replace state={{ from: location.pathname }} />;
   }
 
   if (!hasAnyRole(user.roles, roles)) {

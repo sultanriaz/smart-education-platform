@@ -361,6 +361,198 @@ export const TEACHER_SCHEDULE: TimetableSlot[] = [
   }
 ];
 
+export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
+  "BCS-7C": STUDENT_SCHEDULE.map((s) => ({ ...s, section: "BCS-7C" })),
+  "BCS-7A": [
+    {
+      id: "bcs7a-mon-1",
+      slotNumber: 1,
+      timeRange: "08:30 AM – 10:00 AM",
+      startTime: "08:30",
+      endTime: "10:00",
+      courseCode: "CSC-322",
+      courseTitle: "Operating Systems",
+      instructorName: "Dr. Muhammad Asim",
+      instructorOffice: "C Block, 2nd Floor, Room C-203",
+      section: "BCS-7A",
+      room: "Room C-101",
+      block: "C Block",
+      floor: "1st Floor",
+      capacity: 65,
+      enrolledStudents: 58,
+      day: "Monday",
+      colorScheme: {
+        bg: "bg-blue-500/10 dark:bg-blue-950/40",
+        border: "border-blue-500/30",
+        text: "text-blue-700 dark:text-blue-300",
+        badge: "bg-blue-500/20 text-blue-700 dark:text-blue-300"
+      }
+    },
+    {
+      id: "bcs7a-mon-4",
+      slotNumber: 4,
+      timeRange: "02:00 PM – 03:30 PM",
+      startTime: "14:00",
+      endTime: "15:30",
+      courseCode: "CSC-354",
+      courseTitle: "Compiler Construction Lab",
+      instructorName: "Dr. Munir Ahmad",
+      instructorOffice: "A Block, 3rd Floor, Room A-301",
+      section: "BCS-7A",
+      room: "Software Lab 2",
+      block: "C Block",
+      floor: "Ground Floor",
+      capacity: 55,
+      enrolledStudents: 48,
+      day: "Monday",
+      colorScheme: {
+        bg: "bg-purple-500/10 dark:bg-purple-950/40",
+        border: "border-purple-500/30",
+        text: "text-purple-700 dark:text-purple-300",
+        badge: "bg-purple-500/20 text-purple-700 dark:text-purple-300"
+      }
+    },
+    {
+      id: "bcs7a-wed-1",
+      slotNumber: 1,
+      timeRange: "08:30 AM – 10:00 AM",
+      startTime: "08:30",
+      endTime: "10:00",
+      courseCode: "CSC-331",
+      courseTitle: "Database Systems",
+      instructorName: "Engr. Tariq Mehmood",
+      instructorOffice: "A Block, 1st Floor, Room A-103",
+      section: "BCS-7A",
+      room: "Room C-201",
+      block: "C Block",
+      floor: "2nd Floor",
+      capacity: 65,
+      enrolledStudents: 60,
+      day: "Wednesday",
+      colorScheme: {
+        bg: "bg-cyan-500/10 dark:bg-cyan-950/40",
+        border: "border-cyan-500/30",
+        text: "text-cyan-700 dark:text-cyan-300",
+        badge: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300"
+      }
+    },
+    {
+      id: "bcs7a-thu-1",
+      slotNumber: 1,
+      timeRange: "08:30 AM – 10:00 AM",
+      startTime: "08:30",
+      endTime: "10:00",
+      courseCode: "CSC-322",
+      courseTitle: "Operating Systems",
+      instructorName: "Dr. Muhammad Asim",
+      instructorOffice: "C Block, 2nd Floor, Room C-203",
+      section: "BCS-7A",
+      room: "Room C-101",
+      block: "C Block",
+      floor: "1st Floor",
+      capacity: 65,
+      enrolledStudents: 58,
+      day: "Thursday",
+      colorScheme: {
+        bg: "bg-blue-500/10 dark:bg-blue-950/40",
+        border: "border-blue-500/30",
+        text: "text-blue-700 dark:text-blue-300",
+        badge: "bg-blue-500/20 text-blue-700 dark:text-blue-300"
+      }
+    }
+  ],
+  "BCS-7B": [
+    {
+      id: "bcs7b-tue-1",
+      slotNumber: 1,
+      timeRange: "08:30 AM – 10:00 AM",
+      startTime: "08:30",
+      endTime: "10:00",
+      courseCode: "CSC-371",
+      courseTitle: "Software Engineering",
+      instructorName: "Dr. Majid Hussain",
+      instructorOffice: "A Block, 3rd Floor, Room A-302",
+      section: "BCS-7B",
+      room: "Room A-102",
+      block: "A Block",
+      floor: "1st Floor",
+      capacity: 60,
+      enrolledStudents: 56,
+      day: "Tuesday",
+      colorScheme: {
+        bg: "bg-emerald-500/10 dark:bg-emerald-950/40",
+        border: "border-emerald-500/30",
+        text: "text-emerald-700 dark:text-emerald-300",
+        badge: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+      }
+    },
+    {
+      id: "bcs7b-wed-3",
+      slotNumber: 3,
+      timeRange: "12:00 PM – 01:30 PM",
+      startTime: "12:00",
+      endTime: "13:30",
+      courseCode: "CSC-331",
+      courseTitle: "Database Systems",
+      instructorName: "Engr. Tariq Mehmood",
+      instructorOffice: "A Block, 1st Floor, Room A-103",
+      section: "BCS-7B",
+      room: "Room A-201",
+      block: "A Block",
+      floor: "2nd Floor",
+      capacity: 65,
+      enrolledStudents: 62,
+      day: "Wednesday",
+      colorScheme: {
+        bg: "bg-cyan-500/10 dark:bg-cyan-950/40",
+        border: "border-cyan-500/30",
+        text: "text-cyan-700 dark:text-cyan-300",
+        badge: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300"
+      }
+    },
+    {
+      id: "bcs7b-thu-3",
+      slotNumber: 3,
+      timeRange: "12:00 PM – 01:30 PM",
+      startTime: "12:00",
+      endTime: "13:30",
+      courseCode: "CSC-331",
+      courseTitle: "Database Systems Lab",
+      instructorName: "Engr. Tariq Mehmood",
+      instructorOffice: "A Block, 1st Floor, Room A-103",
+      section: "BCS-7B",
+      room: "Computer Lab 1",
+      block: "A Block",
+      floor: "1st Floor",
+      capacity: 50,
+      enrolledStudents: 45,
+      day: "Thursday",
+      colorScheme: {
+        bg: "bg-cyan-500/10 dark:bg-cyan-950/40",
+        border: "border-cyan-500/30",
+        text: "text-cyan-700 dark:text-cyan-300",
+        badge: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300"
+      }
+    }
+  ]
+};
+
+export const TEACHER_TIMETABLES_BY_NAME: Record<string, TimetableSlot[]> = {
+  "Sir Munir (Dr. Munir Ahmad)": TEACHER_SCHEDULE,
+  "Dr. Muhammad Asim": [
+    STUDENT_SCHEDULE[0]!,
+    STUDENT_SCHEDULE[6]!
+  ],
+  "Dr. Majid Hussain": [
+    STUDENT_SCHEDULE[2]!,
+    STUDENT_SCHEDULE[8]!
+  ],
+  "Engr. Tariq Mehmood": [
+    STUDENT_SCHEDULE[5]!,
+    STUDENT_SCHEDULE[7]!
+  ]
+};
+
 /** Generate an iCalendar (.ics) string for exporting to Google, Apple, or Outlook calendar */
 export function generateICS(slots: TimetableSlot[], calendarName = "Academic Timetable"): string {
   const dayCodeMap: Record<string, string> = {

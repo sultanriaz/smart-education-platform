@@ -1,12 +1,12 @@
 import { createContext, useContext } from "react";
-import type { AuthUser, LoginInput } from "./types";
+import type { AppRole, AuthUser, LoginInput } from "./types";
 
 export type AuthState = "booting" | "authenticated" | "anonymous";
 
 export type AuthContextValue = {
   state: AuthState;
   user: AuthUser | null;
-  login: (input: LoginInput) => Promise<void>;
+  login: (input: LoginInput, requiredRole?: AppRole) => Promise<void>;
   logout: () => Promise<void>;
   reloadUser: () => Promise<void>;
 };

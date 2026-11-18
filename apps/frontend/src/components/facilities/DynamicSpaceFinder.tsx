@@ -60,6 +60,8 @@ export function DynamicSpaceFinder({
   const [selectedSlotNumber, setSelectedSlotNumber] = useState<number>(telemetry.slotNumber);
   const [selectedBlock, setSelectedBlock] = useState<CampusBlockFilter>(initialBlock);
   const [isRightNowActive, setIsRightNowActive] = useState<boolean>(false);
+  const [showOccupied, setShowOccupied] = useState<boolean>(false);
+  const [showWeeklyOverview, setShowWeeklyOverview] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [minCapacity, setMinCapacity] = useState<number>(0);
   const [filterAC, setFilterAC] = useState<boolean>(false);
@@ -156,16 +158,14 @@ export function DynamicSpaceFinder({
       if (filterProjector && !room.equipment.hasProjector) return false;
       if (filterWorkstations && !room.equipment.hasWorkstations) return false;
 
-      // Slot availability filter
+      // Slot availability filter — default to showing only available rooms in the selected slot
       const daySchedule = getRoomDaySchedule(room, selectedDay);
       const slot = daySchedule.find((s) => s.slot === selectedSlotNumber);
 
-      // If user toggles "Available Right Now", only return rooms currently marked free
-      if (isRightNowActive) {
+      if (isRightNowActive || !showOccupied) {
         return slot ? slot.isFree : true;
       }
 
-      // In normal slot browse mode, we show all matching rooms but prioritize available ones
       return true;
     });
   }, [
@@ -177,7 +177,8 @@ export function DynamicSpaceFinder({
     filterWorkstations,
     selectedDay,
     selectedSlotNumber,
-    isRightNowActive
+    isRightNowActive,
+    showOccupied
   ]);
 
   // Group rooms by block for structured view
@@ -481,6 +482,26 @@ export function DynamicSpaceFinder({
             <span>Workstations / PCs</span>
           </button>
 
+          <button
+            onClick={() => setShowOccupied((prev) => !prev)}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
+              showOccupied
+                ? "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-bold"
+                : "border-line bg-surface text-muted hover:text-ink"
+            }`}
+          >
+            <Lock size={11} />
+            <span>{showOccupied ? "Showing Occupied Too" : "Available Only"}</span>
+          </button>
+
+          <button
+            onClick={() => setShowWeeklyOverview((prev) => !prev)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1 text-2xs font-semibold text-brand-600 hover:border-brand-500 transition"
+          >
+            <Calendar size={11} />
+            <span>{showWeeklyOverview ? "Hide Full Week Grid" : "Show Full Week Grid"}</span>
+          </button>
+
           {(filterAC || filterProjector || filterWorkstations || searchQuery || minCapacity > 0) && (
             <button
               onClick={() => {
@@ -498,6 +519,65 @@ export function DynamicSpaceFinder({
           )}
         </div>
       </div>
+
+      {/* ================= FULL WEEK FREE SLOTS OVERVIEW ================= */}
+      {showWeeklyOverview && (
+        <div className="rounded-2xl border border-line bg-panel p-4 shadow-2xs space-y-3 overflow-x-auto">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h4 className="font-bold text-xs text-ink">Full Week Free Slots Matrix (Monday – Saturday)</h4>
+              <p className="text-2xs text-muted">Click any slot cell to view block-wise available rooms for that day and period.</p>
+            </div>
+          </div>
+
+          <table className="w-full min-w-[600px] border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-line text-left text-2xs uppercase tracking-wider text-muted">
+                <th className="py-2 pr-3 font-bold">Day</th>
+                {CAMPUS_SLOTS.map((slot) => (
+                  <th key={slot.number} className="px-2 py-2 text-center font-bold">
+                    Slot {slot.number}
+                    <span className="block font-mono font-normal text-[10px]">{slot.timeRange.replace(" AM", "").replace(" PM", "")}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line/50">
+              {CAMPUS_DAYS.map((day) => (
+                <tr key={day}>
+                  <td className="py-2 pr-3 font-bold text-ink">{day}</td>
+                  {CAMPUS_SLOTS.map((slot) => {
+                    const freeCount = CAMPUS_ROOMS.filter((room) => {
+                      const s = getRoomDaySchedule(room, day).find((x) => x.slot === slot.number);
+                      return s ? s.isFree : true;
+                    }).length;
+                    const isSelectedCell = selectedDay === day && selectedSlotNumber === slot.number;
+                    return (
+                      <td key={slot.number} className="p-1.5 text-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedDay(day);
+                            setSelectedSlotNumber(slot.number);
+                            setIsRightNowActive(false);
+                          }}
+                          className={`w-full rounded-lg px-2 py-1.5 text-2xs font-bold transition border ${
+                            isSelectedCell
+                              ? "border-brand-600 bg-brand-600 text-white shadow-xs"
+                              : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:border-brand-500"
+                          }`}
+                        >
+                          {freeCount} Free
+                        </button>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* ================= MULTI-BLOCK NAVIGATION TABS ================= */}
       <div className="flex flex-wrap items-center gap-2 border-b border-line pb-3">

@@ -125,11 +125,11 @@ export const FACULTY_DIRECTORY: FacultyProfile[] = [
   },
   {
     id: "fac-2",
-    name: "Dr. Munir Ahmad",
+    name: "Dr. Munir Ahmad (Sir Munir)",
     designation: "Head of Department (HOD)",
     department: "Computer Science",
-    officeRoom: "Room C-301 (CS Department Secretariat)",
-    block: "Block C",
+    officeRoom: "Room A-301 (CS Faculty Wing)",
+    block: "Block A",
     floor: "3rd Floor",
     email: "munir@cuisahiwal.edu.pk",
     phoneExtension: "Ext. 201",
@@ -550,6 +550,141 @@ export const CLASSROOMS_LABS: ClassroomLab[] = [
     },
     currentActivity: "Sports Week 2026 Orientation Prep",
     inCharge: "Directorate of Student Affairs"
+  },
+  // Additional Block A, B, C, D Classrooms for complete floor-by-floor directory
+  {
+    id: "rm-a02",
+    roomCode: "Room A-02",
+    name: "Foundation Sciences Lecture Hall",
+    type: "Lecture Theater",
+    block: "Block A",
+    floor: "Ground Floor",
+    capacity: 70,
+    equipment: {
+      projectorsCount: 1,
+      workstationsCount: 0,
+      hasAC: true,
+      hasWifi: true,
+      hasAudioSystem: true,
+      hasSmartPodium: false
+    },
+    currentActivity: "PHY-101 Applied Physics",
+    inCharge: "Natural Sciences Dept"
+  },
+  {
+    id: "rm-b01",
+    roomCode: "Room B-01",
+    name: "Electrical Circuits Foundation Room",
+    type: "Smart Classroom",
+    block: "Block B",
+    floor: "Ground Floor",
+    capacity: 55,
+    equipment: {
+      projectorsCount: 1,
+      workstationsCount: 0,
+      hasAC: true,
+      hasWifi: true,
+      hasAudioSystem: true,
+      hasSmartPodium: true
+    },
+    currentActivity: "BEE-1A Basic Electronics",
+    inCharge: "Electrical Eng Dept"
+  },
+  {
+    id: "rm-b101",
+    roomCode: "Room B-101",
+    name: "Circuit Theory Smart Room",
+    type: "Smart Classroom",
+    block: "Block B",
+    floor: "1st Floor",
+    capacity: 55,
+    equipment: {
+      projectorsCount: 1,
+      workstationsCount: 0,
+      hasAC: true,
+      hasWifi: true,
+      hasAudioSystem: true,
+      hasSmartPodium: true
+    },
+    currentActivity: "BEE-3A Circuits Analysis",
+    inCharge: "Electrical Eng Dept"
+  },
+  {
+    id: "rm-b202",
+    roomCode: "Room B-202",
+    name: "Mechanical CAD & Design Hall",
+    type: "Computer Lab",
+    block: "Block B",
+    floor: "2nd Floor",
+    capacity: 48,
+    equipment: {
+      projectorsCount: 1,
+      workstationsCount: 48,
+      hasAC: true,
+      hasWifi: true,
+      hasAudioSystem: true,
+      hasSmartPodium: true,
+      specialGear: "SolidWorks & AutoCAD Workstations"
+    },
+    currentActivity: "Mechanical Modeling Practical",
+    inCharge: "Mechanical Eng Dept"
+  },
+  {
+    id: "rm-c101",
+    roomCode: "Room C-101",
+    name: "Operating Systems Lecture Room (BCS-7A)",
+    type: "Smart Classroom",
+    block: "Block C",
+    floor: "1st Floor",
+    capacity: 65,
+    equipment: {
+      projectorsCount: 1,
+      workstationsCount: 0,
+      hasAC: true,
+      hasWifi: true,
+      hasAudioSystem: true,
+      hasSmartPodium: true
+    },
+    currentActivity: "CSC-322 Operating Systems",
+    inCharge: "Dr. Muhammad Asim"
+  },
+  {
+    id: "rm-c102",
+    roomCode: "Room C-102",
+    name: "Software Engineering Hall (BCS-7C)",
+    type: "Smart Classroom",
+    block: "Block C",
+    floor: "1st Floor",
+    capacity: 65,
+    equipment: {
+      projectorsCount: 1,
+      workstationsCount: 0,
+      hasAC: true,
+      hasWifi: true,
+      hasAudioSystem: true,
+      hasSmartPodium: false
+    },
+    currentActivity: "CSC-371 Software Engineering",
+    inCharge: "Dr. Majid Hussain"
+  },
+  {
+    id: "rm-d202",
+    roomCode: "Room D-202",
+    name: "Business Analytics Seminar Room",
+    type: "Seminar Hall",
+    block: "Block D",
+    floor: "2nd Floor",
+    capacity: 50,
+    equipment: {
+      projectorsCount: 1,
+      workstationsCount: 0,
+      hasAC: true,
+      hasWifi: true,
+      hasAudioSystem: true,
+      hasSmartPodium: true
+    },
+    currentActivity: "BBA-6A Quantitative Methods",
+    inCharge: "Management Sciences Dept"
   }
 ];
 
@@ -704,4 +839,41 @@ export const FLOOR_BLUEPRINTS: Record<string, FloorBlueprintLayout> = {
       { code: "Server Vault", name: "Campus Datacenter & Fiber Hub", type: "amenity", gridCol: "col-span-1", statusText: "Authorized Only" }
     ]
   }
+};
+
+export interface CampusStatisticMetric {
+  label: string;
+  value: string;
+  sublabel: string;
+}
+
+export interface DepartmentEnrollmentStat {
+  department: string;
+  code: string;
+  students: number;
+  faculty: number;
+  labs: number;
+}
+
+export const CAMPUS_STATISTICS: {
+  overview: CampusStatisticMetric[];
+  departments: DepartmentEnrollmentStat[];
+} = {
+  overview: [
+    { label: "Total Enrolled Students", value: "4,850+", sublabel: "Undergraduate & Graduate programs" },
+    { label: "Faculty & Teaching Staff", value: "215", sublabel: "PhD Professors, HODs & Lecturers" },
+    { label: "Academic Blocks", value: "5", sublabel: "Blocks A, B, C, D & Engineering Labs" },
+    { label: "Classrooms & Theaters", value: "68", sublabel: "Multimedia & smart lecture rooms" },
+    { label: "Specialized Labs", value: "24", sublabel: "Computing, AI/GPU, Cisco & Engineering" },
+    { label: "Central Library Capacity", value: "140 Desks", sublabel: "Plus 6 collaborative study pods & 42k+ volumes" },
+    { label: "University Fleet", value: "18 Buses", sublabel: "City commuter lines & intra-campus shuttles" },
+    { label: "Student Societies", value: "16 Active", sublabel: "Tech, Sports, Literary & Entrepreneurship" }
+  ],
+  departments: [
+    { department: "Computer Science", code: "BCS / MCS", students: 1620, faculty: 64, labs: 9 },
+    { department: "Software Engineering", code: "BSE", students: 1180, faculty: 46, labs: 5 },
+    { department: "Electrical Engineering", code: "BEE", students: 740, faculty: 38, labs: 6 },
+    { department: "Management Sciences", code: "BBA / MBA", students: 820, faculty: 41, labs: 2 },
+    { department: "Mechanical & Sciences", code: "BME / BS", students: 490, faculty: 26, labs: 2 }
+  ]
 };

@@ -27,7 +27,9 @@ import {
   Mic,
   Activity,
   UserCheck,
-  Briefcase
+  Briefcase,
+  BarChart3,
+  Cpu
 } from "lucide-react";
 
 import {
@@ -36,6 +38,7 @@ import {
   CLASSROOMS_LABS,
   LIBRARY_INTELLIGENCE,
   FLOOR_BLUEPRINTS,
+  CAMPUS_STATISTICS,
   type FacultyProfile,
   type AdministrativeOffice,
   type ClassroomLab,
@@ -43,10 +46,12 @@ import {
 } from "../../features/campushub/campus-hub-data";
 
 export type HubTab =
+  | "labs"
+  | "classrooms"
   | "faculty"
   | "offices"
-  | "classrooms"
   | "library"
+  | "statistics"
   | "floorplans";
 
 interface Props {
@@ -103,7 +108,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
     });
   }, [facultyQuery, facultyDeptFilter]);
 
-  // Filtered Offices
+  // Filtered Offices (Administrative Offices)
   const filteredOffices = useMemo(() => {
     return ADMINISTRATIVE_OFFICES.filter((off) => {
       if (officeQuery.trim()) {
@@ -111,27 +116,83 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
         const matchName = off.name.toLowerCase().includes(q);
         const matchOfficer = off.headOfficer.toLowerCase().includes(q);
         const matchOffice = off.officeRoom.toLowerCase().includes(q);
+        const matchBlockFloor = `${off.block} ${off.floor}`.toLowerCase().includes(q);
         const matchServices = off.servicesOffered.some((s) => s.toLowerCase().includes(q));
-        return matchName || matchOfficer || matchOffice || matchServices;
+        return matchName || matchOfficer || matchOffice || matchBlockFloor || matchServices;
       }
       return true;
     });
   }, [officeQuery]);
 
-  // Filtered Classrooms
+  // Filtered Teacher Offices for Office Directory (search by teacher name or office/block/floor)
+  const filteredTeacherOffices = useMemo(() => {
+    return FACULTY_DIRECTORY.filter((f) => {
+      if (officeQuery.trim()) {
+        const q = officeQuery.toLowerCase();
+        return (
+          f.name.toLowerCase().includes(q) ||
+          f.designation.toLowerCase().includes(q) ||
+          f.department.toLowerCase().includes(q) ||
+          f.officeRoom.toLowerCase().includes(q) ||
+          `${f.block} ${f.floor}`.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [officeQuery]);
+
+  // Separate Labs vs Classrooms
+  const labDirectoryItems = useMemo(() => {
+    return CLASSROOMS_LABS.filter(
+      (cr) => cr.type === "Computer Lab" || cr.type === "Hardware/Engineering Lab"
+    );
+  }, []);
+
+  const classroomItems = useMemo(() => {
+    return CLASSROOMS_LABS.filter(
+      (cr) => cr.type !== "Computer Lab" && cr.type !== "Hardware/Engineering Lab"
+    );
+  }, []);
+
+  // Filtered Classrooms (supports search by block, floor, room code, or name)
   const filteredClassrooms = useMemo(() => {
-    return CLASSROOMS_LABS.filter((cr) => {
+    return classroomItems.filter((cr) => {
       if (classroomBlockFilter !== "All" && cr.block !== classroomBlockFilter) return false;
       if (classroomQuery.trim()) {
         const q = classroomQuery.toLowerCase();
         const matchCode = cr.roomCode.toLowerCase().includes(q);
         const matchName = cr.name.toLowerCase().includes(q);
         const matchType = cr.type.toLowerCase().includes(q);
-        return matchCode || matchName || matchType;
+        const matchBlockFloor = `${cr.block} ${cr.floor}`.toLowerCase().includes(q);
+        return matchCode || matchName || matchType || matchBlockFloor;
       }
       return true;
     });
-  }, [classroomBlockFilter, classroomQuery]);
+  }, [classroomItems, classroomBlockFilter, classroomQuery]);
+
+  // Group all classrooms block-wise and floor-by-floor with identical structure per block
+  const classroomsByBlock = useMemo(() => {
+    const blocks = ["Block A", "Block B", "Block C", "Block D"] as const;
+    const floorOrder = ["Ground Floor", "1st Floor", "2nd Floor", "3rd Floor"] as const;
+
+    return blocks
+      .filter((blk) => classroomBlockFilter === "All" || blk === classroomBlockFilter)
+      .map((blk) => {
+        const blkRooms = filteredClassrooms.filter((r) => r.block === blk);
+        const floors = floorOrder
+          .map((flr) => ({
+            floor: flr,
+            rooms: blkRooms.filter((r) => r.floor === flr)
+          }))
+          .filter((f) => f.rooms.length > 0);
+        return {
+          block: blk,
+          totalRooms: blkRooms.length,
+          floors
+        };
+      })
+      .filter((b) => b.totalRooms > 0);
+  }, [filteredClassrooms, classroomBlockFilter]);
 
   // Filtered Library Catalog
   const filteredBooks = useMemo(() => {
@@ -159,76 +220,45 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* ================= 5 MAIN SUB-MODULE SELECTOR CARDS ================= */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        {/* Card 1: Faculty */}
+      {/* ================= 6 CAMPUS HUB DIRECTORY CARDS ================= */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+        {/* Card 1: Lab Directory */}
         <button
-          onClick={() => setActiveTab("faculty")}
+          type="button"
+          onClick={() => setActiveTab("labs")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
-            activeTab === "faculty"
-              ? "border-brand-600 bg-panel ring-2 ring-brand-500/30"
-              : "border-line bg-panel hover:border-brand-500/50"
+            activeTab === "labs"
+              ? "border-cyan-600 bg-panel ring-2 ring-cyan-500/30"
+              : "border-line bg-panel hover:border-cyan-500/50"
           }`}
         >
           <div className="flex items-center justify-between">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                activeTab === "faculty"
-                  ? "bg-brand-600 text-white"
-                  : "bg-brand-500/10 text-brand-600 group-hover:scale-105"
+                activeTab === "labs"
+                  ? "bg-cyan-600 text-white"
+                  : "bg-cyan-500/10 text-cyan-600 group-hover:scale-105"
               }`}
             >
-              <Users size={20} />
+              <Cpu size={20} />
             </div>
             <span className="text-2xs font-extrabold text-muted">
-              {FACULTY_DIRECTORY.length} Profiles
+              {labDirectoryItems.length} Labs
             </span>
           </div>
           <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-brand-600 transition">
-              Faculty Directory
+            <h4 className="font-extrabold text-sm text-ink group-hover:text-cyan-600 transition">
+              Lab Directory
             </h4>
             <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              HODs, Deans & Batch Advisors
+              CS, AI, Cisco &amp; CAD Labs
             </p>
           </div>
         </button>
 
-        {/* Card 2: Administrative Offices */}
+        {/* Card 2: Classrooms */}
         <button
-          onClick={() => setActiveTab("offices")}
-          className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
-            activeTab === "offices"
-              ? "border-indigo-600 bg-panel ring-2 ring-indigo-500/30"
-              : "border-line bg-panel hover:border-indigo-500/50"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                activeTab === "offices"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-indigo-500/10 text-indigo-600 group-hover:scale-105"
-              }`}
-            >
-              <Briefcase size={20} />
-            </div>
-            <span className="text-2xs font-extrabold text-muted">
-              Live Queue Status
-            </span>
-          </div>
-          <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-indigo-600 transition">
-              Office Directory
-            </h4>
-            <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              Registrar, Accounts & Health
-            </p>
-          </div>
-        </button>
-
-        {/* Card 3: Classrooms & Labs */}
-        <button
+          type="button"
           onClick={() => setActiveTab("classrooms")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
             activeTab === "classrooms"
@@ -247,21 +277,90 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
               <Building size={20} />
             </div>
             <span className="text-2xs font-extrabold text-muted">
-              Block & Floor View
+              {classroomItems.length} Rooms
             </span>
           </div>
           <div className="mt-3">
             <h4 className="font-extrabold text-sm text-ink group-hover:text-emerald-600 transition">
-              Classrooms & Labs
+              Classrooms
             </h4>
             <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              Equipped Rooms & Theaters
+              Block &amp; Floor Directory
             </p>
           </div>
         </button>
 
-        {/* Card 4: Library Intelligence */}
+        {/* Card 3: Faculty & Teachers */}
         <button
+          type="button"
+          onClick={() => setActiveTab("faculty")}
+          className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
+            activeTab === "faculty"
+              ? "border-brand-600 bg-panel ring-2 ring-brand-500/30"
+              : "border-line bg-panel hover:border-brand-500/50"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
+                activeTab === "faculty"
+                  ? "bg-brand-600 text-white"
+                  : "bg-brand-500/10 text-brand-600 group-hover:scale-105"
+              }`}
+            >
+              <Users size={20} />
+            </div>
+            <span className="text-2xs font-extrabold text-muted">
+              {FACULTY_DIRECTORY.length} Staff
+            </span>
+          </div>
+          <div className="mt-3">
+            <h4 className="font-extrabold text-sm text-ink group-hover:text-brand-600 transition">
+              Faculty &amp; Teachers
+            </h4>
+            <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
+              Director, HODs &amp; Advisors
+            </p>
+          </div>
+        </button>
+
+        {/* Card 4: Office Directory */}
+        <button
+          type="button"
+          onClick={() => setActiveTab("offices")}
+          className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
+            activeTab === "offices"
+              ? "border-indigo-600 bg-panel ring-2 ring-indigo-500/30"
+              : "border-line bg-panel hover:border-indigo-500/50"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
+                activeTab === "offices"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-indigo-500/10 text-indigo-600 group-hover:scale-105"
+              }`}
+            >
+              <Briefcase size={20} />
+            </div>
+            <span className="text-2xs font-extrabold text-muted">
+              Block &amp; Floor
+            </span>
+          </div>
+          <div className="mt-3">
+            <h4 className="font-extrabold text-sm text-ink group-hover:text-indigo-600 transition">
+              Office Directory
+            </h4>
+            <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
+              Teacher &amp; Admin Offices
+            </p>
+          </div>
+        </button>
+
+        {/* Card 5: Library */}
+        <button
+          type="button"
           onClick={() => setActiveTab("library")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
             activeTab === "library"
@@ -280,24 +379,25 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
               <BookOpen size={20} />
             </div>
             <span className="text-2xs font-extrabold text-emerald-600">
-              {LIBRARY_INTELLIGENCE.availableSilentSeats} Desks Free
+              {LIBRARY_INTELLIGENCE.availableSilentSeats} Free
             </span>
           </div>
           <div className="mt-3">
             <h4 className="font-extrabold text-sm text-ink group-hover:text-amber-600 transition">
-              Library Intelligence
+              Library
             </h4>
             <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              Seat Counts & Book Catalog
+              Seats &amp; Digital Catalog
             </p>
           </div>
         </button>
 
-        {/* Card 5: Interactive Floor Plans */}
+        {/* Card 6: Statistics */}
         <button
-          onClick={() => setActiveTab("floorplans")}
+          type="button"
+          onClick={() => setActiveTab("statistics")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
-            activeTab === "floorplans"
+            activeTab === "statistics"
               ? "border-purple-600 bg-panel ring-2 ring-purple-500/30"
               : "border-line bg-panel hover:border-purple-500/50"
           }`}
@@ -305,25 +405,41 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
           <div className="flex items-center justify-between">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                activeTab === "floorplans"
+                activeTab === "statistics"
                   ? "bg-purple-600 text-white"
                   : "bg-purple-500/10 text-purple-600 group-hover:scale-105"
               }`}
             >
-              <Compass size={20} />
+              <BarChart3 size={20} />
             </div>
             <span className="text-2xs font-extrabold text-purple-600">
-              Spatial Vector Map
+              Campus Data
             </span>
           </div>
           <div className="mt-3">
             <h4 className="font-extrabold text-sm text-ink group-hover:text-purple-600 transition">
-              Floor Blueprints
+              Statistics
             </h4>
             <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              Turn-by-Turn Wayfinding
+              Enrollment &amp; Facilities
             </p>
           </div>
+        </button>
+      </div>
+
+      {/* Quick Wayfinding Blueprints Bar */}
+      <div className="flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => setActiveTab("floorplans")}
+          className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition ${
+            activeTab === "floorplans"
+              ? "border-purple-600 bg-purple-600 text-white"
+              : "border-line bg-panel text-purple-600 hover:border-purple-500"
+          }`}
+        >
+          <Compass size={14} />
+          <span>Interactive Floor Blueprints</span>
         </button>
       </div>
 
@@ -472,7 +588,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
         </div>
       )}
 
-      {/* ================= TAB 2: OFFICE & ADMINISTRATIVE SERVICES ================= */}
+      {/* ================= TAB 2: OFFICE DIRECTORY (TEACHER + ADMIN OFFICES) ================= */}
       {activeTab === "offices" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Search Bar */}
@@ -480,7 +596,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search administrative office by name or service (e.g. Registrar, fee challan, medical dispensary, transcripts)..."
+                placeholder="Search by teacher name or office name (e.g. Sir Munir, Registrar, Accounts, Block A, 3rd Floor)..."
                 value={officeQuery}
                 onChange={(e) => setOfficeQuery(e.target.value)}
                 className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
@@ -494,9 +610,51 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             </div>
           </div>
 
-          {/* Offices List */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            {filteredOffices.map((off) => (
+          {/* Faculty & Teacher Offices (Block & Floor Locator) */}
+          {filteredTeacherOffices.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted">
+                Faculty &amp; Teacher Offices ({filteredTeacherOffices.length})
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredTeacherOffices.map((f) => (
+                  <div
+                    key={`off-${f.id}`}
+                    className="rounded-2xl border border-line bg-panel p-4 shadow-2xs space-y-2.5 hover:border-indigo-500/60 transition"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="font-extrabold text-sm text-ink">{f.name}</h4>
+                        <p className="text-2xs font-semibold text-indigo-600">{f.designation}</p>
+                        <p className="text-2xs text-muted">{f.department}</p>
+                      </div>
+                      <span className="rounded-lg bg-indigo-500/10 px-2 py-0.5 text-2xs font-bold text-indigo-600 shrink-0">
+                        {f.phoneExtension}
+                      </span>
+                    </div>
+
+                    <div className="rounded-xl border border-line/60 bg-surface/60 p-3 text-xs space-y-1">
+                      <p className="font-bold text-ink flex items-center gap-1.5">
+                        <MapPin size={13} className="text-indigo-600 shrink-0" />
+                        <span>
+                          {f.block}, {f.floor}
+                        </span>
+                      </p>
+                      <p className="text-2xs text-muted pl-5">{f.officeRoom}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Administrative Offices List */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted">
+              Administrative Offices &amp; Services ({filteredOffices.length})
+            </h3>
+            <div className="grid gap-6 lg:grid-cols-2">
+              {filteredOffices.map((off) => (
               <div
                 key={off.id}
                 className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-5 flex flex-col justify-between hover:border-indigo-500/60 transition group"
@@ -562,7 +720,9 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                     <div className="flex items-center justify-between">
                       <p className="flex items-center gap-1.5">
                         <MapPin size={13} className="text-brand-500 shrink-0" />
-                        <span className="font-semibold text-ink">{off.officeRoom}</span>
+                        <span className="font-semibold text-ink">
+                          {off.block}, {off.floor} — {off.officeRoom}
+                        </span>
                       </p>
                       <button
                         onClick={() =>
@@ -620,11 +780,135 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* ================= TAB 3: CLASSROOMS & SPECIALIZED LABS ================= */}
+      {/* ================= TAB: LAB DIRECTORY ================= */}
+      {activeTab === "labs" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 className="text-base font-extrabold text-ink">Campus Lab Directory</h3>
+              <p className="text-xs text-muted">
+                Specialized computer, AI/GPU, networking, and CAD engineering laboratories across blocks.
+              </p>
+            </div>
+            <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-600">
+              {labDirectoryItems.length} Active Laboratories
+            </span>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {labDirectoryItems.map((lab) => (
+              <div
+                key={lab.id}
+                className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-cyan-500/60 transition"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-extrabold text-base text-ink">{lab.roomCode}</h4>
+                      <p className="text-xs text-muted mt-0.5">{lab.name}</p>
+                    </div>
+                    <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 text-2xs font-bold text-cyan-600 shrink-0">
+                      {lab.type}
+                    </span>
+                  </div>
+
+                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted">Location</span>
+                      <span className="font-bold text-ink">{lab.block}, {lab.floor}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted">Capacity / Workstations</span>
+                      <span className="font-bold text-ink">{lab.capacity} Seats ({lab.equipment.workstationsCount} PCs)</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted">Lab In-Charge</span>
+                      <span className="font-semibold text-ink">{lab.inCharge}</span>
+                    </div>
+                  </div>
+
+                  {lab.equipment.specialGear && (
+                    <p className="text-2xs text-amber-700 dark:text-amber-300 font-medium">
+                      ⚡ {lab.equipment.specialGear}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    locateOnFloorBlueprint(
+                      lab.block === "Engineering Labs"
+                        ? "Engineering Labs - Ground Floor"
+                        : `${lab.block} - ${lab.floor}`,
+                      lab.roomCode
+                    )
+                  }
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface py-2 text-xs font-bold text-cyan-600 hover:border-cyan-500 transition"
+                >
+                  <Compass size={13} />
+                  <span>View on Floor Blueprint</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ================= TAB: CAMPUS STATISTICS ================= */}
+      {activeTab === "statistics" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          <div>
+            <h3 className="text-base font-extrabold text-ink">Campus Statistics &amp; Overview</h3>
+            <p className="text-xs text-muted">
+              Institutional headcount, academic blocks, laboratories, library capacity, and departmental breakdown.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {CAMPUS_STATISTICS.overview.map((stat) => (
+              <div key={stat.label} className="rounded-2xl border border-line bg-panel p-5 shadow-2xs space-y-1">
+                <p className="text-xs font-semibold text-muted">{stat.label}</p>
+                <p className="font-mono text-2xl font-black text-brand-600">{stat.value}</p>
+                <p className="text-2xs text-muted">{stat.sublabel}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs overflow-x-auto">
+            <h4 className="font-extrabold text-sm text-ink mb-3">Department-Wise Enrollment &amp; Facilities</h4>
+            <table className="w-full min-w-[520px] border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-line text-left text-2xs uppercase tracking-wider text-muted">
+                  <th className="py-2 pr-3 font-bold">Department</th>
+                  <th className="px-3 py-2 font-bold">Programs</th>
+                  <th className="px-3 py-2 text-right font-bold">Students</th>
+                  <th className="px-3 py-2 text-right font-bold">Faculty</th>
+                  <th className="pl-3 py-2 text-right font-bold">Labs</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line/60">
+                {CAMPUS_STATISTICS.departments.map((d) => (
+                  <tr key={d.department}>
+                    <td className="py-2.5 pr-3 font-bold text-ink">{d.department}</td>
+                    <td className="px-3 py-2.5 font-mono text-muted">{d.code}</td>
+                    <td className="px-3 py-2.5 text-right font-mono font-bold text-ink">{d.students.toLocaleString()}</td>
+                    <td className="px-3 py-2.5 text-right font-mono text-ink">{d.faculty}</td>
+                    <td className="pl-3 py-2.5 text-right font-mono font-bold text-brand-600">{d.labs}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ================= TAB 3: CLASSROOMS (SEARCH + BLOCK-WISE FLOOR CARDS) ================= */}
       {activeTab === "classrooms" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Block Selector Chips & Search Bar */}
@@ -632,7 +916,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search classrooms or laboratories by code, name, or equipment (e.g. Room C-204, Software Lab, RTX 4090)..."
+                placeholder="Search classrooms by block, floor, room code, or name (e.g. Block A, 2nd Floor, C-204)..."
                 value={classroomQuery}
                 onChange={(e) => setClassroomQuery(e.target.value)}
                 className="w-full rounded-xl border border-line bg-surface px-3 py-2 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
@@ -647,9 +931,9 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
             <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-line/60">
               <span className="text-2xs font-bold uppercase tracking-wider text-muted mr-1">
-                Filter by Sector:
+                Filter by Block:
               </span>
-              {["All", "Block A", "Block B", "Block C", "Block D", "Engineering Labs"].map((blk) => (
+              {["All", "Block A", "Block B", "Block C", "Block D"].map((blk) => (
                 <button
                   key={blk}
                   onClick={() => setClassroomBlockFilter(blk)}
@@ -665,31 +949,90 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             </div>
           </div>
 
-          {/* Classrooms Grid */}
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {filteredClassrooms.map((cr) => (
-              <div
-                key={cr.id}
-                className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-emerald-500/60 transition group"
-              >
-                <div className="space-y-3.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-extrabold text-base text-ink group-hover:text-emerald-600 transition">
-                          {cr.roomCode}
-                        </h4>
-                        <span className="rounded-md bg-surface border border-line px-2 py-0.5 text-2xs font-bold text-muted">
-                          {cr.floor}
-                        </span>
+          {/* Block-Wise Classrooms Directory (One Card per Block, Grouped by Floor) */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted">
+              All Classrooms Block-Wise (Floor-by-Floor Structure)
+            </h3>
+            <div className="grid gap-5 md:grid-cols-2">
+              {classroomsByBlock.map((blkGroup) => (
+                <div
+                  key={blkGroup.block}
+                  className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4"
+                >
+                  <div className="flex items-center justify-between border-b border-line pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                        <Building size={18} />
+                      </span>
+                      <div>
+                        <h4 className="font-extrabold text-base text-ink">{blkGroup.block}</h4>
+                        <p className="text-2xs text-muted">
+                          {blkGroup.floors.length} {blkGroup.floors.length === 1 ? "Floor" : "Floors"} · {blkGroup.totalRooms} Classrooms
+                        </p>
                       </div>
-                      <p className="text-xs text-muted mt-0.5 line-clamp-1">{cr.name}</p>
                     </div>
-
-                    <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-2xs font-bold text-emerald-600 shrink-0">
-                      {cr.type}
-                    </span>
                   </div>
+
+                  <div className="space-y-3">
+                    {blkGroup.floors.map((flr) => (
+                      <div key={flr.floor} className="space-y-1.5">
+                        <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                          {flr.floor}
+                        </p>
+                        <div className="space-y-1.5">
+                          {flr.rooms.map((rm) => (
+                            <div
+                              key={rm.id}
+                              className="flex items-center justify-between gap-2 rounded-xl border border-line/60 bg-surface/60 px-3 py-2 text-xs"
+                            >
+                              <div className="min-w-0">
+                                <span className="font-mono font-bold text-ink">{rm.roomCode}</span>
+                                <span className="text-muted ml-2 truncate">{rm.name}</span>
+                              </div>
+                              <span className="text-2xs font-semibold text-muted shrink-0">
+                                {rm.capacity} seats
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Detailed Classroom Cards (with explicit Block & Floor badges) */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted">
+              Classroom Search Results &amp; Equipment Details ({filteredClassrooms.length})
+            </h3>
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {filteredClassrooms.map((cr) => (
+                <div
+                  key={cr.id}
+                  className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-emerald-500/60 transition group"
+                >
+                  <div className="space-y-3.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <h4 className="font-extrabold text-base text-ink group-hover:text-emerald-600 transition">
+                            {cr.roomCode}
+                          </h4>
+                          <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-2xs font-bold text-emerald-700 dark:text-emerald-300">
+                            {cr.block} · {cr.floor}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted mt-0.5 line-clamp-1">{cr.name}</p>
+                      </div>
+
+                      <span className="rounded-full bg-surface border border-line px-2 py-0.5 text-[10px] font-bold text-muted shrink-0">
+                        {cr.type}
+                      </span>
+                    </div>
 
                   {/* Telemetry Box */}
                   <div className="rounded-xl border border-line/60 bg-surface/50 p-3 space-y-2 text-xs">
@@ -768,6 +1111,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         </div>
       )}

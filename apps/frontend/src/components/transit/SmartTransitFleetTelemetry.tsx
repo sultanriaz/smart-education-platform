@@ -194,7 +194,7 @@ export function SmartTransitFleetTelemetry({
             </div>
 
             <h3 className="font-extrabold text-lg text-ink group-hover:text-brand-600 transition">
-              Planned Routes (City Route Networks)
+              Planned Routes
             </h3>
             <p className="text-xs text-muted mt-1 leading-relaxed">
               Morning Inbound (07:15–08:30 AM) and Evening Outbound (03:45 PM) express commuter routes covering Farid Town Point, Mall Road, High Court, and Canal corridors.
@@ -240,7 +240,7 @@ export function SmartTransitFleetTelemetry({
             </div>
 
             <h3 className="font-extrabold text-lg text-ink group-hover:text-cyan-600 transition">
-              Shuttle Schedule (Inter-Campus Loops)
+              Shuttle Schedule
             </h3>
             <p className="text-xs text-muted mt-1 leading-relaxed">
               High-frequency circular loops between Allama Iqbal & Fatima Jinnah Hostels, Central Library, CS Block C Quadrangle, and the Sports Complex & Gym arena.
@@ -571,20 +571,20 @@ export function SmartTransitFleetTelemetry({
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-extrabold text-ink uppercase tracking-wider flex items-center gap-1.5">
                         <Clock size={13} className="text-brand-500" />
-                        <span>Stop-by-Stop Itinerary ({route.stops.length} Stops)</span>
+                        <span>Complete Stop-by-Stop Schedule ({route.stops.length} Stops)</span>
                       </span>
                       <button
                         onClick={() => setExpandedRouteId(isExpanded ? null : route.id)}
                         className="text-2xs font-bold text-brand-600 hover:underline flex items-center gap-0.5"
                       >
-                        <span>{isExpanded ? "Collapse Itinerary" : "Expand All Stops"}</span>
-                        {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                        <span>{isExpanded ? "Show All Stops" : "Compact View"}</span>
+                        {isExpanded ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
                       </button>
                     </div>
 
-                    {/* Timeline stops */}
+                    {/* Timeline stops — show ALL stops by default */}
                     <div className="space-y-3 relative pl-5 border-l-2 border-brand-500/30">
-                      {(isExpanded ? route.stops : route.stops.slice(0, 3)).map((stop, sIdx) => {
+                      {(!isExpanded ? route.stops : route.stops.slice(0, 3)).map((stop) => {
                         const isPassed = stop.status === "PASSED";
                         const isApproaching = stop.status === "APPROACHING";
                         const isSubscribed = subscribedStops[stop.id];
@@ -675,9 +675,9 @@ export function SmartTransitFleetTelemetry({
                         );
                       })}
 
-                      {!isExpanded && route.stops.length > 3 && (
+                      {isExpanded && route.stops.length > 3 && (
                         <button
-                          onClick={() => setExpandedRouteId(route.id)}
+                          onClick={() => setExpandedRouteId(null)}
                           className="text-2xs font-bold text-brand-600 hover:underline pt-1 block"
                         >
                           + {route.stops.length - 3} more stops along this line…
