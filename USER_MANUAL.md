@@ -179,7 +179,80 @@ Navigate to **Finance** (`/app/student/finance`):
 
 ---
 
-## 5. Security & Privacy Safeguards
+## 5. Universal Campus Gateway & Client Modules Guide
+
+The platform integrates 8 dedicated operational modules accessible both from the public gateway (`/` or `/explore`) and from protected role-specific workspaces.
+
+### 5.1 Module 1: Main Dashboard (Universal Campus Gateway)
+- **Accessible at**: `/` and `/explore`
+- **8 Core Action Cards**:
+  1. **Student Portal**: Direct sign-in for students (`/login/student`) with department and registration number validation.
+  2. **Free Slots**: Live discovery of empty classrooms for study sessions.
+  3. **Timetable**: Master section and teacher timetable engine.
+  4. **Campus Hub**: Centralized university directory across 6 campus divisions.
+  5. **Transport Service**: City bus networks and intra-campus shuttle telemetries.
+  6. **Faculty**: Dedicated faculty portal sign-in (`/login/faculty`).
+  7. **Sports Week**: Tournament brackets, fixtures, and department standings.
+  8. **Self Assessment**: Autonomous AI diagnostic assessment engine.
+
+### 5.2 Module 2: Student Academic Cockpit & Course Command Centers
+- **Accessible at**: `/app/student` and `/app/student/courses/:courseId`
+- **Regulatory Attendance Guard**: Alerts when attendance dips below the mandatory 75% HEC threshold with calculation of required consecutive lectures.
+- **8 Subject Detail Sub-Cards**:
+  1. *Assignments*: View pending tasks with file upload dropbox.
+  2. *Quizzes*: Multiple-choice and timed quizzes.
+  3. *Attendance*: Class-by-class attendance ledger and leave excuse submission.
+  4. *Marks*: Weightage breakdowns and aggregate GPA projections.
+  5. *Notifications*: Course announcements and notices from instructors.
+  6. *Resources*: Syllabus, lecture slides, and supplementary reading files.
+  7. *Lecture Hub*: Recorded lecture videos with playback controls.
+  8. *Course Information*: Instructor details, office hours, and course outlines.
+
+### 5.3 Module 3: Intelligent Timetable & Schedule Engine
+- **Accessible at**: `/app/student/timetable`, `/app/teacher/timetable`, and Gateway Tab
+- **Student View**: Filter by section (e.g. `BCS-7C`, `BCS-7A`, `BSE-5A`) with daily lecture count summaries and enrolled student capacities.
+- **Teacher View**: Filter by faculty member (e.g. `Sir Munir (Dr. Munir Ahmad)`) with assigned slots and halls.
+- **1-Click Sync**: Export schedule to `.ics` for Google Calendar, Apple Calendar, and Outlook.
+
+### 5.4 Module 4: Dynamic Space Finder & Free Slot Navigator
+- **Accessible at**: `/app/student/facilities` and Gateway Tab
+- **Available Right Now**: 1-click filter for instantly free rooms.
+- **Block-Wise Navigation**: Block A, Block B, Block C, Block D, and Engineering Labs.
+- **Room Telemetry**: Seating capacity, projector, Wi-Fi, power sockets, and "Free Until" indicators.
+- **Weekly Matrix**: Comprehensive day and slot grid of all available study spaces.
+
+### 5.5 Module 5: Smart Transit & Fleet Telemetry
+- **Accessible at**: `/app/student/transit` and Gateway Tab
+- **City Route Networks**: Inbound and outbound routes (e.g., *Farid Town Point*, *Mall Road Express*, *Canal Line*).
+- **Stop-by-Stop Itineraries**: Scheduled times vs estimated actual arrivals (ETAs), bus numbers, driver contacts, and occupancy status.
+- **Disruption Bulletins**: Live alerts for route diversions, maintenance, or weather delays.
+
+### 5.6 Module 6: Campus Hub, Directory & Spatial Wayfinding
+- **Accessible at**: `/app/student/hub` and Gateway Tab
+- **6 Specialized Directories**:
+  1. *Faculty & Teachers Directory*: Search by department, title, office hours, and consultation booking.
+  2. *Office Directory*: Registrar, Accounts, Examination, Career Placement, and Medical Center with working hours and live queue token trackers.
+  3. *Lab Directory*: Specialized hardware, robotics, and computer labs with equipment inventories.
+  4. *Classrooms*: Lecture halls categorized by floor and block with seating capacity.
+  5. *Library Intelligence*: Live seat availability, catalog search, and borrowing limits.
+  6. *Campus Statistics*: High-level summary of campus assets.
+- **Interactive Floor Blueprints**: Visual vector room maps highlighting selected rooms.
+
+### 5.7 Module 7: Campus Life, Marquee Events & Sports Gala Portal
+- **Accessible at**: `/app/student/events` and Gateway Tab
+- **Calendar-Aware Morphing**: Sports Gala (Spring), Tech Hackathon (Fall), Career Fair (Winter).
+- **Tournament Engine**: Live fixtures grouped by day with day selector pills, knockout elimination brackets, and department points table.
+
+### 5.8 Module 8: AI Self-Learning & Adaptive Assessment Studio
+- **Accessible at**: `/app/student/learning` and Gateway Card
+- **Bloom's Taxonomy Generator**: Configurable question difficulty, counts, and topic filters.
+- **KaTeX Step-by-Step Proofs**: High-resolution mathematical formula derivations.
+- **Topic Mastery Radar Chart**: Visual SVG radar diagram classifying topics into Strong ($\ge 75\%$), Moderate ($50\text{--}74\%$), and Weak ($<50\%$).
+- **Smart Test Regeneration**: Automatic weakness remediation targeting identified knowledge gaps.
+
+---
+
+## 6. Security & Privacy Safeguards
 
 - **Multi-Tenant Account Isolation**: Students and teachers can never access other users' private financial, academic, or payroll records.
 - **Strict Role Boundaries**: Accessing an administrative or teacher URL with a student account immediately triggers a `403 Forbidden` response.

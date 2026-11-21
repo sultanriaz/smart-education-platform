@@ -28,8 +28,8 @@ const WEEKDAYS: Array<TimetableSlot["day"]> = [
   "Friday"
 ];
 
-export function TimetableHub() {
-  const [selectedRole, setSelectedRole] = useState<"student" | "teacher">("student");
+export function TimetableHub({ initialRole = "student" }: { initialRole?: "student" | "teacher" } = {}) {
+  const [selectedRole, setSelectedRole] = useState<"student" | "teacher">(initialRole);
   const [selectedSection, setSelectedSection] = useState<string>("BCS-7C");
   const [selectedTeacher, setSelectedTeacher] = useState<string>("Sir Munir (Dr. Munir Ahmad)");
   const [displayStyle, setDisplayStyle] = useState<"weekly_list" | "interactive_engine">("weekly_list");
