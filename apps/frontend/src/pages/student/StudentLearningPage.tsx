@@ -127,7 +127,7 @@ function InstitutionalResourceCard({
           }
           target="_blank"
           rel="noreferrer"
-          className="mt-5 inline-flex rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
+          className="mt-5 inline-flex rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary-hover transition"
         >
           Open resource
         </a>
@@ -465,8 +465,8 @@ export function StudentLearningPage() {
           onClick={() => setActiveTab("materials")}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
             activeTab === "materials"
-              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-              : "text-muted hover:text-text hover:bg-panel"
+              ? "bg-primary-soft text-primary-ink"
+              : "text-muted hover:text-ink hover:bg-panel"
           }`}
         >
           <FolderOpen className="h-4 w-4" />
@@ -478,8 +478,8 @@ export function StudentLearningPage() {
           onClick={() => setActiveTab("tests")}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
             activeTab === "tests"
-              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-              : "text-muted hover:text-text hover:bg-panel"
+              ? "bg-primary-soft text-primary-ink"
+              : "text-muted hover:text-ink hover:bg-panel"
           }`}
         >
           <FileQuestion className="h-4 w-4" />
@@ -491,8 +491,8 @@ export function StudentLearningPage() {
           onClick={() => setActiveTab("mastery")}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
             activeTab === "mastery"
-              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-              : "text-muted hover:text-text hover:bg-panel"
+              ? "bg-primary-soft text-primary-ink"
+              : "text-muted hover:text-ink hover:bg-panel"
           }`}
         >
           <BarChart2 className="h-4 w-4" />
@@ -504,8 +504,8 @@ export function StudentLearningPage() {
           onClick={() => setActiveTab("institutional")}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
             activeTab === "institutional"
-              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-              : "text-muted hover:text-text hover:bg-panel"
+              ? "bg-primary-soft text-primary-ink"
+              : "text-muted hover:text-ink hover:bg-panel"
           }`}
         >
           <Library className="h-4 w-4" />

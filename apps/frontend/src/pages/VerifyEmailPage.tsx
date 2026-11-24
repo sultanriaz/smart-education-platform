@@ -63,8 +63,8 @@ export function VerifyEmailPage() {
         <div
           className={`mt-6 rounded-xl border p-4 text-sm ${
             state === "error"
-              ? "border-red-200 bg-red-50 text-danger"
-              : "border-line bg-surface"
+              ? "border-danger/40 bg-danger-soft text-danger-ink"
+              : "border-line bg-surface text-ink"
           }`}
           role={state === "error" ? "alert" : undefined}
         >

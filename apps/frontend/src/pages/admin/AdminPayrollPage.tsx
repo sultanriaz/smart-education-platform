@@ -187,14 +187,14 @@ export function AdminPayrollPage() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 py-2.5 px-4 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "border-primary-600 text-primary-600 bg-primary-50/50 dark:bg-primary-950/20"
-                  : "border-transparent text-muted hover:text-foreground"
+                  ? "border-primary text-primary-ink bg-primary-soft/50"
+                  : "border-transparent text-muted hover:text-ink"
               }`}
             >
               <Icon className="w-4 h-4" />
               {tab.label}
               {tab.id === "runs" && runs.filter((r) => r.status === "CALCULATED").length > 0 && (
-                <span className="ml-1 bg-amber-500 text-white rounded-full px-1.5 py-0.2 text-[10px]">
+                <span className="ml-1 bg-warning text-warning-fg rounded-full px-1.5 py-0.2 text-[10px]">
                   {runs.filter((r) => r.status === "CALCULATED").length}
                 </span>
               )}
@@ -211,19 +211,19 @@ export function AdminPayrollPage() {
             Automated gross-to-net computation engine supports base pay, allowances (conveyance, medical, housing), statutory tax deductions, and unpaid leave proration. Maker-checker enforcement ensures segregation of duties prior to batch disbursement.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-muted/30 rounded border">
+            <div className="p-4 bg-subtle/60 rounded border border-line">
               <span className="text-xs text-muted">Configured Salary Structures</span>
               <div className="text-xl font-bold mt-1">{structures.length}</div>
             </div>
-            <div className="p-4 bg-muted/30 rounded border">
+            <div className="p-4 bg-subtle/60 rounded border border-line">
               <span className="text-xs text-muted">Active Payroll Periods</span>
               <div className="text-xl font-bold mt-1">{periods.length}</div>
             </div>
-            <div className="p-4 bg-muted/30 rounded border">
+            <div className="p-4 bg-subtle/60 rounded border border-line">
               <span className="text-xs text-muted">Maker-Checker Policy</span>
               <div className="flex items-center gap-2 mt-1">
-                <ShieldCheck className="w-5 h-5 text-green-600" />
-                <span className="font-bold text-green-600 text-sm">Enforced</span>
+                <ShieldCheck className="w-5 h-5 text-success-ink" />
+                <span className="font-bold text-success-ink text-sm">Enforced</span>
               </div>
             </div>
           </div>
@@ -283,7 +283,7 @@ export function AdminPayrollPage() {
                       {s.components?.map((c, idx) => (
                         <div key={idx} className="flex justify-between">
                           <span className="text-muted">{c.name}:</span>
-                          <span className={`font-mono ${c.component_type === "ALLOWANCE" ? "text-green-600" : "text-red-600"}`}>
+                          <span className={`font-mono ${c.component_type === "ALLOWANCE" ? "text-success-ink" : "text-danger-ink"}`}>
                             {c.component_type === "ALLOWANCE" ? "+" : "-"}PKR {Number(c.amount).toLocaleString()}
                           </span>
                         </div>
@@ -334,7 +334,7 @@ export function AdminPayrollPage() {
           <h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-2">Available Periods</h4>
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-muted/50 border-b">
+              <thead className="bg-subtle/75 border-b border-line">
                 <tr>
                   <th className="py-2.5 px-3">Period Name</th>
                   <th className="py-2.5 px-3">Start Date</th>
@@ -362,7 +362,6 @@ export function AdminPayrollPage() {
       )}
 
       {/* Tab: Maker-Checker Run Approvals */}
-      {/* Tab: Maker-Checker Run Approvals */}
       {activeTab === "runs" && (
         <Card className="p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
@@ -375,15 +374,15 @@ export function AdminPayrollPage() {
                 Segregation of Duties: A payroll run created/calculated by one administrator cannot be approved by that same administrator.
               </p>
             </div>
-            <label className="flex items-center gap-2 text-xs bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 px-3 py-1.5 rounded cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs bg-warning-soft border border-warning/40 px-3 py-1.5 rounded cursor-pointer select-none">
               <input
                 id="simulate-failures-chk"
                 type="checkbox"
                 checked={simulateFailureMode}
                 onChange={(e) => setSimulateFailureMode(e.target.checked)}
-                className="rounded text-amber-600 focus:ring-amber-500"
+                className="rounded text-warning focus:ring-warning"
               />
-              <span className="font-semibold text-amber-800 dark:text-amber-300">
+              <span className="font-semibold text-warning-ink">
                 Simulate Payout Rail Failures (Audit Test)
               </span>
             </label>
@@ -394,7 +393,7 @@ export function AdminPayrollPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
-                <thead className="bg-muted/50 border-b">
+                <thead className="bg-subtle/75 border-b border-line">
                   <tr>
                     <th className="py-2.5 px-3">Period</th>
                     <th className="py-2.5 px-3">Total Gross</th>
@@ -410,8 +409,8 @@ export function AdminPayrollPage() {
                     <tr key={r.id}>
                       <td className="py-2.5 px-3 font-medium">{r.period_name || "Monthly Period"}</td>
                       <td className="py-2.5 px-3 font-mono">PKR {Number(r.total_gross).toLocaleString()}</td>
-                      <td className="py-2.5 px-3 font-mono text-red-600">-PKR {Number(r.total_deductions).toLocaleString()}</td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-green-600">PKR {Number(r.total_net).toLocaleString()}</td>
+                      <td className="py-2.5 px-3 font-mono text-danger-ink">-PKR {Number(r.total_deductions).toLocaleString()}</td>
+                      <td className="py-2.5 px-3 font-mono font-bold text-success-ink">PKR {Number(r.total_net).toLocaleString()}</td>
                       <td className="py-2.5 px-3 font-mono text-[11px] text-muted">{r.created_by?.slice(0, 8)}…</td>
                       <td className="py-2.5 px-3">
                         <Badge>
@@ -462,7 +461,7 @@ export function AdminPayrollPage() {
 
           <div className="overflow-x-auto mt-4">
             <table className="w-full text-xs text-left">
-              <thead className="bg-muted/50 border-b">
+              <thead className="bg-subtle/75 border-b border-line">
                 <tr>
                   <th className="py-2.5 px-3">Batch Number</th>
                   <th className="py-2.5 px-3">Total Amount</th>
@@ -486,22 +485,22 @@ export function AdminPayrollPage() {
                     const canReconcile = d.status === "COMPLETED" || d.status === "PARTIAL_FAILURE";
                     return (
                       <Fragment key={d.id}>
-                        <tr className="hover:bg-muted/20">
+                        <tr className="hover:bg-subtle/45">
                           <td className="py-2.5 px-3 font-bold flex items-center gap-1.5">
                             <button
                               type="button"
                               onClick={() => setExpandedBatchId(isExpanded ? null : d.id)}
-                              className="text-muted hover:text-foreground p-0.5"
+                              className="text-muted hover:text-ink p-0.5"
                             >
                               {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                             </button>
                             <span>{d.batch_number || d.id.slice(0, 12)}</span>
                           </td>
-                          <td className="py-2.5 px-3 font-bold text-green-600">PKR {Number(d.total_amount).toLocaleString()}</td>
+                          <td className="py-2.5 px-3 font-bold text-success-ink">PKR {Number(d.total_amount).toLocaleString()}</td>
                           <td className="py-2.5 px-3 font-sans">{d.total_employees} staff</td>
                           <td className="py-2.5 px-3 font-sans">
                             {d.failed_count && d.failed_count > 0 ? (
-                              <span className="text-red-600 font-bold flex items-center gap-1">
+                              <span className="text-danger-ink font-bold flex items-center gap-1">
                                 <AlertTriangle className="w-3.5 h-3.5" /> {d.failed_count}
                               </span>
                             ) : (
@@ -509,7 +508,7 @@ export function AdminPayrollPage() {
                             )}
                           </td>
                           <td className="py-2.5 px-3 font-sans">
-                            <span className="text-emerald-600 font-medium">{d.reconciled_count || 0}</span>
+                            <span className="text-success-ink font-medium">{d.reconciled_count || 0}</span>
                           </td>
                           <td className="py-2.5 px-3 font-sans">
                             <Badge>{d.status}</Badge>
@@ -537,13 +536,13 @@ export function AdminPayrollPage() {
 
                         {isExpanded && d.records && d.records.length > 0 && (
                           <tr>
-                            <td colSpan={7} className="p-0 bg-muted/10">
+                            <td colSpan={7} className="p-0 bg-subtle/30">
                               <div className="p-3 border-y border-dashed">
                                 <h4 className="text-[11px] font-sans font-bold text-muted mb-2 uppercase tracking-wider">
                                   Batch Payout Records ({d.records.length})
                                 </h4>
                                 <table className="w-full text-[11px] text-left bg-card rounded border">
-                                  <thead className="bg-muted/40 border-b">
+                                  <thead className="bg-subtle/70 border-b border-line">
                                     <tr>
                                       <th className="py-1.5 px-2.5">Simulated Reference</th>
                                       <th className="py-1.5 px-2.5">Bank / Account</th>
@@ -561,28 +560,28 @@ export function AdminPayrollPage() {
                                         <td className="py-1.5 px-2.5 font-sans">
                                           {r.bank_name} ({r.bank_account_number})
                                         </td>
-                                        <td className="py-1.5 px-2.5 font-bold text-green-600">PKR {Number(r.amount).toLocaleString()}</td>
+                                        <td className="py-1.5 px-2.5 font-bold text-success-ink">PKR {Number(r.amount).toLocaleString()}</td>
                                         <td className="py-1.5 px-2.5 font-sans">
                                           <Badge>
-                                            <span className={r.status === "SUCCESS" ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                                            <span className={r.status === "SUCCESS" ? "text-success-ink font-bold" : "text-danger-ink font-bold"}>
                                               {r.status}
                                             </span>
                                           </Badge>
                                           {r.error_message && (
-                                            <div className="text-[10px] text-red-600 font-sans mt-0.5 line-clamp-1" title={r.error_message}>
+                                            <div className="text-[10px] text-danger-ink font-sans mt-0.5 line-clamp-1" title={r.error_message}>
                                               {r.error_message}
                                             </div>
                                           )}
                                         </td>
                                         <td className="py-1.5 px-2.5 font-sans">{r.retry_count}</td>
                                         <td className="py-1.5 px-2.5 font-sans">
-                                          {r.reconciled ? <span className="text-green-600 font-bold">Yes</span> : <span className="text-muted">No</span>}
+                                          {r.reconciled ? <span className="text-success-ink font-bold">Yes</span> : <span className="text-muted">No</span>}
                                         </td>
                                         <td className="py-1.5 px-2.5 text-right font-sans">
                                           {r.status === "FAILED" ? (
                                             <Button
                                               variant="secondary"
-                                              className="text-[10px] px-2 py-0.5 min-h-6 text-amber-700 hover:text-amber-800"
+                                              className="text-[10px] px-2 py-0.5 min-h-6 text-warning-ink"
                                               onClick={() => retryRecordMutation.mutate(r.id)}
                                               disabled={retryRecordMutation.isPending}
                                             >

@@ -120,12 +120,12 @@ export function StudentFinancePage() {
 
       {/* Scholarships Notice if any */}
       {scholarships.length > 0 && (
-        <Card className="mb-6 border-l-4 border-l-primary-500 p-4">
+        <Card className="mb-6 border-l-4 border-l-primary p-4">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="text-primary-600 h-6 w-6" />
+            <ShieldCheck className="text-primary-ink h-6 w-6" />
             <div>
-              <h4 className="font-semibold text-sm">Active Scholarships / Fee Concessions</h4>
-              <p className="text-xs text-muted-foreground">
+              <h4 className="font-semibold text-sm text-ink">Active Scholarships / Fee Concessions</h4>
+              <p className="text-xs text-muted">
                 {scholarships.map((s) => `${s.name} (${s.discount_percentage}% discount)`).join(", ")}
               </p>
             </div>
@@ -175,7 +175,7 @@ export function StudentFinancePage() {
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Installment Schedule</h4>
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs text-left">
-                      <thead className="bg-muted/50 text-muted-foreground">
+                      <thead className="bg-subtle/60 text-muted">
                         <tr>
                           <th className="py-2 px-3">#</th>
                           <th className="py-2 px-3">Due Date</th>
@@ -189,12 +189,12 @@ export function StudentFinancePage() {
                       </thead>
                       <tbody className="divide-y">
                         {inv.installments.map((inst) => (
-                          <tr key={inst.id} className="hover:bg-muted/20">
+                          <tr key={inst.id} className="hover:bg-subtle/45">
                             <td className="py-2 px-3 font-medium">Inst. {inst.installment_number}</td>
                             <td className="py-2 px-3">{new Date(inst.due_date).toLocaleDateString()}</td>
                             <td className="py-2 px-3">{new Date(inst.grace_period_end_date).toLocaleDateString()}</td>
                             <td className="py-2 px-3">PKR {Number(inst.amount_due).toLocaleString()}</td>
-                            <td className="py-2 px-3 text-red-600">
+                            <td className="py-2 px-3 text-danger-ink">
                               {inst.late_fee_amount > 0 ? `+PKR ${inst.late_fee_amount}` : "None"}
                             </td>
                             <td className="py-2 px-3">PKR {Number(inst.paid_amount).toLocaleString()}</td>
@@ -236,7 +236,7 @@ export function StudentFinancePage() {
         ) : (
           <div className="overflow-x-auto bg-card rounded-lg border">
             <table className="w-full text-xs text-left">
-              <thead className="bg-muted/50 border-b">
+              <thead className="bg-subtle/75 border-b border-line">
                 <tr>
                   <th className="py-2.5 px-4">Receipt #</th>
                   <th className="py-2.5 px-4">Date</th>
@@ -253,7 +253,7 @@ export function StudentFinancePage() {
                     <td className="py-2.5 px-4">{new Date(p.created_at).toLocaleDateString()}</td>
                     <td className="py-2.5 px-4 uppercase">{p.payment_method}</td>
                     <td className="py-2.5 px-4 font-mono text-muted">{p.gateway_reference || "N/A"}</td>
-                    <td className="py-2.5 px-4 font-bold text-green-600">PKR {Number(p.amount).toLocaleString()}</td>
+                    <td className="py-2.5 px-4 font-bold text-success-ink">PKR {Number(p.amount).toLocaleString()}</td>
                     <td className="py-2.5 px-4">
                       <Badge>{p.status}</Badge>
                     </td>
@@ -267,8 +267,8 @@ export function StudentFinancePage() {
 
       {/* Simulated Payment Modal */}
       {isPayModalOpen && selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-background rounded-lg shadow-xl max-w-md w-full p-6 border space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 p-4 backdrop-blur-xs">
+          <div className="bg-panel text-ink rounded-lg shadow-xl max-w-md w-full p-6 border border-line space-y-4">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="text-base font-bold flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-primary" />
@@ -282,7 +282,7 @@ export function StudentFinancePage() {
               </button>
             </div>
 
-            <div className="bg-muted/30 p-3 rounded-md space-y-1 text-xs">
+            <div className="bg-subtle/60 p-3 rounded-md space-y-1 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted">Invoice:</span>
                 <span className="font-semibold">{selectedInvoice.invoice_number}</span>
@@ -295,7 +295,7 @@ export function StudentFinancePage() {
               )}
               <div className="flex justify-between text-sm font-bold pt-2 border-t mt-2">
                 <span>Amount Payable:</span>
-                <span className="text-primary-600">
+                <span className="text-primary-ink font-semibold">
                   PKR{" "}
                   {Number(
                     selectedInstallment
@@ -321,8 +321,8 @@ export function StudentFinancePage() {
                     onClick={() => setPaymentMethod(m.id)}
                     className={`p-3 border rounded text-left transition-all ${
                       paymentMethod === m.id
-                        ? "border-primary-600 bg-primary-50 font-bold dark:bg-primary-950/30"
-                        : "border-border hover:bg-muted/40"
+                        ? "border-primary bg-primary-soft text-primary-ink font-bold"
+                        : "border-line hover:bg-subtle/60"
                     }`}
                   >
                     {m.name}
@@ -331,8 +331,8 @@ export function StudentFinancePage() {
               </div>
             </div>
 
-            <div className="text-[11px] text-muted-foreground bg-amber-50 dark:bg-amber-950/20 p-2.5 rounded border border-amber-200 dark:border-amber-900/50 flex gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-[11px] text-warning-ink bg-warning-soft p-2.5 rounded border border-warning/35 flex gap-2">
+              <AlertCircle className="w-4 h-4 text-warning-ink shrink-0 mt-0.5" />
               <span>
                 <strong>Test Sandbox Environment:</strong> Payments are processed via simulated banking rails with SHA-256 HMAC cryptographic signatures. Real money is never transferred.
               </span>

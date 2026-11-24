@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { ArrowUpRight, Banknote, Bell, BookOpen, CalendarDays, ChevronDown, ClipboardCheck, CreditCard, GraduationCap, LayoutDashboard, LifeBuoy, LogOut, Menu, Moon, Search, Settings2, ShieldCheck, Sun, Users, X, Compass } from "lucide-react";
+import { ArrowUpRight, Banknote, Bell, BookOpen, CalendarDays, ChevronDown, ClipboardCheck, CreditCard, GraduationCap, LayoutDashboard, LifeBuoy, LogOut, Menu, Search, Settings2, ShieldCheck, Users, X, Compass } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "../../features/auth/useAuth";
 import { hasAnyRole, primaryRole } from "../../features/auth/permissions";
@@ -29,7 +29,6 @@ export function WorkspaceShell() {
   const searchInput = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const [collapsed, setCollapsed] = useState(false);
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
   const role = user ? primaryRole(user.roles) : null;
   const profileMenuRef = useRef<HTMLDetailsElement>(null);
 
@@ -58,13 +57,6 @@ export function WorkspaceShell() {
   }, [items, location.pathname]);
   const name = user?.fullName ?? "Your workspace";
   const initials = name.split(" ").map(word => word[0]).slice(0, 2).join("").toUpperCase();
-
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem("sep-theme", next);
-  }
 
   useEffect(() => {
     const openSearch = (event: KeyboardEvent) => {
@@ -112,7 +104,6 @@ export function WorkspaceShell() {
           <div className="breadcrumb"><span>Workspace</span><span>/</span><strong>{title}</strong></div>
           <div className="topbar-actions">
             <button className="search-trigger" aria-label="Search pages" onClick={() => { searchDialog.current?.showModal(); searchInput.current?.focus(); }}><Search size={16} /><span>Find a page…</span><kbd>Ctrl K</kbd></button>
-            <button className="icon-button" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} onClick={toggleTheme}>{theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}</button>
             <Link to="/app/notifications" className="icon-button notification-button" aria-label={`Notifications${unread.data ? `, ${unread.data} unread` : ""}`}><Bell size={18} />{Boolean(unread.data) && <span className="notification-dot" />}</Link>
             <details ref={profileMenuRef} className="profile-menu"><summary aria-label="Account menu"><span className="avatar small">{initials}</span><ChevronDown size={14} /></summary><div><strong>{name}</strong><Link to="/app/profile">Manage profile</Link><button onClick={() => void logout()}>Sign out</button></div></details>
           </div>

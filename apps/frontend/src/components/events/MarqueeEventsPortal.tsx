@@ -123,11 +123,11 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
+              <span className="flex h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
               <h3 className="text-base font-extrabold text-ink">
                 Campus Life, Marquee Events & Gala Engine
               </h3>
-              <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-2xs font-extrabold text-rose-600">
+              <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-2xs font-extrabold text-primary-ink">
                 Dynamic Academic Calendar Morphing
               </span>
             </div>
@@ -145,7 +145,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                 onClick={() => setActiveSeason("SPORTS_GALA")}
                 className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                   activeSeason === "SPORTS_GALA"
-                    ? "bg-rose-600 text-white shadow-xs"
+                    ? "bg-primary text-on-primary shadow-xs"
                     : "text-muted hover:text-ink"
                 }`}
               >
@@ -157,7 +157,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                 onClick={() => setActiveSeason("TECH_GALA")}
                 className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                   activeSeason === "TECH_GALA"
-                    ? "bg-indigo-600 text-white shadow-xs"
+                    ? "bg-secondary text-secondary-fg shadow-xs"
                     : "text-muted hover:text-ink"
                 }`}
               >
@@ -169,7 +169,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                 onClick={() => setActiveSeason("CAREER_CONVOCATION")}
                 className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                   activeSeason === "CAREER_CONVOCATION"
-                    ? "bg-emerald-600 text-white shadow-xs"
+                    ? "bg-success text-success-fg shadow-xs"
                     : "text-muted hover:text-ink"
                 }`}
               >
@@ -183,7 +183,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
         {/* Following Department Alert Strip */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-line/60 text-xs text-muted">
           <div className="flex items-center gap-2">
-            <Bell size={13} className="text-rose-500" />
+            <Bell size={13} className="text-primary-ink" />
             <span>Following Department Notifications:</span>
             {["Computer Science", "Software Engineering", "Electrical Engineering", "Management Sciences"].map((dept) => {
               const isFollowed = followedDepartments.includes(dept);
@@ -193,7 +193,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                   onClick={() => toggleFollowDept(dept)}
                   className={`rounded-lg px-2.5 py-0.5 text-2xs font-bold transition border ${
                     isFollowed
-                      ? "border-rose-500 bg-rose-500/10 text-rose-600 font-extrabold"
+                      ? "border-primary bg-primary-soft text-primary-ink font-extrabold"
                       : "border-line bg-surface text-muted hover:text-ink"
                   }`}
                 >
@@ -203,7 +203,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
             })}
           </div>
 
-          <span className="text-2xs text-emerald-600 font-semibold">
+          <span className="text-2xs text-success-ink font-semibold">
             ● Push Alerts Active (15m before match start)
           </span>
         </div>
@@ -219,14 +219,14 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                 onClick={() => setSportsSubTab("fixtures")}
                 className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
                   sportsSubTab === "fixtures"
-                    ? "bg-rose-600 text-white shadow-xs"
+                    ? "bg-primary text-on-primary shadow-xs"
                     : "bg-panel text-muted hover:text-ink border border-line"
                 }`}
               >
                 <Flame size={14} />
                 <span>Live Fixtures & Results</span>
                 {liveCount > 0 && (
-                  <span className="rounded-full bg-white/20 px-2 py-0.2 text-[10px] font-black animate-pulse">
+                  <span className="rounded-full bg-on-primary/20 px-2 py-0.2 text-[10px] font-black animate-pulse">
                     {liveCount} LIVE
                   </span>
                 )}
@@ -236,7 +236,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                 onClick={() => setSportsSubTab("brackets")}
                 className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
                   sportsSubTab === "brackets"
-                    ? "bg-rose-600 text-white shadow-xs"
+                    ? "bg-primary text-on-primary shadow-xs"
                     : "bg-panel text-muted hover:text-ink border border-line"
                 }`}
               >
@@ -248,7 +248,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                 onClick={() => setSportsSubTab("standings")}
                 className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
                   sportsSubTab === "standings"
-                    ? "bg-rose-600 text-white shadow-xs"
+                    ? "bg-primary text-on-primary shadow-xs"
                     : "bg-panel text-muted hover:text-ink border border-line"
                 }`}
               >
@@ -272,7 +272,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                   onClick={() => setFilterDay("All")}
                   className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
                     filterDay === "All"
-                      ? "bg-rose-600 text-white shadow-xs"
+                      ? "bg-primary text-on-primary shadow-xs"
                       : "bg-panel text-muted border border-line hover:text-ink"
                   }`}
                 >
@@ -285,7 +285,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                     onClick={() => setFilterDay(day)}
                     className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
                       filterDay === day
-                        ? "bg-rose-600 text-white shadow-xs"
+                        ? "bg-primary text-on-primary shadow-xs"
                         : "bg-panel text-muted border border-line hover:text-ink"
                     }`}
                   >
@@ -300,7 +300,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                   {/* Day Filter */}
                   <div>
                     <label className="block font-bold text-muted mb-1 flex items-center gap-1">
-                      <Calendar size={12} className="text-rose-500" />
+                      <Calendar size={12} className="text-primary-ink" />
                       <span>Filter Day:</span>
                     </label>
                     <select
@@ -320,7 +320,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                   {/* Sport Filter */}
                   <div>
                     <label className="block font-bold text-muted mb-1 flex items-center gap-1">
-                      <Trophy size={12} className="text-rose-500" />
+                      <Trophy size={12} className="text-primary-ink" />
                       <span>Sport:</span>
                     </label>
                     <select
@@ -341,7 +341,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                   {/* Department Filter */}
                   <div>
                     <label className="block font-bold text-muted mb-1 flex items-center gap-1">
-                      <Users size={12} className="text-rose-500" />
+                      <Users size={12} className="text-primary-ink" />
                       <span>Department:</span>
                     </label>
                     <select
@@ -364,7 +364,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                         setFilterSport("All");
                         setFilterDept("All");
                       }}
-                      className="ml-auto text-2xs font-semibold text-muted hover:text-red-500 self-end py-1.5"
+                      className="ml-auto text-2xs font-semibold text-muted hover:text-danger-ink self-end py-1.5"
                     >
                       Reset Filters
                     </button>
@@ -378,10 +378,10 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                   <div key={group.day} className="space-y-4">
                     <div className="flex items-center justify-between border-b border-line pb-2">
                       <h3 className="font-extrabold text-base text-ink flex items-center gap-2">
-                        <Calendar size={16} className="text-rose-600" />
+                        <Calendar size={16} className="text-primary-ink" />
                         <span>{group.day}</span>
                       </h3>
-                      <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-bold text-rose-600">
+                      <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-bold text-primary-ink">
                         {group.matches.length} {group.matches.length === 1 ? "Game" : "Games"} Scheduled
                       </span>
                     </div>
@@ -396,15 +396,15 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                       key={match.id}
                       className={`flex flex-col justify-between rounded-3xl border p-5 shadow-2xs transition group ${
                         isLive
-                          ? "border-rose-500/80 bg-rose-500/5 ring-2 ring-rose-500/20"
-                          : "border-line bg-panel hover:border-rose-500/50"
+                          ? "border-primary/80 bg-primary/5 ring-2 ring-primary/20"
+                          : "border-line bg-panel hover:border-primary/50"
                       }`}
                     >
                       <div className="space-y-4">
                         {/* Match Header: Sport, Stage, Status */}
                         <div className="flex items-center justify-between border-b border-line pb-3">
                           <div className="flex items-center gap-2">
-                            <span className="rounded-lg bg-rose-500/10 px-2.5 py-1 font-extrabold text-xs text-rose-600">
+                            <span className="rounded-lg bg-primary-soft px-2.5 py-1 font-extrabold text-xs text-primary-ink">
                               {match.sport}
                             </span>
                             <span className="rounded-md bg-surface border border-line px-2 py-0.5 text-2xs font-semibold text-muted">
@@ -413,8 +413,8 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                           </div>
 
                           {isLive ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1 text-2xs font-black text-white shadow-xs animate-pulse">
-                              <span className="h-2 w-2 rounded-full bg-white" />
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-danger px-3 py-1 text-2xs font-black text-danger-fg shadow-xs animate-pulse">
+                              <span className="h-2 w-2 rounded-full bg-danger-fg" />
                               <span>LIVE NOW</span>
                             </span>
                           ) : match.status === "COMPLETED" ? (
@@ -422,7 +422,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                               Final Result
                             </span>
                           ) : (
-                            <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-2xs font-bold text-indigo-600">
+                            <span className="rounded-full bg-secondary-soft px-2.5 py-0.5 text-2xs font-bold text-secondary-ink">
                               Scheduled
                             </span>
                           )}
@@ -437,7 +437,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                                 {match.teamA.department.split(" ")[0]![0]}
                               </span>
                               <div>
-                                <p className={`font-extrabold text-sm ${match.teamA.isWinner ? "text-rose-600 font-black" : "text-ink"}`}>
+                                <p className={`font-extrabold text-sm ${match.teamA.isWinner ? "text-primary-ink font-black" : "text-ink"}`}>
                                   {match.teamA.name}
                                 </p>
                                 <p className="text-[10px] text-muted">{match.teamA.department}</p>
@@ -461,7 +461,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                                 {match.teamB.department.split(" ")[0]![0]}
                               </span>
                               <div>
-                                <p className={`font-extrabold text-sm ${match.teamB.isWinner ? "text-rose-600 font-black" : "text-ink"}`}>
+                                <p className={`font-extrabold text-sm ${match.teamB.isWinner ? "text-primary-ink font-black" : "text-ink"}`}>
                                   {match.teamB.name}
                                 </p>
                                 <p className="text-[10px] text-muted">{match.teamB.department}</p>
@@ -478,7 +478,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                         {/* Venue & Timing */}
                         <div className="space-y-1.5 text-xs text-muted">
                           <p className="flex items-center gap-1.5">
-                            <MapPin size={13} className="text-rose-500 shrink-0" />
+                            <MapPin size={13} className="text-primary-ink shrink-0" />
                             <span className="font-semibold text-ink">{match.venue}</span>
                             <span className="text-2xs text-muted">({match.groundMapZone})</span>
                           </p>
@@ -493,7 +493,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                           <div className="rounded-xl bg-panel border border-line p-2.5 text-2xs space-y-0.5">
                             <p className="font-bold text-ink">Result: {match.summaryResult}</p>
                             {match.mvpPlayer && (
-                              <p className="text-muted">⭐ MVP: <strong className="text-rose-600">{match.mvpPlayer}</strong></p>
+                              <p className="text-muted">⭐ MVP: <strong className="text-primary-ink">{match.mvpPlayer}</strong></p>
                             )}
                           </div>
                         )}
@@ -505,7 +505,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                         <button
                           onClick={() => toggleMatchAlert(match.id)}
                           className={`inline-flex items-center gap-1 text-xs font-bold transition ${
-                            isSubscribed ? "text-rose-600 font-extrabold" : "text-muted hover:text-ink"
+                            isSubscribed ? "text-primary-ink font-extrabold" : "text-muted hover:text-ink"
                           }`}
                         >
                           <Bell size={12} className={isSubscribed ? "fill-current" : ""} />
@@ -534,7 +534,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                     Live progression from Quarter Finals to Semi Finals and Friday Grand Final.
                   </p>
                 </div>
-                <span className="rounded-full bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose-600">
+                <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-ink">
                   Single Elimination Knockout
                 </span>
               </div>
@@ -553,16 +553,16 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                       {bracket.matches.map((bm) => (
                         <div
                           key={bm.id}
-                          className="rounded-2xl border border-line bg-surface/50 p-3.5 space-y-2 hover:border-rose-500/60 transition shadow-2xs"
+                          className="rounded-2xl border border-line bg-surface/50 p-3.5 space-y-2 hover:border-primary/60 transition shadow-2xs"
                         >
                           <div className="flex items-center justify-between text-2xs text-muted border-b border-line/40 pb-1.5">
                             <span>{bm.timing}</span>
-                            <span className="font-semibold text-rose-600">Winner: {bm.winner}</span>
+                            <span className="font-semibold text-primary-ink">Winner: {bm.winner}</span>
                           </div>
 
                           {/* Team 1 */}
                           <div className="flex items-center justify-between text-xs">
-                            <span className={`font-bold ${bm.winner.includes(bm.team1) ? "text-rose-600 font-black" : "text-ink"}`}>
+                            <span className={`font-bold ${bm.winner.includes(bm.team1) ? "text-primary-ink font-black" : "text-ink"}`}>
                               {bm.team1}
                             </span>
                             <span className="font-mono text-2xs text-muted">{bm.score1}</span>
@@ -570,7 +570,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
 
                           {/* Team 2 */}
                           <div className="flex items-center justify-between text-xs">
-                            <span className={`font-bold ${bm.winner.includes(bm.team2) ? "text-rose-600 font-black" : "text-ink"}`}>
+                            <span className={`font-bold ${bm.winner.includes(bm.team2) ? "text-primary-ink font-black" : "text-ink"}`}>
                               {bm.team2}
                             </span>
                             <span className="font-mono text-2xs text-muted">{bm.score2}</span>
@@ -596,7 +596,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                     Accumulated points based on official Gold, Silver, and Bronze medal victories.
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs font-bold text-rose-600">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-primary-ink">
                   <Trophy size={16} />
                   <span>Championship Trophy</span>
                 </div>
@@ -609,7 +609,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                     key={dept.code}
                     className={`flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-4 transition shadow-2xs ${
                       dept.rank === 1
-                        ? "border-amber-500/60 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent"
+                        ? "border-accent/60 bg-gradient-to-r from-accent/15 via-accent/5 to-transparent"
                         : "border-line bg-surface/50"
                     }`}
                   >
@@ -617,11 +617,11 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                       <div
                         className={`flex h-10 w-10 items-center justify-center rounded-xl font-mono font-black text-sm ${
                           dept.rank === 1
-                            ? "bg-amber-500 text-white shadow-xs"
+                            ? "bg-accent text-accent-fg shadow-xs"
                             : dept.rank === 2
-                            ? "bg-zinc-300 text-zinc-900"
+                            ? "bg-secondary text-secondary-fg"
                             : dept.rank === 3
-                            ? "bg-amber-700 text-white"
+                            ? "bg-subtle text-ink border border-line"
                             : "bg-surface border border-line text-muted"
                         }`}
                       >
@@ -642,15 +642,15 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                     {/* Medal Counts */}
                     <div className="flex items-center gap-6">
                       <div className="flex items-center gap-3 text-xs">
-                        <span className="flex items-center gap-1 font-bold text-amber-600" title="Gold Medals">
+                        <span className="flex items-center gap-1 font-bold text-accent-ink" title="Gold Medals">
                           <span>🥇</span>
                           <span>{dept.goldMedals}</span>
                         </span>
-                        <span className="flex items-center gap-1 font-bold text-zinc-500" title="Silver Medals">
+                        <span className="flex items-center gap-1 font-bold text-muted" title="Silver Medals">
                           <span>🥈</span>
                           <span>{dept.silverMedals}</span>
                         </span>
-                        <span className="flex items-center gap-1 font-bold text-amber-800" title="Bronze Medals">
+                        <span className="flex items-center gap-1 font-bold text-warning-ink" title="Bronze Medals">
                           <span>🥉</span>
                           <span>{dept.bronzeMedals}</span>
                         </span>
@@ -675,15 +675,15 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
       {activeSeason === "TECH_GALA" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Hackathon Hero Timer */}
-          <div className="rounded-3xl border border-indigo-500/40 bg-gradient-to-r from-indigo-500/15 via-purple-500/10 to-transparent p-6 shadow-sm">
+          <div className="rounded-3xl border border-secondary/40 bg-gradient-to-r from-secondary/15 via-primary/10 to-transparent p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Terminal size={18} className="text-indigo-600" />
+                  <Terminal size={18} className="text-secondary-ink" />
                   <h3 className="text-base font-extrabold text-ink">
                     HackCOMSATS 2026: 48-Hour AI Code Sprint
                   </h3>
-                  <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-2xs font-extrabold text-indigo-700 dark:text-indigo-300">
+                  <span className="rounded-full bg-secondary-soft px-2.5 py-0.5 text-2xs font-extrabold text-secondary-ink">
                     Live Code Sprint
                   </span>
                 </div>
@@ -697,10 +697,10 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                 <span className="text-2xs font-bold text-muted uppercase tracking-wider block">
                   Time Remaining to Code Freeze
                 </span>
-                <span className="font-mono font-black text-2xl text-indigo-600">
+                <span className="font-mono font-black text-2xl text-secondary-ink">
                   18h : 42m : 19s
                 </span>
-                <span className="text-[10px] text-emerald-600 font-semibold block mt-0.5">
+                <span className="text-[10px] text-success-ink font-semibold block mt-0.5">
                   ● Mentors on Duty in Lab 1
                 </span>
               </div>
@@ -712,20 +712,20 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
             {TECH_GALA_EVENTS.map((comp) => (
               <div
                 key={comp.id}
-                className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-4 flex flex-col justify-between hover:border-indigo-500/60 transition group"
+                className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-4 flex flex-col justify-between hover:border-secondary/60 transition group"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="rounded-md bg-indigo-500/10 px-2.5 py-0.5 text-2xs font-extrabold text-indigo-600">
+                    <span className="rounded-md bg-secondary-soft px-2.5 py-0.5 text-2xs font-extrabold text-secondary-ink">
                       {comp.category}
                     </span>
-                    <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-2xs font-bold text-emerald-600">
+                    <span className="rounded-full bg-success-soft px-2.5 py-0.5 text-2xs font-bold text-success-ink">
                       {comp.status === "HACKING_IN_PROGRESS" ? "In Progress" : "Registration Open"}
                     </span>
                   </div>
 
                   <div>
-                    <h4 className="font-extrabold text-base text-ink group-hover:text-indigo-600 transition">
+                    <h4 className="font-extrabold text-base text-ink group-hover:text-secondary-ink transition">
                       {comp.title}
                     </h4>
                     <p className="text-xs text-muted mt-0.5 flex items-center gap-1.5">
@@ -737,7 +737,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                   <div className="rounded-2xl border border-line/60 bg-surface/50 p-3 space-y-1.5 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-muted">Prize Pool</span>
-                      <span className="font-bold text-emerald-600">{comp.prizePool}</span>
+                      <span className="font-bold text-success-ink">{comp.prizePool}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted">Schedule Window</span>
@@ -756,7 +756,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                     setRegSuccess(false);
                     setTeamNameInput("");
                   }}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition shadow-xs"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-secondary py-2.5 text-xs font-bold text-secondary-fg hover:opacity-90 transition shadow-xs"
                 >
                   <Code size={14} />
                   <span>Register Team / Submit Hack</span>
@@ -770,15 +770,15 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
       {/* ================= MODE 3: CAREER FAIR & CONVOCATION (WINTER SESSION) ================= */}
       {activeSeason === "CAREER_CONVOCATION" && (
         <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="rounded-3xl border border-emerald-500/40 bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-transparent p-6 shadow-sm">
+          <div className="rounded-3xl border border-success/40 bg-gradient-to-r from-success/15 via-secondary/10 to-transparent p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Briefcase size={18} className="text-emerald-600" />
+                  <Briefcase size={18} className="text-success-ink" />
                   <h3 className="text-base font-extrabold text-ink">
                     Annual Mega Career Fair & Convocation 2026
                   </h3>
-                  <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-2xs font-extrabold text-emerald-700 dark:text-emerald-300">
+                  <span className="rounded-full bg-success-soft px-2.5 py-0.5 text-2xs font-extrabold text-success-ink">
                     60+ Tech Employers On-Campus
                   </span>
                 </div>
@@ -791,7 +791,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                 <span className="text-2xs font-bold text-muted uppercase tracking-wider block">
                   Hiring Quota
                 </span>
-                <span className="font-mono font-black text-xl text-emerald-600">
+                <span className="font-mono font-black text-xl text-success-ink">
                   250+ Positions
                 </span>
                 <span className="text-[10px] text-muted block mt-0.5">Across CS, SE & EE Grads</span>
@@ -804,15 +804,15 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
             {CAREER_FAIR_COMPANIES.map((company) => (
               <div
                 key={company.id}
-                className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-4 flex flex-col justify-between hover:border-emerald-500/60 transition group"
+                className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-4 flex flex-col justify-between hover:border-success/60 transition group"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-2xs font-extrabold text-emerald-600">
+                      <span className="rounded-md bg-success-soft px-2 py-0.5 text-2xs font-extrabold text-success-ink">
                         {company.sector}
                       </span>
-                      <h4 className="font-extrabold text-base text-ink mt-1 group-hover:text-emerald-600 transition">
+                      <h4 className="font-extrabold text-base text-ink mt-1 group-hover:text-success-ink transition">
                         {company.companyName}
                       </h4>
                       <p className="text-xs text-muted flex items-center gap-1.5 mt-0.5">
@@ -847,7 +847,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
 
                 <button
                   onClick={() => setInterviewBookingCompany(company)}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-xs"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-success py-2.5 text-xs font-bold text-success-fg hover:opacity-90 transition shadow-xs"
                 >
                   <Briefcase size={14} />
                   <span>Book Walk-in Interview FastPass</span>
@@ -860,11 +860,11 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
 
       {/* ================= MODAL: TECH GALA REGISTRATION ================= */}
       {registeredComp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div>
-                <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-2xs font-extrabold text-indigo-600 uppercase">
+                <span className="rounded-full bg-secondary-soft px-2.5 py-0.5 text-2xs font-extrabold text-secondary-ink uppercase">
                   Tech Competition Entry
                 </span>
                 <h3 className="font-extrabold text-base text-ink mt-1">
@@ -877,15 +877,15 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
             </div>
 
             {regSuccess ? (
-              <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-5 text-center space-y-2">
-                <CheckCircle2 size={24} className="mx-auto text-emerald-600" />
+              <div className="rounded-2xl border border-success/40 bg-success-soft p-5 text-center space-y-2">
+                <CheckCircle2 size={24} className="mx-auto text-success-ink" />
                 <h4 className="font-bold text-sm text-ink">Team Registered Successfully!</h4>
                 <p className="text-2xs text-muted">
                   Team "{teamNameInput}" has been confirmed. Software Lab workstations and credentials dispatched to student emails.
                 </p>
                 <button
                   onClick={() => setRegisteredComp(null)}
-                  className="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-700 mt-2"
+                  className="rounded-xl bg-success px-5 py-2 text-xs font-bold text-success-fg hover:opacity-90 mt-2"
                 >
                   Close Pass
                 </button>
@@ -899,7 +899,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                     placeholder="e.g. ByteCraft AI, Algorithmic Aces..."
                     value={teamNameInput}
                     onChange={(e) => setTeamNameInput(e.target.value)}
-                    className="w-full rounded-xl border border-line bg-surface p-2.5 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-xl border border-line bg-surface p-2.5 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-secondary"
                   />
                 </div>
 
@@ -920,7 +920,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
                   <button
                     onClick={() => setRegSuccess(true)}
                     disabled={!teamNameInput.trim()}
-                    className="rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
+                    className="rounded-xl bg-secondary px-5 py-2 text-xs font-bold text-secondary-fg hover:opacity-90 disabled:opacity-50"
                   >
                     Confirm Registration
                   </button>
@@ -933,7 +933,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
 
       {/* ================= MODAL: CAREER INTERVIEW FASTPASS ================= */}
       {interviewBookingCompany && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-3xl border border-line bg-panel p-6 shadow-2xl text-center space-y-5 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between text-left">
               <div>
@@ -945,9 +945,9 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
               </button>
             </div>
 
-            <div className="rounded-2xl border-2 border-dashed border-emerald-500/40 bg-surface/80 p-5 space-y-2">
+            <div className="rounded-2xl border-2 border-dashed border-success/40 bg-surface/80 p-5 space-y-2">
               <span className="text-2xs font-extrabold text-muted uppercase">FastPass Reserved</span>
-              <div className="font-mono font-black text-2xl text-emerald-600">
+              <div className="font-mono font-black text-2xl text-success-ink">
                 SLOT #INT-48
               </div>
               <p className="text-2xs text-muted">
@@ -961,7 +961,7 @@ export function MarqueeEventsPortal({ initialMode = "SPORTS_GALA" }: Props) {
 
             <button
               onClick={() => setInterviewBookingCompany(null)}
-              className="w-full rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition"
+              className="w-full rounded-xl bg-success py-2.5 text-xs font-bold text-success-fg hover:opacity-90 transition"
             >
               Add to Calendar & Close
             </button>

@@ -62,7 +62,7 @@ export function EmailVerificationRequestPage() {
             />
             {serverError ? (
               <div
-                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger"
+                className="rounded-xl border border-danger/40 bg-danger-soft px-3 py-2 text-sm text-danger-ink"
                 role="alert"
               >
                 {serverError}

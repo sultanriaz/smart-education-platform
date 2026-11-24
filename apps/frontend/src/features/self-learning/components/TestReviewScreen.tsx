@@ -50,8 +50,8 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
       <div
         className={`rounded-2xl border p-6 shadow-xs ${
           isPassed
-            ? "border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/30"
-            : "border-red-200 bg-red-50/60 dark:border-red-900/60 dark:bg-red-950/30"
+            ? "border-success/40 bg-success-soft/60"
+            : "border-danger/40 bg-danger-soft/60"
         }`}
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -59,8 +59,8 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
             <div
               className={`flex h-14 w-14 items-center justify-center rounded-2xl ${
                 isPassed
-                  ? "bg-emerald-600 text-white"
-                  : "bg-red-600 text-white"
+                  ? "bg-success text-success-fg"
+                  : "bg-danger text-danger-fg"
               }`}
             >
               <Award className="h-8 w-8" />
@@ -68,7 +68,7 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
             <div>
               <span
                 className={`text-xs font-bold uppercase tracking-wider ${
-                  isPassed ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"
+                  isPassed ? "text-success-ink" : "text-danger-ink"
                 }`}
               >
                 {isPassed ? "Assessment Passed" : "Needs Remediation"}
@@ -93,7 +93,7 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
               type="button"
               disabled={isRegenerating}
               onClick={() => onRegenerateSmartTest("balanced")}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-panel px-3.5 py-2.5 text-xs font-semibold hover:border-brand-500 hover:text-brand-600 disabled:opacity-50 transition"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-panel px-3.5 py-2.5 text-xs font-semibold hover:border-primary hover:text-primary-ink disabled:opacity-50 transition"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>Balanced Retest</span>
@@ -103,7 +103,7 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
               type="button"
               disabled={isRegenerating}
               onClick={() => onRegenerateSmartTest("challenge")}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-500/10 px-3.5 py-2.5 text-xs font-bold text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 disabled:opacity-50 transition"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-secondary/40 bg-secondary-soft px-3.5 py-2.5 text-xs font-bold text-secondary-ink hover:opacity-90 disabled:opacity-50 transition"
             >
               <TrendingUp className="h-3.5 w-3.5" />
               <span>Challenge Mode</span>
@@ -113,7 +113,7 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
               type="button"
               disabled={isRegenerating}
               onClick={() => onRegenerateSmartTest("weak_focus")}
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 disabled:opacity-50 transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-on-primary shadow-xs hover:bg-primary-hover disabled:opacity-50 transition"
             >
               <Sparkles className="h-4 w-4" />
               <span>{isRegenerating ? "Regenerating…" : "1-Click Smart Regenerate (Gaps)"}</span>
@@ -123,8 +123,8 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
 
         {/* Weak topic warning alert if any */}
         {weakTopics.length > 0 && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-white/70 dark:bg-black/20 p-3 text-xs text-text border border-line">
-            <TrendingDown className="h-4 w-4 text-red-500 shrink-0" />
+          <div className="mt-4 flex items-center gap-2 rounded-xl bg-panel/80 p-3 text-xs text-ink border border-line">
+            <TrendingDown className="h-4 w-4 text-danger-ink shrink-0" />
             <span>
               <strong>Target Remediation Areas:</strong> Smart Regeneration will focus 70% of questions on{" "}
               {weakTopics.map((w) => `"${w.topic}"`).join(", ")}.
@@ -147,10 +147,10 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
                 <span
                   className={`rounded-md px-2 py-0.5 font-bold text-xs ${
                     tb.status === "Strong"
-                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                      ? "bg-success-soft text-success-ink"
                       : tb.status === "Moderate"
-                      ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                      : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                      ? "bg-warning-soft text-warning-ink"
+                      : "bg-danger-soft text-danger-ink"
                   }`}
                 >
                   {tb.status}
@@ -166,10 +166,10 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
                 <div
                   className={`h-full ${
                     tb.status === "Strong"
-                      ? "bg-emerald-500"
+                      ? "bg-success"
                       : tb.status === "Moderate"
-                      ? "bg-amber-500"
-                      : "bg-red-500"
+                      ? "bg-warning"
+                      : "bg-danger"
                   }`}
                   style={{ width: `${tb.percentage}%` }}
                 />
@@ -190,19 +190,19 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
           return (
             <div
               key={q.question_id}
-              className={`rounded-2xl border p-5 transition shadow-xs ${
+              className={`rounded-2xl border p-5 transition shadow-xs bg-panel ${
                 isCorrect
-                  ? "border-emerald-200 bg-panel dark:border-emerald-950/60"
-                  : "border-red-200 bg-panel dark:border-red-950/60"
+                  ? "border-success/40"
+                  : "border-danger/40"
               }`}
             >
               {/* Question Header */}
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   {isCorrect ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-success-ink shrink-0" />
                   ) : (
-                    <XCircle className="h-5 w-5 text-red-600 shrink-0" />
+                    <XCircle className="h-5 w-5 text-danger-ink shrink-0" />
                   )}
                   <span className="font-bold text-sm">Question {q.question_number}</span>
                   {q.topic_tag && (
@@ -218,8 +218,8 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
                 <span
                   className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                     isCorrect
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950"
-                      : "bg-red-100 text-red-700 dark:bg-red-950"
+                      ? "bg-success-soft text-success-ink"
+                      : "bg-danger-soft text-danger-ink"
                   }`}
                 >
                   {isCorrect ? "Correct" : "Incorrect"}
@@ -243,10 +243,10 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
                   let styleClass = "border-line bg-surface text-muted";
                   if (isRightAnswer) {
                     styleClass =
-                      "border-emerald-500 bg-emerald-50/70 font-semibold text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200 ring-1 ring-emerald-500";
+                      "border-success bg-success-soft/80 font-semibold text-success-ink ring-1 ring-success";
                   } else if (isStudentPick && !isRightAnswer) {
                     styleClass =
-                      "border-red-500 bg-red-50/70 font-semibold text-red-900 dark:bg-red-950/50 dark:text-red-200 line-through";
+                      "border-danger bg-danger-soft/80 font-semibold text-danger-ink line-through";
                   }
 
                   return (
@@ -266,17 +266,17 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
               {/* Pedagogical Feedback / Document-Cited Rationale */}
               <div className="mt-4 rounded-xl border border-line bg-surface p-3.5 text-xs leading-relaxed space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 font-bold text-brand-600">
+                  <div className="flex items-center gap-1.5 font-bold text-primary-ink">
                     <BookOpen className="h-3.5 w-3.5" />
                     <span>Document-Cited Diagnostic Explanation</span>
                   </div>
                   {q.topic_tag && (
-                    <span className="rounded-md bg-brand-500/10 px-2 py-0.5 text-[11px] font-semibold text-brand-700 dark:text-brand-300">
+                    <span className="rounded-md bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary-ink">
                       Cited Topic: {q.topic_tag}
                     </span>
                   )}
                 </div>
-                <p className="text-text">
+                <p className="text-ink">
                   <RichMathText text={q.explanation} />
                 </p>
               </div>
@@ -287,7 +287,7 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
                   <button
                     type="button"
                     onClick={() => toggleSolution(q.question_id)}
-                    className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition"
+                    className="flex items-center gap-1.5 text-xs font-semibold text-primary-ink hover:underline transition"
                   >
                     <span>{isSolutionOpen ? "Hide Step-by-Step LaTeX Proof" : "View Solution & LaTeX Formula Proof"}</span>
                     {isSolutionOpen ? (
@@ -298,10 +298,10 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
                   </button>
 
                   {isSolutionOpen && (
-                    <div className="mt-3 rounded-xl border border-brand-200 bg-brand-50/40 dark:bg-brand-950/20 p-4 space-y-3">
+                    <div className="mt-3 rounded-xl border border-primary/30 bg-primary-soft/40 p-4 space-y-3">
                       {q.formula_latex && (
                         <div>
-                          <p className="text-xs font-semibold text-brand-700 uppercase tracking-wide">
+                          <p className="text-xs font-semibold text-primary-ink uppercase tracking-wide">
                             Governing LaTeX Formula:
                           </p>
                           <KaTeXViewer math={q.formula_latex} className="my-1 text-sm font-semibold" />
@@ -310,10 +310,10 @@ export const TestReviewScreen: React.FC<TestReviewScreenProps> = ({
 
                       {q.step_by_step_solution && q.step_by_step_solution.length > 0 && (
                         <div>
-                          <p className="text-xs font-semibold text-brand-700 uppercase tracking-wide mb-1.5">
+                          <p className="text-xs font-semibold text-primary-ink uppercase tracking-wide mb-1.5">
                             Intermediate Derivation Proof:
                           </p>
-                          <ol className="list-decimal list-inside space-y-1.5 text-xs text-text">
+                          <ol className="list-decimal list-inside space-y-1.5 text-xs text-ink">
                             {q.step_by_step_solution.map((step, idx) => (
                               <li key={idx} className="leading-relaxed">
                                 <RichMathText text={step} />

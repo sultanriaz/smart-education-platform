@@ -8,10 +8,10 @@ export const Button = forwardRef<
   ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }
 >(({ className, variant = "primary", type = "button", ...props }, ref) => {
   const variants: Record<Variant, string> = {
-    primary: "bg-brand-600 text-white hover:bg-brand-700",
+    primary: "bg-primary text-on-primary hover:bg-primary-hover",
     secondary: "border border-line bg-panel text-ink hover:bg-surface",
     ghost: "bg-transparent text-ink hover:bg-surface",
-    danger: "bg-danger text-white hover:opacity-90"
+    danger: "bg-danger text-danger-fg hover:opacity-90"
   };
   return (
     <button

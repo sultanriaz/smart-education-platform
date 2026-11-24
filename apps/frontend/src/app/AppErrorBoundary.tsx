@@ -24,7 +24,7 @@ export class AppErrorBoundary extends Component<
               Reload the application. If the problem continues, contact support.
             </p>
             <button
-              className="mt-6 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
+              className="mt-6 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary hover:bg-primary-hover transition"
               onClick={() => window.location.reload()}
             >
               Reload application

@@ -228,16 +228,16 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
           onClick={() => setActiveTab("labs")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
             activeTab === "labs"
-              ? "border-cyan-600 bg-panel ring-2 ring-cyan-500/30"
-              : "border-line bg-panel hover:border-cyan-500/50"
+              ? "border-secondary bg-panel ring-2 ring-secondary/30"
+              : "border-line bg-panel hover:border-secondary/50"
           }`}
         >
           <div className="flex items-center justify-between">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
                 activeTab === "labs"
-                  ? "bg-cyan-600 text-white"
-                  : "bg-cyan-500/10 text-cyan-600 group-hover:scale-105"
+                  ? "bg-secondary text-secondary-fg"
+                  : "bg-secondary-soft text-secondary-ink group-hover:scale-105"
               }`}
             >
               <Cpu size={20} />
@@ -247,7 +247,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             </span>
           </div>
           <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-cyan-600 transition">
+            <h4 className="font-extrabold text-sm text-ink group-hover:text-secondary-ink transition">
               Lab Directory
             </h4>
             <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
@@ -262,16 +262,16 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
           onClick={() => setActiveTab("classrooms")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
             activeTab === "classrooms"
-              ? "border-emerald-600 bg-panel ring-2 ring-emerald-500/30"
-              : "border-line bg-panel hover:border-emerald-500/50"
+              ? "border-success bg-panel ring-2 ring-success/30"
+              : "border-line bg-panel hover:border-success/50"
           }`}
         >
           <div className="flex items-center justify-between">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
                 activeTab === "classrooms"
-                  ? "bg-emerald-600 text-white"
-                  : "bg-emerald-500/10 text-emerald-600 group-hover:scale-105"
+                  ? "bg-success text-success-fg"
+                  : "bg-success-soft text-success-ink group-hover:scale-105"
               }`}
             >
               <Building size={20} />
@@ -281,7 +281,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             </span>
           </div>
           <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-emerald-600 transition">
+            <h4 className="font-extrabold text-sm text-ink group-hover:text-success-ink transition">
               Classrooms
             </h4>
             <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
@@ -296,16 +296,16 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
           onClick={() => setActiveTab("faculty")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
             activeTab === "faculty"
-              ? "border-brand-600 bg-panel ring-2 ring-brand-500/30"
-              : "border-line bg-panel hover:border-brand-500/50"
+              ? "border-primary bg-panel ring-2 ring-primary/30"
+              : "border-line bg-panel hover:border-primary/50"
           }`}
         >
           <div className="flex items-center justify-between">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
                 activeTab === "faculty"
-                  ? "bg-brand-600 text-white"
-                  : "bg-brand-500/10 text-brand-600 group-hover:scale-105"
+                  ? "bg-primary text-on-primary"
+                  : "bg-primary-soft text-primary-ink group-hover:scale-105"
               }`}
             >
               <Users size={20} />
@@ -330,16 +330,16 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
           onClick={() => setActiveTab("offices")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
             activeTab === "offices"
-              ? "border-indigo-600 bg-panel ring-2 ring-indigo-500/30"
-              : "border-line bg-panel hover:border-indigo-500/50"
+              ? "border-secondary bg-panel ring-2 ring-secondary/30"
+              : "border-line bg-panel hover:border-secondary/50"
           }`}
         >
           <div className="flex items-center justify-between">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
                 activeTab === "offices"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-indigo-500/10 text-indigo-600 group-hover:scale-105"
+                  ? "bg-secondary text-secondary-fg"
+                  : "bg-secondary-soft text-secondary-ink group-hover:scale-105"
               }`}
             >
               <Briefcase size={20} />
@@ -349,7 +349,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             </span>
           </div>
           <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-indigo-600 transition">
+            <h4 className="font-extrabold text-sm text-ink group-hover:text-secondary-ink transition">
               Office Directory
             </h4>
             <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
@@ -364,26 +364,26 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
           onClick={() => setActiveTab("library")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
             activeTab === "library"
-              ? "border-amber-600 bg-panel ring-2 ring-amber-500/30"
-              : "border-line bg-panel hover:border-amber-500/50"
+              ? "border-accent bg-panel ring-2 ring-accent/30"
+              : "border-line bg-panel hover:border-accent/50"
           }`}
         >
           <div className="flex items-center justify-between">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
                 activeTab === "library"
-                  ? "bg-amber-600 text-white"
-                  : "bg-amber-500/10 text-amber-600 group-hover:scale-105"
+                  ? "bg-accent text-accent-fg"
+                  : "bg-accent-soft text-accent-ink group-hover:scale-105"
               }`}
             >
               <BookOpen size={20} />
             </div>
-            <span className="text-2xs font-extrabold text-emerald-600">
+            <span className="text-2xs font-extrabold text-success-ink">
               {LIBRARY_INTELLIGENCE.availableSilentSeats} Free
             </span>
           </div>
           <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-amber-600 transition">
+            <h4 className="font-extrabold text-sm text-ink group-hover:text-accent-ink transition">
               Library
             </h4>
             <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
@@ -398,26 +398,26 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
           onClick={() => setActiveTab("statistics")}
           className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
             activeTab === "statistics"
-              ? "border-purple-600 bg-panel ring-2 ring-purple-500/30"
-              : "border-line bg-panel hover:border-purple-500/50"
+              ? "border-primary bg-panel ring-2 ring-primary/30"
+              : "border-line bg-panel hover:border-primary/50"
           }`}
         >
           <div className="flex items-center justify-between">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
                 activeTab === "statistics"
-                  ? "bg-purple-600 text-white"
-                  : "bg-purple-500/10 text-purple-600 group-hover:scale-105"
+                  ? "bg-primary text-on-primary"
+                  : "bg-primary-soft text-primary-ink group-hover:scale-105"
               }`}
             >
               <BarChart3 size={20} />
             </div>
-            <span className="text-2xs font-extrabold text-purple-600">
+            <span className="text-2xs font-extrabold text-primary-ink">
               Campus Data
             </span>
           </div>
           <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-purple-600 transition">
+            <h4 className="font-extrabold text-sm text-ink group-hover:text-primary-ink transition">
               Statistics
             </h4>
             <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
@@ -434,8 +434,8 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
           onClick={() => setActiveTab("floorplans")}
           className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition ${
             activeTab === "floorplans"
-              ? "border-purple-600 bg-purple-600 text-white"
-              : "border-line bg-panel text-purple-600 hover:border-purple-500"
+              ? "border-primary bg-primary text-on-primary"
+              : "border-line bg-panel text-primary-ink hover:border-primary"
           }`}
         >
           <Compass size={14} />
@@ -492,12 +492,12 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-indigo-700 text-white font-extrabold text-sm shadow-xs">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-on-primary font-extrabold text-sm shadow-xs">
                           {f.avatarInitials}
                         </div>
                         <span
                           className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-panel ${
-                            f.isAvailableToday ? "bg-emerald-500" : "bg-zinc-400"
+                            f.isAvailableToday ? "bg-success" : "bg-muted"
                           }`}
                           title={f.isAvailableToday ? "In Office Today" : "Not In Office Today"}
                         />
@@ -548,7 +548,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   {/* Consultation Hours & Email */}
                   <div className="space-y-1.5 text-xs">
                     <div className="flex items-center gap-1.5 text-muted">
-                      <Clock size={12} className="text-emerald-500 shrink-0" />
+                      <Clock size={12} className="text-success-ink shrink-0" />
                       <span className="text-2xs">
                         Consultation: <strong className="text-ink">{f.consultationHours}</strong>
                       </span>
@@ -576,7 +576,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       setMeetingSubmitted(false);
                       setMeetingPurpose("");
                     }}
-                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 py-2.5 text-xs font-bold text-white hover:bg-brand-700 transition shadow-xs"
+                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-xs font-bold text-on-primary hover:bg-primary-hover transition shadow-xs"
                   >
                     <Calendar size={13} />
                     <span>Request Meeting / Consultation</span>
@@ -599,7 +599,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                 placeholder="Search by teacher name or office name (e.g. Sir Munir, Registrar, Accounts, Block A, 3rd Floor)..."
                 value={officeQuery}
                 onChange={(e) => setOfficeQuery(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-secondary"
               />
               <Search size={14} className="absolute left-3 top-3 text-muted" />
               {officeQuery && (
@@ -620,22 +620,22 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                 {filteredTeacherOffices.map((f) => (
                   <div
                     key={`off-${f.id}`}
-                    className="rounded-2xl border border-line bg-panel p-4 shadow-2xs space-y-2.5 hover:border-indigo-500/60 transition"
+                    className="rounded-2xl border border-line bg-panel p-4 shadow-2xs space-y-2.5 hover:border-secondary/60 transition"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h4 className="font-extrabold text-sm text-ink">{f.name}</h4>
-                        <p className="text-2xs font-semibold text-indigo-600">{f.designation}</p>
+                        <p className="text-2xs font-semibold text-secondary-ink">{f.designation}</p>
                         <p className="text-2xs text-muted">{f.department}</p>
                       </div>
-                      <span className="rounded-lg bg-indigo-500/10 px-2 py-0.5 text-2xs font-bold text-indigo-600 shrink-0">
+                      <span className="rounded-lg bg-secondary-soft px-2 py-0.5 text-2xs font-bold text-secondary-ink shrink-0">
                         {f.phoneExtension}
                       </span>
                     </div>
 
                     <div className="rounded-xl border border-line/60 bg-surface/60 p-3 text-xs space-y-1">
                       <p className="font-bold text-ink flex items-center gap-1.5">
-                        <MapPin size={13} className="text-indigo-600 shrink-0" />
+                        <MapPin size={13} className="text-secondary-ink shrink-0" />
                         <span>
                           {f.block}, {f.floor}
                         </span>
@@ -657,16 +657,16 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
               {filteredOffices.map((off) => (
               <div
                 key={off.id}
-                className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-5 flex flex-col justify-between hover:border-indigo-500/60 transition group"
+                className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-5 flex flex-col justify-between hover:border-secondary/60 transition group"
               >
                 <div className="space-y-4">
                   {/* Top Bar: Office Name & Status */}
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-2xs font-extrabold text-indigo-600">
+                      <span className="rounded-md bg-secondary-soft px-2 py-0.5 text-2xs font-extrabold text-secondary-ink">
                         {off.category}
                       </span>
-                      <h4 className="font-extrabold text-base text-ink mt-1.5 group-hover:text-indigo-600 transition">
+                      <h4 className="font-extrabold text-base text-ink mt-1.5 group-hover:text-secondary-ink transition">
                         {off.name}
                       </h4>
                       <p className="text-xs text-muted mt-0.5">
@@ -677,10 +677,10 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                     <span
                       className={`rounded-full px-2.5 py-1 text-2xs font-extrabold ${
                         off.counterStatus === "OPEN"
-                          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                          ? "bg-success-soft text-success-ink"
                           : off.counterStatus === "BUSY"
-                          ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
-                          : "bg-rose-500/15 text-rose-700 dark:text-rose-300"
+                          ? "bg-warning-soft text-warning-ink"
+                          : "bg-danger-soft text-danger-ink"
                       }`}
                     >
                       {off.counterStatus === "OPEN" ? "● Counter Active" : "● Busy Traffic"}
@@ -688,9 +688,9 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   </div>
 
                   {/* Live Ticket Queue Telemetry Box */}
-                  <div className="rounded-2xl border border-indigo-500/30 bg-indigo-500/5 p-4 space-y-2">
+                  <div className="rounded-2xl border border-secondary/35 bg-secondary-soft/45 p-4 space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                      <span className="font-bold text-secondary-ink flex items-center gap-1.5">
                         <Ticket size={14} />
                         <span>Live Queue Telemetry</span>
                       </span>
@@ -699,16 +699,16 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-indigo-500/20 text-xs">
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-secondary/20 text-xs">
                       <div className="rounded-xl bg-panel border border-line p-2.5 text-center">
                         <span className="text-2xs text-muted block">Now Serving Token</span>
-                        <span className="font-mono font-extrabold text-lg text-indigo-600">
+                        <span className="font-mono font-extrabold text-lg text-secondary-ink">
                           #{off.currentTicketServing}
                         </span>
                       </div>
                       <div className="rounded-xl bg-panel border border-line p-2.5 text-center">
                         <span className="text-2xs text-muted block">Students in Line</span>
-                        <span className="font-mono font-extrabold text-lg text-amber-600">
+                        <span className="font-mono font-extrabold text-lg text-warning-ink">
                           {off.queueLength} Waiting
                         </span>
                       </div>
@@ -743,7 +743,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
                     <div className="flex items-center justify-between text-2xs pt-1">
                       <span className="flex items-center gap-1">
-                        <Clock size={11} className="text-emerald-500" />
+                        <Clock size={11} className="text-success-ink" />
                         <span>{off.workingHours}</span>
                       </span>
                       <span className="font-mono">{off.phoneExtension}</span>
@@ -772,7 +772,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       setVirtualTicketOffice(off);
                       setMyTicketNumber(off.currentTicketServing + off.queueLength + 1);
                     }}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition shadow-xs"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-secondary py-2.5 text-xs font-bold text-secondary-fg hover:opacity-90 transition shadow-xs"
                   >
                     <Ticket size={14} />
                     <span>Generate Virtual Queue Token</span>
@@ -795,7 +795,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                 Specialized computer, AI/GPU, networking, and CAD engineering laboratories across blocks.
               </p>
             </div>
-            <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-600">
+            <span className="rounded-full bg-secondary-soft px-3 py-1 text-xs font-bold text-secondary-ink">
               {labDirectoryItems.length} Active Laboratories
             </span>
           </div>
@@ -804,7 +804,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             {labDirectoryItems.map((lab) => (
               <div
                 key={lab.id}
-                className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-cyan-500/60 transition"
+                className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-secondary/60 transition"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
@@ -812,7 +812,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       <h4 className="font-extrabold text-base text-ink">{lab.roomCode}</h4>
                       <p className="text-xs text-muted mt-0.5">{lab.name}</p>
                     </div>
-                    <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 text-2xs font-bold text-cyan-600 shrink-0">
+                    <span className="rounded-full bg-secondary-soft px-2.5 py-1 text-2xs font-bold text-secondary-ink shrink-0">
                       {lab.type}
                     </span>
                   </div>
@@ -833,7 +833,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   </div>
 
                   {lab.equipment.specialGear && (
-                    <p className="text-2xs text-amber-700 dark:text-amber-300 font-medium">
+                    <p className="text-2xs text-warning-ink font-medium">
                       ⚡ {lab.equipment.specialGear}
                     </p>
                   )}
@@ -849,7 +849,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       lab.roomCode
                     )
                   }
-                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface py-2 text-xs font-bold text-cyan-600 hover:border-cyan-500 transition"
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface py-2 text-xs font-bold text-secondary-ink hover:border-secondary transition"
                 >
                   <Compass size={13} />
                   <span>View on Floor Blueprint</span>
@@ -919,7 +919,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                 placeholder="Search classrooms by block, floor, room code, or name (e.g. Block A, 2nd Floor, C-204)..."
                 value={classroomQuery}
                 onChange={(e) => setClassroomQuery(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                className="w-full rounded-xl border border-line bg-surface px-3 py-2 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-primary"
               />
               <Search size={14} className="absolute left-3 top-2.5 text-muted" />
               {classroomQuery && (
@@ -939,7 +939,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   onClick={() => setClassroomBlockFilter(blk)}
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition border ${
                     classroomBlockFilter === blk
-                      ? "border-emerald-600 bg-emerald-600 text-white font-bold shadow-xs"
+                      ? "border-primary bg-primary text-on-primary font-bold shadow-xs"
                       : "border-line bg-surface text-muted hover:text-ink"
                   }`}
                 >
@@ -962,7 +962,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                 >
                   <div className="flex items-center justify-between border-b border-line pb-3">
                     <div className="flex items-center gap-2.5">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-ink">
                         <Building size={18} />
                       </span>
                       <div>
@@ -977,7 +977,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   <div className="space-y-3">
                     {blkGroup.floors.map((flr) => (
                       <div key={flr.floor} className="space-y-1.5">
-                        <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                        <p className="text-xs font-bold text-primary-ink">
                           {flr.floor}
                         </p>
                         <div className="space-y-1.5">
@@ -1013,16 +1013,16 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
               {filteredClassrooms.map((cr) => (
                 <div
                   key={cr.id}
-                  className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-emerald-500/60 transition group"
+                  className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-primary/60 transition group"
                 >
                   <div className="space-y-3.5">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <h4 className="font-extrabold text-base text-ink group-hover:text-emerald-600 transition">
+                          <h4 className="font-extrabold text-base text-ink group-hover:text-success-ink transition">
                             {cr.roomCode}
                           </h4>
-                          <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-2xs font-bold text-emerald-700 dark:text-emerald-300">
+                          <span className="rounded-md bg-primary-soft px-2 py-0.5 text-2xs font-bold text-primary-ink">
                             {cr.block} · {cr.floor}
                           </span>
                         </div>
@@ -1042,7 +1042,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted">Current Activity</span>
-                      <span className="font-bold text-emerald-600 line-clamp-1">{cr.currentActivity}</span>
+                      <span className="font-bold text-success-ink line-clamp-1">{cr.currentActivity}</span>
                     </div>
                   </div>
 
@@ -1060,24 +1060,24 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       )}
                       {cr.equipment.projectorsCount > 0 && (
                         <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-ink font-semibold">
-                          <Tv size={10} className="text-indigo-500" />
+                          <Tv size={10} className="text-secondary-ink" />
                           <span>{cr.equipment.projectorsCount} Laser Projector{cr.equipment.projectorsCount > 1 ? "s" : ""}</span>
                         </span>
                       )}
                       {cr.equipment.hasAC && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-sky-600 font-semibold">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-secondary-ink font-semibold">
                           <Wind size={10} />
                           <span>AC</span>
                         </span>
                       )}
                       {cr.equipment.hasWifi && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-emerald-600 font-semibold">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-success-ink font-semibold">
                           <Wifi size={10} />
                           <span>Wi-Fi</span>
                         </span>
                       )}
                       {cr.equipment.hasSmartPodium && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-purple-600 font-semibold">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-accent-ink font-semibold">
                           <Mic size={10} />
                           <span>Smart Podium</span>
                         </span>
@@ -1085,7 +1085,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                     </div>
 
                     {cr.equipment.specialGear && (
-                      <p className="text-2xs text-amber-700 dark:text-amber-300 font-medium pt-1">
+                      <p className="text-2xs text-warning-ink font-medium pt-1">
                         ⚡ {cr.equipment.specialGear}
                       </p>
                     )}
@@ -1120,15 +1120,15 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
       {activeTab === "library" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Real-Time Silent Study Seat Telemetry Banner */}
-          <div className="rounded-3xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-6 shadow-sm">
+          <div className="rounded-3xl border border-accent/40 bg-gradient-to-r from-accent/15 via-accent/5 to-transparent p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="flex h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
                   <h3 className="text-base font-extrabold text-ink">
                     Central University Library Live Intelligence
                   </h3>
-                  <span className="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-2xs font-extrabold text-emerald-600">
+                  <span className="rounded-full bg-success-soft px-2.5 py-0.5 text-2xs font-extrabold text-success-ink">
                     Live Optical Counters
                   </span>
                 </div>
@@ -1143,7 +1143,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   <span className="text-2xs text-muted block uppercase font-bold tracking-wider">
                     Silent Desks
                   </span>
-                  <span className="font-mono font-extrabold text-xl text-emerald-600">
+                  <span className="font-mono font-extrabold text-xl text-success-ink">
                     {LIBRARY_INTELLIGENCE.availableSilentSeats} / {LIBRARY_INTELLIGENCE.totalSilentSeats}
                   </span>
                   <span className="text-[10px] text-muted block mt-0.5">Seats Free Right Now</span>
@@ -1170,7 +1170,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                 placeholder="Search digital book catalog by title, author, or ISBN (e.g. Compilers Dragon Book, Operating Systems, CLRS, Deep Learning)..."
                 value={libraryQuery}
                 onChange={(e) => setLibraryQuery(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-accent"
               />
               <Search size={14} className="absolute left-3 top-3 text-muted" />
               {libraryQuery && (
@@ -1190,7 +1190,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   onClick={() => setLibraryCategoryFilter(cat)}
                   className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition border ${
                     libraryCategoryFilter === cat
-                      ? "border-amber-600 bg-amber-600 text-white font-bold shadow-xs"
+                      ? "border-accent bg-accent text-accent-fg font-bold shadow-xs"
                       : "border-line bg-surface text-muted hover:text-ink"
                   }`}
                 >
@@ -1205,18 +1205,18 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             {filteredBooks.map((book) => (
               <div
                 key={book.id}
-                className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-amber-500/60 transition group"
+                className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-accent/60 transition group"
               >
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-2xs font-bold text-amber-700 dark:text-amber-300">
+                    <span className="rounded-md bg-accent-soft px-2 py-0.5 text-2xs font-bold text-accent-ink">
                       {book.category}
                     </span>
                     <span
                       className={`rounded-full px-2 py-0.5 text-2xs font-bold ${
                         book.isAvailable
-                          ? "bg-emerald-500/15 text-emerald-600"
-                          : "bg-rose-500/15 text-rose-600"
+                          ? "bg-success-soft text-success-ink"
+                          : "bg-danger-soft text-danger-ink"
                       }`}
                     >
                       {book.isAvailable ? `${book.availableCopies} Available` : "All Checked Out"}
@@ -1224,7 +1224,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   </div>
 
                   <div>
-                    <h4 className="font-extrabold text-sm text-ink group-hover:text-amber-600 transition leading-snug">
+                    <h4 className="font-extrabold text-sm text-ink group-hover:text-accent-ink transition leading-snug">
                       {book.title}
                     </h4>
                     <p className="text-xs text-muted mt-0.5">{book.authors}</p>
@@ -1235,7 +1235,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   <div className="rounded-xl border border-line/60 bg-surface/50 p-2.5 space-y-1 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-muted flex items-center gap-1">
-                        <MapPin size={11} className="text-amber-500" />
+                        <MapPin size={11} className="text-accent-ink" />
                         <span>Shelf Location:</span>
                       </span>
                       <span className="font-mono font-bold text-ink">{book.shelfLocation}</span>
@@ -1255,7 +1255,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       setBookReservedSuccess(false);
                     }}
                     disabled={!book.isAvailable}
-                    className="flex-1 rounded-xl bg-amber-600 py-2 text-xs font-bold text-white hover:bg-amber-700 transition disabled:opacity-50 shadow-xs"
+                    className="flex-1 rounded-xl bg-accent py-2 text-xs font-bold text-accent-fg hover:opacity-90 transition disabled:opacity-50 shadow-xs"
                   >
                     Reserve Copy
                   </button>
@@ -1282,7 +1282,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
           <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs flex flex-wrap items-center justify-between gap-4">
             <div>
               <label className="block text-xs font-bold text-ink mb-1.5 flex items-center gap-1.5">
-                <Compass size={14} className="text-purple-600" />
+                <Compass size={14} className="text-primary-ink" />
                 <span>Select Building Sector & Floor Blueprint</span>
               </label>
               <div className="flex flex-wrap gap-2">
@@ -1295,7 +1295,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                     }}
                     className={`rounded-xl px-3.5 py-2 text-xs font-bold transition border ${
                       selectedBlueprintKey === key
-                        ? "border-purple-600 bg-purple-600 text-white shadow-xs"
+                        ? "border-primary bg-primary text-on-primary shadow-xs"
                         : "border-line bg-surface text-muted hover:text-ink"
                     }`}
                   >
@@ -1322,7 +1322,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   </h4>
                   <p className="text-xs text-muted mt-0.5">{activeBlueprint.corridorDescription}</p>
                 </div>
-                <span className="rounded-md bg-purple-500/10 px-2.5 py-1 text-2xs font-bold text-purple-600">
+                <span className="rounded-md bg-primary-soft px-2.5 py-1 text-2xs font-bold text-primary-ink">
                   Interactive Wayfinding
                 </span>
               </div>
@@ -1345,18 +1345,18 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                         onClick={() => setHighlightedRoomCode(room.code)}
                         className={`cursor-pointer rounded-2xl border p-4 transition text-center space-y-1 ${room.gridCol} ${
                           isSelected
-                            ? "border-purple-600 bg-purple-600/15 ring-2 ring-purple-500/60 shadow-md scale-[1.02]"
+                            ? "border-primary bg-primary-soft ring-2 ring-primary/50 shadow-md scale-[1.02]"
                             : room.type === "classroom"
-                            ? "border-line bg-panel hover:border-purple-500/60 hover:bg-surface"
+                            ? "border-line bg-panel hover:border-primary/60 hover:bg-surface"
                             : room.type === "office"
-                            ? "border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500"
+                            ? "border-secondary/35 bg-secondary-soft/45 hover:border-secondary"
                             : room.type === "lab"
-                            ? "border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500"
+                            ? "border-success/35 bg-success-soft/45 hover:border-success"
                             : "border-line/60 bg-surface/80 opacity-75"
                         }`}
                       >
                         {isSelected && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-purple-600 animate-pulse">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-primary-ink animate-pulse">
                             📍 YOU ARE LOCATING
                           </span>
                         )}
@@ -1383,7 +1383,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             <div className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-5 flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary-ink">
                     <Compass size={20} />
                   </div>
                   <div>
@@ -1394,8 +1394,8 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
                 {highlightedRoomCode ? (
                   <div className="space-y-4">
-                    <div className="rounded-2xl border border-purple-500/40 bg-purple-500/10 p-4 space-y-1">
-                      <span className="text-2xs font-extrabold text-purple-600 uppercase tracking-wider">
+                    <div className="rounded-2xl border border-primary/40 bg-primary-soft p-4 space-y-1">
+                      <span className="text-2xs font-extrabold text-primary-ink uppercase tracking-wider">
                         Destination Target
                       </span>
                       <h4 className="font-extrabold text-base text-ink">{highlightedRoomCode}</h4>
@@ -1404,9 +1404,9 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       </p>
                     </div>
 
-                    <div className="space-y-3 relative pl-5 border-l-2 border-purple-500/40 text-xs">
+                    <div className="space-y-3 relative pl-5 border-l-2 border-primary/40 text-xs">
                       <div className="relative">
-                        <span className="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-purple-600 ring-4 ring-panel" />
+                        <span className="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-panel" />
                         <strong className="text-ink block">Step 1: Arrive at Sector Arch</strong>
                         <p className="text-2xs text-muted mt-0.5">
                           Walk past the Central Fountain towards {activeBlueprint.block} Portico entrance.
@@ -1414,7 +1414,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       </div>
 
                       <div className="relative">
-                        <span className="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-purple-600 ring-4 ring-panel" />
+                        <span className="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-panel" />
                         <strong className="text-ink block">Step 2: Ascend to {activeBlueprint.floor}</strong>
                         <p className="text-2xs text-muted mt-0.5">
                           Take the West Wing Elevator or Central Fire Staircase to {activeBlueprint.floor}.
@@ -1422,8 +1422,8 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                       </div>
 
                       <div className="relative">
-                        <span className="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-emerald-500 ring-4 ring-panel" />
-                        <strong className="text-emerald-700 dark:text-emerald-300 block">
+                        <span className="absolute -left-[25px] top-1 h-3 w-3 rounded-full bg-success ring-4 ring-panel" />
+                        <strong className="text-success-ink block">
                           Step 3: Arrive at {highlightedRoomCode}
                         </strong>
                         <p className="text-2xs text-muted mt-0.5">
@@ -1445,7 +1445,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
               <div className="pt-3 border-t border-line/60 text-2xs text-muted flex items-center justify-between">
                 <span>Accessibility: ADA Ramps & Elevators</span>
-                <span className="text-emerald-600 font-bold">100% Barrier-Free Access</span>
+                <span className="text-success-ink font-bold">100% Barrier-Free Access</span>
               </div>
             </div>
           </div>
@@ -1454,7 +1454,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
       {/* ================= MEETING REQUEST MODAL ================= */}
       {meetingModalFaculty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div>
@@ -1474,17 +1474,17 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             </div>
 
             {meetingSubmitted ? (
-              <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-5 text-center space-y-2">
-                <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-600">
+              <div className="rounded-2xl border border-success/40 bg-success-soft p-5 text-center space-y-2">
+                <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-success-ink">
                   <CheckCircle2 size={18} />
                   <span>Consultation Request Dispatched!</span>
                 </div>
-                <p className="text-2xs text-emerald-700 dark:text-emerald-300">
+                <p className="text-2xs text-success-ink">
                   Confirmation sent to {meetingModalFaculty.email}. An invite will appear on your Student Timetable once accepted.
                 </p>
                 <button
                   onClick={() => setMeetingModalFaculty(null)}
-                  className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 mt-2"
+                  className="rounded-xl bg-success px-4 py-2 text-xs font-bold text-success-fg hover:opacity-90 mt-2"
                 >
                   Done
                 </button>
@@ -1550,7 +1550,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   <button
                     onClick={() => setMeetingSubmitted(true)}
                     disabled={!meetingPurpose.trim()}
-                    className="rounded-xl bg-brand-600 px-5 py-2 text-xs font-bold text-white hover:bg-brand-700 disabled:opacity-50"
+                    className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-on-primary hover:bg-primary-hover disabled:opacity-50"
                   >
                     Submit Request
                   </button>
@@ -1563,7 +1563,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
       {/* ================= VIRTUAL QUEUE TICKET MODAL ================= */}
       {virtualTicketOffice && myTicketNumber && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-sm rounded-3xl border border-line bg-panel p-6 shadow-2xl text-center space-y-5 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between text-left">
               <div>
@@ -1575,17 +1575,17 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
               </button>
             </div>
 
-            <div className="rounded-2xl border-2 border-dashed border-indigo-500/40 bg-surface/80 p-6 space-y-3">
+            <div className="rounded-2xl border-2 border-dashed border-secondary/40 bg-surface/80 p-6 space-y-3">
               <span className="text-2xs font-extrabold text-muted uppercase tracking-wider">
                 Your Priority Ticket
               </span>
-              <div className="font-mono font-black text-4xl text-indigo-600">
+              <div className="font-mono font-black text-4xl text-secondary-ink">
                 #{myTicketNumber}
               </div>
               <p className="text-2xs text-muted">
                 Currently Serving: <strong className="text-ink">#{virtualTicketOffice.currentTicketServing}</strong>
               </p>
-              <div className="rounded-xl bg-panel border border-line p-2 text-2xs text-indigo-700 dark:text-indigo-300 font-semibold">
+              <div className="rounded-xl bg-panel border border-line p-2 text-2xs text-secondary-ink font-semibold">
                 Est. Waiting Time: ~{virtualTicketOffice.avgWaitMinutes + 4} minutes
               </div>
             </div>
@@ -1596,7 +1596,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
             <button
               onClick={() => setVirtualTicketOffice(null)}
-              className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition"
+              className="w-full rounded-xl bg-secondary py-2.5 text-xs font-bold text-secondary-fg hover:opacity-90 transition"
             >
               Keep Ticket in Wallet
             </button>
@@ -1606,11 +1606,11 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
       {/* ================= BOOK RESERVATION MODAL ================= */}
       {reservedBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
             <div className="flex items-start justify-between">
               <div>
-                <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-2xs font-extrabold text-amber-700 dark:text-amber-300 uppercase">
+                <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-2xs font-extrabold text-accent-ink uppercase">
                   Library Circulation Desk
                 </span>
                 <h3 className="font-extrabold text-base text-ink mt-1">Reserve Book Copy</h3>
@@ -1621,15 +1621,15 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
             </div>
 
             {bookReservedSuccess ? (
-              <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-5 text-center space-y-2">
-                <CheckCircle2 size={22} className="mx-auto text-emerald-600" />
+              <div className="rounded-2xl border border-success/40 bg-success-soft p-5 text-center space-y-2">
+                <CheckCircle2 size={22} className="mx-auto text-success-ink" />
                 <h4 className="font-bold text-sm text-ink">Copy Held at Circulation Desk!</h4>
                 <p className="text-2xs text-muted">
                   A physical copy of "{reservedBook.title}" will be held under your Reg No at {reservedBook.shelfLocation} for 24 hours.
                 </p>
                 <button
                   onClick={() => setReservedBook(null)}
-                  className="rounded-xl bg-emerald-600 px-5 py-2 text-xs font-bold text-white hover:bg-emerald-700 mt-2"
+                  className="rounded-xl bg-success px-5 py-2 text-xs font-bold text-success-fg hover:opacity-90 mt-2"
                 >
                   Close
                 </button>
@@ -1639,7 +1639,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                 <div className="rounded-2xl border border-line bg-surface p-3.5 space-y-1">
                   <h4 className="font-bold text-ink">{reservedBook.title}</h4>
                   <p className="text-2xs text-muted">{reservedBook.authors} · {reservedBook.edition}</p>
-                  <p className="text-2xs font-mono text-amber-600 pt-1">Location: {reservedBook.shelfLocation}</p>
+                  <p className="text-2xs font-mono text-accent-ink pt-1">Location: {reservedBook.shelfLocation}</p>
                 </div>
 
                 <div className="rounded-xl border border-line/60 bg-panel p-3 text-2xs text-muted space-y-1">
@@ -1657,7 +1657,7 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
                   </button>
                   <button
                     onClick={() => setBookReservedSuccess(true)}
-                    className="rounded-xl bg-amber-600 px-5 py-2 text-xs font-bold text-white hover:bg-amber-700"
+                    className="rounded-xl bg-accent px-5 py-2 text-xs font-bold text-accent-fg hover:opacity-90"
                   >
                     Confirm 24h Desk Hold
                   </button>

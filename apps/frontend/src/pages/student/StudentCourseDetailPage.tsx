@@ -224,10 +224,10 @@ export function StudentCourseDetailPage() {
             <div
               className={`rounded-xl border px-3.5 py-2 text-right ${
                 isGreen
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                  ? "border-success/40 bg-success-soft text-success-ink"
                   : isAmber
-                  ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                  : "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300"
+                  ? "border-warning/40 bg-warning-soft text-warning-ink"
+                  : "border-danger/40 bg-danger-soft text-danger-ink"
               }`}
             >
               <p className="text-[11px] font-medium uppercase tracking-wider">
@@ -241,7 +241,7 @@ export function StudentCourseDetailPage() {
             {/* AI Practice Quick Launch */}
             <Link
               to="/app/student/learning"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2.5 text-xs font-bold text-on-primary shadow-xs hover:bg-primary-hover transition"
             >
               <Sparkles size={14} />
               <span>AI Self-Assessment</span>
@@ -251,9 +251,9 @@ export function StudentCourseDetailPage() {
 
         {/* Regulatory Attendance Banner (if <75%) */}
         {isRed && (
-          <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-3.5 text-xs text-red-800 dark:text-red-200 flex items-center justify-between gap-3">
+          <div className="rounded-xl border border-danger/40 bg-danger-soft p-3.5 text-xs text-danger-ink flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <ShieldAlert size={18} className="text-danger shrink-0" />
+              <ShieldAlert size={18} className="text-danger-ink shrink-0" />
               <span>
                 <strong>Examination Eligibility Alert:</strong> Your attendance ({currentCourse.attendance.percentage}%) is below the mandatory{" "}
                 <strong>75% regulatory cutoff</strong>. You need to attend the next{" "}
@@ -267,7 +267,7 @@ export function StudentCourseDetailPage() {
                 setActiveTab("attendance");
                 setIsExcuseModalOpen(true);
               }}
-              className="shrink-0 rounded-lg bg-danger px-3 py-1 font-bold text-white text-xs hover:bg-red-700 transition"
+              className="shrink-0 rounded-lg bg-danger px-3 py-1 font-bold text-danger-fg text-xs hover:opacity-90 transition"
             >
               Submit Leave Excuse
             </button>
@@ -284,7 +284,7 @@ export function StudentCourseDetailPage() {
             label: "Assignments",
             metric: `${currentCourse.coursework.assignments.length} Tasks`,
             icon: FileText,
-            color: "text-blue-600 bg-blue-500/10"
+            color: "text-primary-ink bg-primary-soft"
           },
           {
             id: "quizzes" as const,
@@ -292,7 +292,7 @@ export function StudentCourseDetailPage() {
             label: "Quizzes",
             metric: `${currentCourse.coursework.quizzes.length} Quizzes`,
             icon: HelpCircle,
-            color: "text-violet-600 bg-violet-500/10"
+            color: "text-secondary-ink bg-secondary-soft"
           },
           {
             id: "attendance" as const,
@@ -300,7 +300,7 @@ export function StudentCourseDetailPage() {
             label: "Attendance",
             metric: `${currentCourse.attendance.percentage}%`,
             icon: CheckCircle2,
-            color: "text-emerald-600 bg-emerald-500/10"
+            color: "text-success-ink bg-success-soft"
           },
           {
             id: "marks" as const,
@@ -308,7 +308,7 @@ export function StudentCourseDetailPage() {
             label: "Marks",
             metric: currentCourse.standing.estimatedGrade,
             icon: Percent,
-            color: "text-amber-600 bg-amber-500/10"
+            color: "text-accent-ink bg-accent-soft"
           },
           {
             id: "notifications" as const,
@@ -316,7 +316,7 @@ export function StudentCourseDetailPage() {
             label: "Notifications",
             metric: `${currentCourse.overview.announcements.length} Alerts`,
             icon: Bell,
-            color: "text-rose-600 bg-rose-500/10"
+            color: "text-warning-ink bg-warning-soft"
           },
           {
             id: "resources" as const,
@@ -324,7 +324,7 @@ export function StudentCourseDetailPage() {
             label: "Resources",
             metric: `${currentCourse.lectureHub.materials.length} Files`,
             icon: Download,
-            color: "text-cyan-600 bg-cyan-500/10"
+            color: "text-secondary-ink bg-secondary-soft"
           },
           {
             id: "lectureHub" as const,
@@ -332,7 +332,7 @@ export function StudentCourseDetailPage() {
             label: "Lecture Hub",
             metric: `${currentCourse.lectureHub.recordings.length} Videos`,
             icon: Video,
-            color: "text-indigo-600 bg-indigo-500/10"
+            color: "text-primary-ink bg-primary-soft"
           },
           {
             id: "courseInfo" as const,
@@ -340,7 +340,7 @@ export function StudentCourseDetailPage() {
             label: "Course Information",
             metric: `${currentCourse.creditHours} Cr. Hrs`,
             icon: Info,
-            color: "text-teal-600 bg-teal-500/10"
+            color: "text-ink bg-subtle"
           }
         ].map((card) => {
           const Icon = card.icon;
@@ -355,8 +355,8 @@ export function StudentCourseDetailPage() {
               }}
               className={`rounded-2xl border p-4 text-left transition shadow-2xs flex flex-col justify-between gap-2.5 group ${
                 isSelected
-                  ? "border-brand-600 bg-panel ring-2 ring-brand-500/30 shadow-sm"
-                  : "border-line bg-panel hover:border-brand-500/60"
+                  ? "border-primary bg-panel ring-2 ring-primary/30 shadow-sm"
+                  : "border-line bg-panel hover:border-primary/60"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
@@ -367,7 +367,7 @@ export function StudentCourseDetailPage() {
                   {card.metric}
                 </span>
               </div>
-              <p className={`text-sm font-bold ${isSelected ? "text-brand-600" : "text-ink group-hover:text-brand-600"}`}>
+              <p className={`text-sm font-bold ${isSelected ? "text-primary-ink" : "text-ink group-hover:text-primary-ink"}`}>
                 {card.label}
               </p>
             </button>
@@ -382,13 +382,13 @@ export function StudentCourseDetailPage() {
             {/* Left: Instructor Bio Card */}
             <div className="rounded-2xl border border-line bg-panel p-6 shadow-2xs space-y-4">
               <div className="flex items-center gap-3.5">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 font-bold text-white shadow-xs text-base">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary font-bold text-on-primary shadow-xs text-base">
                   {currentCourse.teacher.avatar}
                 </div>
                 <div>
                   <h3 className="font-bold text-base text-ink">{currentCourse.teacher.name}</h3>
-                  <p className="text-xs text-brand-600 font-medium">{currentCourse.teacher.role}</p>
-                  <span className="inline-block rounded-full bg-emerald-500/10 px-2 py-0.2 text-[10px] font-semibold text-emerald-600 mt-1">
+                  <p className="text-xs text-primary-ink font-medium">{currentCourse.teacher.role}</p>
+                  <span className="inline-block rounded-full bg-success-soft px-2 py-0.2 text-[10px] font-semibold text-success-ink mt-1">
                     ● {currentCourse.teacher.status}
                   </span>
                 </div>
@@ -398,11 +398,11 @@ export function StudentCourseDetailPage() {
 
               <div className="space-y-2 border-t border-line/60 pt-3 text-xs">
                 <div className="flex items-center gap-2 text-muted">
-                  <MapPin size={14} className="text-brand-600 shrink-0" />
+                  <MapPin size={14} className="text-primary-ink shrink-0" />
                   <span>{currentCourse.teacher.office}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted">
-                  <Clock size={14} className="text-brand-600 shrink-0" />
+                  <Clock size={14} className="text-primary-ink shrink-0" />
                   <span>Consultation: {currentCourse.teacher.officeHours}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted font-mono text-[11px]">
@@ -425,7 +425,7 @@ export function StudentCourseDetailPage() {
                 <ul className="space-y-1.5 text-xs text-ink">
                   {currentCourse.overview.objectives.map((obj, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-brand-500/10 text-brand-600 font-bold text-[10px] mt-0.5">
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-ink font-bold text-[10px] mt-0.5">
                         {i + 1}
                       </span>
                       <span>{obj}</span>
@@ -469,7 +469,7 @@ export function StudentCourseDetailPage() {
                     {currentCourse.overview.gradingPolicy.map((gp, i) => (
                       <tr key={i} className="hover:bg-surface/30">
                         <td className="p-3 font-semibold text-ink">{gp.item}</td>
-                        <td className="p-3 font-mono font-bold text-brand-600">{gp.weight}</td>
+                        <td className="p-3 font-mono font-bold text-primary-ink">{gp.weight}</td>
                         <td className="p-3 text-muted">{gp.description}</td>
                       </tr>
                     ))}
@@ -485,19 +485,19 @@ export function StudentCourseDetailPage() {
                   <h3 className="font-bold text-base text-ink">Instructor Announcements Feed</h3>
                   <p className="text-xs text-muted">Official broadcasts published by {currentCourse.teacher.name}</p>
                 </div>
-                <Bell size={18} className="text-brand-600" />
+                <Bell size={18} className="text-primary-ink" />
               </div>
 
               <div className="space-y-3 mt-2">
                 {currentCourse.overview.announcements.map((ann) => (
                   <div
                     key={ann.id}
-                    className="rounded-xl border border-line bg-surface/50 p-4 space-y-1.5 hover:border-brand-500/50 transition"
+                    className="rounded-xl border border-line bg-surface/50 p-4 space-y-1.5 hover:border-primary/50 transition"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-sm text-ink">{ann.title}</span>
                       {ann.isPinned && (
-                        <span className="rounded-full bg-brand-500/10 px-2 py-0.5 text-[10px] font-bold text-brand-600 uppercase">
+                        <span className="rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-bold text-primary-ink uppercase">
                           Pinned
                         </span>
                       )}
@@ -531,7 +531,7 @@ export function StudentCourseDetailPage() {
 
             <div className="rounded-2xl border border-line bg-panel p-4 shadow-2xs">
               <p className="text-xs font-semibold text-muted">Quizzes Performance</p>
-              <p className="text-xl font-bold font-mono text-emerald-600 mt-1">
+              <p className="text-xl font-bold font-mono text-success-ink mt-1">
                 17.5 / 20.0 (87.5%)
               </p>
               <p className="text-[11px] text-muted mt-0.5">+1.9 marks above section mean.</p>
@@ -539,7 +539,7 @@ export function StudentCourseDetailPage() {
 
             <div className="rounded-2xl border border-line bg-panel p-4 shadow-2xs">
               <p className="text-xs font-semibold text-muted">Mid-Term Result</p>
-              <p className="text-xl font-bold font-mono text-brand-600 mt-1">
+              <p className="text-xl font-bold font-mono text-primary-ink mt-1">
                 21.5 / 25.0 (86.0%)
               </p>
               <p className="text-[11px] text-muted mt-0.5">Class 90th percentile.</p>
@@ -559,7 +559,7 @@ export function StudentCourseDetailPage() {
               {currentCourse.coursework.assignments.map((asgn) => (
                 <div
                   key={asgn.id}
-                  className="rounded-2xl border border-line bg-surface/50 p-5 space-y-3 hover:border-brand-500/60 transition"
+                  className="rounded-2xl border border-line bg-surface/50 p-5 space-y-3 hover:border-primary/60 transition"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
@@ -576,10 +576,10 @@ export function StudentCourseDetailPage() {
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
                           asgn.status === "Graded"
-                            ? "bg-emerald-500/10 text-emerald-600"
+                            ? "bg-success-soft text-success-ink"
                             : asgn.status === "Submitted"
-                            ? "bg-blue-500/10 text-blue-600"
-                            : "bg-amber-500/10 text-amber-600"
+                            ? "bg-secondary-soft text-secondary-ink"
+                            : "bg-warning-soft text-warning-ink"
                         }`}
                       >
                         {asgn.status}
@@ -592,7 +592,7 @@ export function StudentCourseDetailPage() {
                             setSelectedAssignmentId(asgn.id);
                             setUploadedFileName("");
                           }}
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-on-primary shadow-xs hover:bg-primary-hover transition"
                         >
                           <Upload size={13} />
                           <span>Submit to Dropbox</span>
@@ -604,12 +604,12 @@ export function StudentCourseDetailPage() {
                   {asgn.submittedFile && (
                     <div className="rounded-xl border border-line/70 bg-panel p-3 text-xs flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <FileText size={15} className="text-brand-600" />
+                        <FileText size={15} className="text-primary-ink" />
                         <span className="font-mono font-medium text-ink">{asgn.submittedFile}</span>
                         <span className="text-muted">({asgn.submittedAt})</span>
                       </div>
                       {asgn.obtainedScore !== undefined && (
-                        <span className="font-mono font-bold text-emerald-600">
+                        <span className="font-mono font-bold text-success-ink">
                           Score: {asgn.obtainedScore} / {asgn.maxPoints}
                         </span>
                       )}
@@ -617,7 +617,7 @@ export function StudentCourseDetailPage() {
                   )}
 
                   {asgn.feedback && (
-                    <p className="text-xs text-muted bg-surface/70 rounded-lg p-2.5 border-l-2 border-emerald-500">
+                    <p className="text-xs text-muted bg-surface/70 rounded-lg p-2.5 border-l-2 border-success">
                       <strong>Instructor Feedback:</strong> {asgn.feedback}
                     </p>
                   )}
@@ -636,7 +636,7 @@ export function StudentCourseDetailPage() {
 
               <Link
                 to="/app/student/learning"
-                className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-bold text-primary-ink hover:underline"
               >
                 <Sparkles size={14} />
                 <span>Practice Smart Test</span>
@@ -651,7 +651,7 @@ export function StudentCourseDetailPage() {
                   <div key={qz.id} className="rounded-xl border border-line bg-surface/50 p-4 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <h4 className="font-bold text-sm text-ink">{qz.title}</h4>
-                      <span className="font-mono font-bold text-sm text-brand-600">
+                      <span className="font-mono font-bold text-sm text-primary-ink">
                         {qz.obtainedScore} / {qz.maxPoints}
                       </span>
                     </div>
@@ -662,13 +662,13 @@ export function StudentCourseDetailPage() {
                     <div className="space-y-1 text-xs pt-1 border-t border-line/60">
                       <div className="flex justify-between text-[11px] text-muted">
                         <span>Section Mean: {qz.classAverage}</span>
-                        <span className={isAbove ? "text-emerald-600 font-bold" : "text-amber-600 font-bold"}>
+                        <span className={isAbove ? "text-success-ink font-bold" : "text-warning-ink font-bold"}>
                           {isAbove ? `+${diff} above average` : `${diff} below average`}
                         </span>
                       </div>
                       <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-brand-600 rounded-full"
+                          className="h-full bg-primary rounded-full"
                           style={{ width: `${(qz.obtainedScore / qz.maxPoints) * 100}%` }}
                         />
                       </div>
@@ -689,7 +689,7 @@ export function StudentCourseDetailPage() {
             <div className="rounded-2xl border border-line bg-panel p-6 shadow-2xs space-y-3">
               <p className="text-xs font-bold uppercase tracking-wider text-muted">Attendance Overview</p>
               <div className="flex items-baseline gap-2">
-                <span className={`text-3xl font-black font-mono ${isGreen ? "text-emerald-600" : isAmber ? "text-amber-600" : "text-red-600"}`}>
+                <span className={`text-3xl font-black font-mono ${isGreen ? "text-success-ink" : isAmber ? "text-warning-ink" : "text-danger-ink"}`}>
                   {currentCourse.attendance.percentage}%
                 </span>
                 <span className="text-xs text-muted font-medium">
@@ -700,19 +700,19 @@ export function StudentCourseDetailPage() {
               <div className="space-y-1.5 pt-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-muted">Present:</span>
-                  <span className="font-bold text-emerald-600">{currentCourse.attendance.attended}</span>
+                  <span className="font-bold text-success-ink">{currentCourse.attendance.attended}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted">Absent:</span>
-                  <span className="font-bold text-danger">{currentCourse.attendance.absent}</span>
+                  <span className="font-bold text-danger-ink">{currentCourse.attendance.absent}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted">Late:</span>
-                  <span className="font-bold text-amber-600">{currentCourse.attendance.late}</span>
+                  <span className="font-bold text-warning-ink">{currentCourse.attendance.late}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted">Excused / Approved Leave:</span>
-                  <span className="font-bold text-blue-600">{currentCourse.attendance.excused}</span>
+                  <span className="font-bold text-secondary-ink">{currentCourse.attendance.excused}</span>
                 </div>
               </div>
             </div>
@@ -721,7 +721,7 @@ export function StudentCourseDetailPage() {
             <div className="lg:col-span-2 rounded-2xl border border-line bg-panel p-6 shadow-2xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <AlertTriangle size={18} className={isRed ? "text-danger" : "text-amber-600"} />
+                  <AlertTriangle size={18} className={isRed ? "text-danger-ink" : "text-warning-ink"} />
                   <h3 className="font-bold text-base text-ink">Regulatory Examination Threshold</h3>
                 </div>
                 <p className="text-xs text-muted mt-2 leading-relaxed">
@@ -732,11 +732,11 @@ export function StudentCourseDetailPage() {
                 <div className="mt-4 rounded-xl border border-line bg-surface/60 p-4 space-y-1.5 text-xs">
                   <strong className="text-ink">Attendance Forecast Calculator:</strong>
                   {isRed ? (
-                    <p className="text-red-700 dark:text-red-300">
+                    <p className="text-danger-ink">
                       ⚠️ You must attend the next <strong>{currentCourse.attendance.requiredConsecutive} consecutive lectures</strong> without absence to cross 75.0%.
                     </p>
                   ) : (
-                    <p className="text-emerald-700 dark:text-emerald-300">
+                    <p className="text-success-ink">
                       ✓ Your attendance meets all compliance policies. You can safely miss up to 2 future lectures while remaining above 75%.
                     </p>
                   )}
@@ -748,7 +748,7 @@ export function StudentCourseDetailPage() {
                 <button
                   type="button"
                   onClick={() => setIsExcuseModalOpen(true)}
-                  className="rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition"
+                  className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-on-primary shadow-xs hover:bg-primary-hover transition"
                 >
                   Submit Leave Excuse Request
                 </button>
@@ -771,7 +771,7 @@ export function StudentCourseDetailPage() {
                         Lecture {lv.lectureNo} ({lv.date}) · {lv.reason}
                       </p>
                       <p className="text-muted mt-0.5">
-                        Document: <span className="font-mono text-brand-600">{lv.documentName}</span> · Submitted: {lv.submittedAt}
+                        Document: <span className="font-mono text-primary-ink">{lv.documentName}</span> · Submitted: {lv.submittedAt}
                       </p>
                       {lv.adminRemarks && (
                         <p className="text-[11px] text-muted italic mt-0.5">Note: {lv.adminRemarks}</p>
@@ -780,10 +780,10 @@ export function StudentCourseDetailPage() {
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-bold self-start sm:self-auto ${
                         lv.status === "Approved"
-                          ? "bg-emerald-500/10 text-emerald-600"
+                          ? "bg-success-soft text-success-ink"
                           : lv.status === "Pending"
-                          ? "bg-amber-500/10 text-amber-600"
-                          : "bg-red-500/10 text-danger"
+                          ? "bg-warning-soft text-warning-ink"
+                          : "bg-danger-soft text-danger-ink"
                       }`}
                     >
                       {lv.status}
@@ -803,7 +803,7 @@ export function StudentCourseDetailPage() {
                 <thead className="bg-surface text-muted font-bold border-b border-line">
                   <tr>
                     <th className="p-3">Lec #</th>
-                    <th className="p-3">Date & Slot</th>
+                    <th className="p-3">Date &amp; Slot</th>
                     <th className="p-3">Room</th>
                     <th className="p-3">Topic Covered</th>
                     <th className="p-3">Status</th>
@@ -813,7 +813,7 @@ export function StudentCourseDetailPage() {
                 <tbody className="divide-y divide-line/60">
                   {currentCourse.attendanceLedger.map((row) => (
                     <tr key={row.id} className="hover:bg-surface/30">
-                      <td className="p-3 font-mono font-bold text-brand-600">{row.lectureNo}</td>
+                      <td className="p-3 font-mono font-bold text-primary-ink">{row.lectureNo}</td>
                       <td className="p-3">
                         <div className="font-semibold text-ink">{row.date}</div>
                         <div className="text-[11px] text-muted">{row.slot}</div>
@@ -824,12 +824,12 @@ export function StudentCourseDetailPage() {
                         <span
                           className={`rounded-md px-2 py-0.5 text-[11px] font-bold ${
                             row.status === "PRESENT"
-                              ? "bg-emerald-500/10 text-emerald-600"
+                              ? "bg-success-soft text-success-ink"
                               : row.status === "ABSENT"
-                              ? "bg-red-500/10 text-danger"
+                              ? "bg-danger-soft text-danger-ink"
                               : row.status === "LATE"
-                              ? "bg-amber-500/10 text-amber-600"
-                              : "bg-blue-500/10 text-blue-600"
+                              ? "bg-warning-soft text-warning-ink"
+                              : "bg-secondary-soft text-secondary-ink"
                           }`}
                         >
                           {row.status}
@@ -843,7 +843,7 @@ export function StudentCourseDetailPage() {
                               setExcuseLectureNo(row.lectureNo);
                               setIsExcuseModalOpen(true);
                             }}
-                            className="text-xs font-bold text-brand-600 hover:underline"
+                            className="text-xs font-bold text-primary-ink hover:underline"
                           >
                             Submit Excuse
                           </button>
@@ -867,19 +867,19 @@ export function StudentCourseDetailPage() {
           <div className="rounded-2xl border border-line bg-panel p-6 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-base text-ink">Recorded Lecture Hub & Archives</h3>
+                <h3 className="font-bold text-base text-ink">Recorded Lecture Hub &amp; Archives</h3>
                 <p className="text-xs text-muted">Watch lecture recordings and jump directly to key technical timestamps.</p>
               </div>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Video Player Preview Area */}
-              <div className="lg:col-span-2 rounded-2xl border border-line bg-black/90 p-4 text-white flex flex-col justify-between aspect-video relative overflow-hidden group">
+              <div className="lg:col-span-2 rounded-2xl border border-line bg-hero-bg p-4 text-hero-fg flex flex-col justify-between aspect-video relative overflow-hidden group">
                 <div className="flex items-center justify-between z-10 text-xs">
-                  <span className="rounded-md bg-white/20 backdrop-blur-md px-2 py-1 font-bold">
+                  <span className="rounded-md bg-hero-fg/15 backdrop-blur-md px-2 py-1 font-bold text-hero-fg">
                     Lecture {selectedRecording?.lectureNo || 1}
                   </span>
-                  <span className="font-mono text-white/80">{selectedRecording?.duration || "45:00"}</span>
+                  <span className="font-mono text-hero-muted">{selectedRecording?.duration || "45:00"}</span>
                 </div>
 
                 {/* Center Play Button Simulator */}
@@ -888,30 +888,30 @@ export function StudentCourseDetailPage() {
                     type="button"
                     onClick={() => setIsPlaying(!isPlaying)}
                     aria-label={isPlaying ? "Pause lecture" : "Play lecture"}
-                    className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg hover:scale-110 transition"
+                    className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg hover:scale-110 transition"
                   >
                     {isPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
                   </button>
-                  <p className="mt-3 text-sm font-bold text-white max-w-md">
+                  <p className="mt-3 text-sm font-bold text-hero-fg max-w-md">
                     {selectedRecording?.title || "Lecture Recording"}
                   </p>
-                  <p className="text-xs text-white/70 mt-1">
+                  <p className="text-xs text-hero-muted mt-1">
                     {isPlaying ? "Simulating high-definition video playback…" : "Click to stream lecture archive"}
                   </p>
                 </div>
 
                 {/* Timestamps Navigation Pill Bar */}
-                <div className="z-10 bg-black/60 backdrop-blur-md rounded-xl p-2.5 space-y-1 text-xs">
-                  <p className="text-[11px] font-bold text-brand-300 uppercase tracking-wider">Concept Timestamps:</p>
+                <div className="z-10 bg-hero-bg/85 border border-hero-fg/15 backdrop-blur-md rounded-xl p-2.5 space-y-1 text-xs">
+                  <p className="text-[11px] font-bold text-hero-accent uppercase tracking-wider">Concept Timestamps:</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedRecording?.timestamps.map((ts, idx) => (
                       <button
                         key={idx}
                         type="button"
                         onClick={() => setIsPlaying(true)}
-                        className="rounded-lg bg-white/10 hover:bg-white/20 px-2 py-1 font-mono text-[11px] text-white flex items-center gap-1 transition"
+                        className="rounded-lg bg-hero-fg/10 hover:bg-hero-fg/20 px-2 py-1 font-mono text-[11px] text-hero-fg flex items-center gap-1 transition"
                       >
-                        <Clock size={11} className="text-brand-300" />
+                        <Clock size={11} className="text-hero-accent" />
                         <span>{ts.time} - {ts.label}</span>
                       </button>
                     ))}
@@ -934,8 +934,8 @@ export function StudentCourseDetailPage() {
                         }}
                         className={`cursor-pointer rounded-xl border p-3.5 space-y-1 transition ${
                           isSelected
-                            ? "border-brand-500 bg-brand-500/10 shadow-xs"
-                            : "border-line bg-surface/50 hover:border-brand-500/50"
+                            ? "border-primary bg-primary-soft/50 shadow-xs"
+                            : "border-line bg-surface/50 hover:border-primary/50"
                         }`}
                       >
                         <div className="flex items-center justify-between text-xs">
@@ -967,7 +967,7 @@ export function StudentCourseDetailPage() {
                     onClick={() => setMaterialFilter(cat)}
                     className={`rounded-lg px-2.5 py-1 font-semibold transition ${
                       materialFilter === cat
-                        ? "bg-brand-600 text-white shadow-2xs"
+                        ? "bg-primary text-on-primary shadow-2xs"
                         : "bg-surface text-muted hover:text-ink border border-line"
                     }`}
                   >
@@ -994,10 +994,10 @@ export function StudentCourseDetailPage() {
               {filteredMaterials.map((mat) => (
                 <div
                   key={mat.id}
-                  className="rounded-xl border border-line bg-surface/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-brand-500/50 transition"
+                  className="rounded-xl border border-line bg-surface/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-primary/50 transition"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="rounded-lg bg-brand-500/10 px-2.5 py-1 font-mono text-xs font-bold text-brand-600">
+                    <span className="rounded-lg bg-primary-soft px-2.5 py-1 font-mono text-xs font-bold text-primary-ink">
                       {mat.format}
                     </span>
                     <div>
@@ -1012,7 +1012,7 @@ export function StudentCourseDetailPage() {
                     <button
                       type="button"
                       onClick={() => alert(`Downloading ${mat.title} (${mat.size})...`)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-panel px-3.5 py-1.5 text-xs font-semibold text-brand-600 hover:border-brand-500 transition shadow-2xs"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-panel px-3.5 py-1.5 text-xs font-semibold text-primary-ink hover:border-primary transition shadow-2xs"
                     >
                       <Download size={13} />
                       <span>Download</span>
@@ -1020,7 +1020,7 @@ export function StudentCourseDetailPage() {
 
                     <Link
                       to="/app/student/learning"
-                      className="inline-flex items-center gap-1 rounded-xl bg-surface px-2.5 py-1.5 text-xs font-medium text-muted hover:text-brand-600 transition"
+                      className="inline-flex items-center gap-1 rounded-xl bg-surface px-2.5 py-1.5 text-xs font-medium text-muted hover:text-primary-ink transition"
                     >
                       <Sparkles size={12} />
                       <span>AI Notes</span>
@@ -1035,7 +1035,7 @@ export function StudentCourseDetailPage() {
 
       {/* ================= MODAL 1: DROPBOX SUBMISSION UPLOADER ================= */}
       {selectedAssignmentId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 p-4 backdrop-blur-xs">
           <div className="w-full max-w-lg rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div>
@@ -1054,15 +1054,15 @@ export function StudentCourseDetailPage() {
             </div>
 
             {submissionSuccess ? (
-              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-5 text-center text-emerald-700 dark:text-emerald-300 space-y-2">
-                <CheckCircle2 size={32} className="mx-auto text-emerald-600" />
+              <div className="rounded-xl border border-success/40 bg-success-soft p-5 text-center text-success-ink space-y-2">
+                <CheckCircle2 size={32} className="mx-auto text-success-ink" />
                 <p className="font-bold text-sm">Assignment Submitted Successfully!</p>
                 <p className="text-xs">Your deliverable has been recorded in the academic vault.</p>
               </div>
             ) : (
               <form onSubmit={handleDropboxSubmit} className="space-y-4">
                 <div className="rounded-2xl border-2 border-dashed border-line bg-surface/50 p-6 text-center space-y-2">
-                  <Upload size={32} className="mx-auto text-brand-600" />
+                  <Upload size={32} className="mx-auto text-primary-ink" />
                   <p className="text-xs font-bold text-ink">Upload your solution or code archive</p>
                   <p className="text-[11px] text-muted">Supported: .cpp, .c, .py, .pdf, .zip up to 50 MB</p>
                   <input
@@ -1077,12 +1077,12 @@ export function StudentCourseDetailPage() {
                   />
                   <label
                     htmlFor="dropbox-file"
-                    className="inline-block cursor-pointer rounded-xl bg-panel px-4 py-2 text-xs font-bold text-brand-600 border border-line hover:border-brand-500 transition shadow-2xs mt-2"
+                    className="inline-block cursor-pointer rounded-xl bg-panel px-4 py-2 text-xs font-bold text-primary-ink border border-line hover:border-primary transition shadow-2xs mt-2"
                   >
                     Select Local File
                   </label>
                   {uploadedFileName && (
-                    <p className="mt-2 text-xs font-mono font-bold text-emerald-600">
+                    <p className="mt-2 text-xs font-mono font-bold text-success-ink">
                       Selected: {uploadedFileName}
                     </p>
                   )}
@@ -1108,7 +1108,7 @@ export function StudentCourseDetailPage() {
 
       {/* ================= MODAL 2: MEDICAL / LEAVE EXCUSE REQUEST ================= */}
       {isExcuseModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 p-4 backdrop-blur-xs">
           <div className="w-full max-w-lg rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div>
@@ -1127,8 +1127,8 @@ export function StudentCourseDetailPage() {
             </div>
 
             {excuseSuccess ? (
-              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-5 text-center text-emerald-700 dark:text-emerald-300 space-y-2">
-                <CheckCircle2 size={32} className="mx-auto text-emerald-600" />
+              <div className="rounded-xl border border-success/40 bg-success-soft p-5 text-center text-success-ink space-y-2">
+                <CheckCircle2 size={32} className="mx-auto text-success-ink" />
                 <p className="font-bold text-sm">Leave Excuse Submitted!</p>
                 <p className="text-xs">
                   Your request has been forwarded to {currentCourse.teacher.name} and the Academic Office for clearance.
@@ -1182,7 +1182,7 @@ export function StudentCourseDetailPage() {
                     />
                     <label
                       htmlFor="excuse-file"
-                      className="cursor-pointer rounded-xl border border-line bg-surface px-3 py-2 text-xs font-semibold text-brand-600 hover:border-brand-500 transition"
+                      className="cursor-pointer rounded-xl border border-line bg-surface px-3 py-2 text-xs font-semibold text-primary-ink hover:border-primary transition"
                     >
                       Browse Document (.pdf/.jpg)
                     </label>

@@ -105,7 +105,7 @@ export function StudentAssessmentsPage() {
                       "mt-5 inline-flex rounded-xl px-4 py-2 text-sm font-semibold",
                       notOpen || expired || limitReached
                         ? "pointer-events-none bg-surface text-muted"
-                        : "bg-brand-600 text-white"
+                        : "bg-primary text-on-primary hover:bg-primary-hover transition"
                     ].join(" ")}
                   >
                     Open assessment

@@ -90,10 +90,10 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
   const quotaPct = quota ? quota.used_percentage : 0;
   const quotaColor =
     quotaPct > 90
-      ? "bg-red-500"
+      ? "bg-danger"
       : quotaPct > 75
-      ? "bg-amber-500"
-      : "bg-brand-600";
+      ? "bg-warning"
+      : "bg-primary";
 
   return (
     <div className="space-y-6">
@@ -101,7 +101,7 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
       <div className="rounded-2xl border border-line bg-panel p-5 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/60">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft text-primary-ink">
               <HardDrive className="h-5 w-5" />
             </div>
             <div>
@@ -134,8 +134,8 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
         onDrop={handleDrop}
         className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition ${
           dragActive
-            ? "border-brand-500 bg-brand-50/50 dark:bg-brand-950/20"
-            : "border-line bg-panel hover:border-brand-300"
+            ? "border-primary bg-primary-soft/50"
+            : "border-line bg-panel hover:border-primary/60"
         }`}
       >
         <input
@@ -148,7 +148,7 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
         />
 
         <div className="flex flex-col items-center justify-center gap-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-950/50">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary-ink">
             <UploadCloud className="h-7 w-7" />
           </div>
 
@@ -156,7 +156,7 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
             Drag & Drop educational materials here, or{" "}
             <label
               htmlFor="file-upload-input"
-              className="cursor-pointer text-brand-600 hover:underline font-semibold"
+              className="cursor-pointer text-primary-ink hover:underline font-semibold"
             >
               browse files
             </label>
@@ -171,14 +171,14 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
           <div className="mt-6 mx-auto max-w-md rounded-xl border border-line bg-surface p-4 text-left shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 truncate">
-                <FileText className="h-5 w-5 text-brand-600 shrink-0" />
+                <FileText className="h-5 w-5 text-primary-ink shrink-0" />
                 <span className="text-sm font-semibold truncate">{selectedFile.name}</span>
                 <span className="text-xs text-muted">({formatBytes(selectedFile.size)})</span>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedFile(null)}
-                className="text-muted hover:text-red-500 text-xs font-semibold"
+                className="text-muted hover:text-danger-ink text-xs font-semibold"
               >
                 Clear
               </button>
@@ -191,7 +191,7 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
                 placeholder="e.g. Chapter 4: Neural Networks & Backpropagation"
                 value={docTitle}
                 onChange={(e) => setDocTitle(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-line bg-panel p-2 text-sm"
+                className="mt-1 w-full rounded-lg border border-line bg-panel p-2 text-sm text-ink"
               />
             </div>
 
@@ -199,7 +199,7 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
               type="button"
               disabled={isUploading}
               onClick={executeUpload}
-              className="mt-4 w-full rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-brand-700 disabled:opacity-50"
+              className="mt-4 w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover disabled:opacity-50"
             >
               {isUploading ? "Ingesting & Extracting Gemini RAG Chunks..." : "Upload & Analyze Syllabus"}
             </button>
@@ -208,13 +208,13 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
 
         {/* Feedback messages */}
         {uploadError && (
-          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-red-600">
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-danger-ink">
             <AlertCircle className="h-4 w-4" />
             <span>{uploadError}</span>
           </div>
         )}
         {uploadSuccess && (
-          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-emerald-600">
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm text-success-ink">
             <CheckCircle2 className="h-4 w-4" />
             <span>{uploadSuccess}</span>
           </div>
@@ -241,12 +241,12 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
             {materials.map((mat) => (
               <div
                 key={mat.id}
-                className="flex flex-col justify-between rounded-2xl border border-line bg-panel p-5 shadow-xs transition hover:border-brand-200"
+                className="flex flex-col justify-between rounded-2xl border border-line bg-panel p-5 shadow-xs transition hover:border-primary/50"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface border border-line text-brand-600">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface border border-line text-primary-ink">
                         {mat.file_type === "pdf" ? (
                           <FileText className="h-5 w-5" />
                         ) : mat.file_type === "pptx" ? (
@@ -267,7 +267,7 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
                       type="button"
                       onClick={() => onDeleteMaterial(mat.id)}
                       title="Delete document"
-                      className="rounded-lg p-1.5 text-muted hover:bg-red-50 hover:text-red-600 transition"
+                      className="rounded-lg p-1.5 text-muted hover:bg-danger-soft hover:text-danger-ink transition"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -277,14 +277,14 @@ export const MaterialLibraryTab: React.FC<MaterialLibraryTabProps> = ({
                   {mat.extracted_topics && mat.extracted_topics.length > 0 && (
                     <div className="mt-4">
                       <p className="flex items-center gap-1.5 text-xs font-semibold text-muted mb-2">
-                        <Tag className="h-3.5 w-3.5 text-brand-600" />
+                        <Tag className="h-3.5 w-3.5 text-primary-ink" />
                         <span>Gemini Syllabus Topics ({mat.extracted_topics.length})</span>
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {mat.extracted_topics.map((t, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center rounded-md bg-surface px-2 py-1 text-xs font-medium text-text border border-line"
+                            className="inline-flex items-center rounded-md bg-surface px-2 py-1 text-xs font-medium text-ink border border-line"
                           >
                             {t}
                           </span>

@@ -195,14 +195,14 @@ export function AdminFinancePage() {
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 py-2.5 px-4 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
                 activeTab === tab.id
-                  ? "border-primary-600 text-primary-600 bg-primary-50/50 dark:bg-primary-950/20"
-                  : "border-transparent text-muted hover:text-foreground"
+                  ? "border-primary text-primary-ink bg-primary-soft/50"
+                  : "border-transparent text-muted hover:text-ink"
               }`}
             >
               <Icon className="w-4 h-4" />
               {tab.label}
               {tab.id === "refunds" && refunds.filter((r) => r.status === "PENDING_APPROVAL").length > 0 && (
-                <span className="ml-1 bg-red-500 text-white rounded-full px-1.5 py-0.2 text-[10px]">
+                <span className="ml-1 bg-danger text-danger-fg rounded-full px-1.5 py-0.2 text-[10px]">
                   {refunds.filter((r) => r.status === "PENDING_APPROVAL").length}
                 </span>
               )}
@@ -220,19 +220,19 @@ export function AdminFinancePage() {
               All financial transactions are strictly posted using the double-entry accounting ledger. External payment gateways (JazzCash, Easypaisa, 1Bill) operate in simulated fail-closed sandbox mode.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-muted/30 rounded border">
+              <div className="p-4 bg-subtle/60 rounded border border-line">
                 <span className="text-xs text-muted">Active Invoices</span>
                 <div className="text-xl font-bold mt-1">{summary?.active_invoices_count ?? 0}</div>
               </div>
-              <div className="p-4 bg-muted/30 rounded border">
+              <div className="p-4 bg-subtle/60 rounded border border-line">
                 <span className="text-xs text-muted">Configured Fee Structures</span>
                 <div className="text-xl font-bold mt-1">{structures.length}</div>
               </div>
-              <div className="p-4 bg-muted/30 rounded border">
+              <div className="p-4 bg-subtle/60 rounded border border-line">
                 <span className="text-xs text-muted">General Ledger Status</span>
                 <div className="flex items-center gap-2 mt-1">
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                  <span className="font-bold text-green-600 text-sm">Debits Equal Credits</span>
+                  <CheckCircle2 className="w-5 h-5 text-success-ink" />
+                  <span className="font-bold text-success-ink text-sm">Debits Equal Credits</span>
                 </div>
               </div>
             </div>
@@ -373,7 +373,7 @@ export function AdminFinancePage() {
             </div>
 
             {previewResult && (
-              <div className="mt-4 p-4 bg-muted/40 rounded border text-xs space-y-2">
+              <div className="mt-4 p-4 bg-subtle/70 rounded border border-line text-xs space-y-2">
                 <div className="font-bold">Preview Calculation Summary:</div>
                 <div>Total Students Processed: {previewResult.total_previewed}</div>
                 <div className="font-mono text-muted text-[11px]">
@@ -405,7 +405,7 @@ export function AdminFinancePage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
-                <thead className="bg-muted/50 border-b">
+                <thead className="bg-subtle/75 border-b border-line">
                   <tr>
                     <th className="py-2.5 px-3">Refund #</th>
                     <th className="py-2.5 px-3">Student ID</th>
@@ -421,7 +421,7 @@ export function AdminFinancePage() {
                     <tr key={r.id}>
                       <td className="py-2.5 px-3 font-mono font-medium">{r.refund_number}</td>
                       <td className="py-2.5 px-3 font-mono text-[11px]">{r.student_id.slice(0, 8)}…</td>
-                      <td className="py-2.5 px-3 font-bold text-red-600">PKR {Number(r.amount).toLocaleString()}</td>
+                      <td className="py-2.5 px-3 font-bold text-danger-ink">PKR {Number(r.amount).toLocaleString()}</td>
                       <td className="py-2.5 px-3">{r.reason}</td>
                       <td className="py-2.5 px-3 font-mono text-[11px] text-muted">{r.maker_id.slice(0, 8)}…</td>
                       <td className="py-2.5 px-3">
@@ -470,7 +470,7 @@ export function AdminFinancePage() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-muted/50 border-b">
+              <thead className="bg-subtle/75 border-b border-line">
                 <tr>
                   <th className="py-2.5 px-3">Batch #</th>
                   <th className="py-2.5 px-3">Gateway</th>
@@ -536,16 +536,16 @@ export function AdminFinancePage() {
             </div>
             <div>
               {trialBalance?.is_balanced ? (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-950/40 border border-green-300 dark:border-green-800 rounded-md">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <span className="text-xs font-bold text-green-700 dark:text-green-300">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-success-soft border border-success/40 rounded-md">
+                  <CheckCircle2 className="w-4 h-4 text-success-ink" />
+                  <span className="text-xs font-bold text-success-ink">
                     Balanced: Total Debits == Total Credits
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-800 rounded-md">
-                  <AlertTriangle className="w-4 h-4 text-red-600" />
-                  <span className="text-xs font-bold text-red-700 dark:text-red-300">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-danger-soft border border-danger/40 rounded-md">
+                  <AlertTriangle className="w-4 h-4 text-danger-ink" />
+                  <span className="text-xs font-bold text-danger-ink">
                     Imbalance Detected
                   </span>
                 </div>
@@ -555,7 +555,7 @@ export function AdminFinancePage() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="bg-muted/50 border-b">
+              <thead className="bg-subtle/75 border-b border-line">
                 <tr>
                   <th className="py-2.5 px-3">Account Code</th>
                   <th className="py-2.5 px-3">Account Name</th>
@@ -566,7 +566,7 @@ export function AdminFinancePage() {
               </thead>
               <tbody className="divide-y font-mono">
                 {trialBalance?.accounts?.map((acc) => (
-                  <tr key={acc.account_code} className="hover:bg-muted/20">
+                  <tr key={acc.account_code} className="hover:bg-subtle/45">
                     <td className="py-2.5 px-3 font-bold">{acc.account_code}</td>
                     <td className="py-2.5 px-3 font-sans">{acc.account_name}</td>
                     <td className="py-2.5 px-3 font-sans text-muted">{acc.account_type}</td>
@@ -579,15 +579,15 @@ export function AdminFinancePage() {
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="border-t-2 font-mono font-bold bg-muted/40">
+              <tfoot className="border-t-2 border-line font-mono font-bold bg-subtle/70">
                 <tr>
                   <td colSpan={3} className="py-3 px-3 font-sans text-right">
                     Trial Balance Totals:
                   </td>
-                  <td className="py-3 px-3 text-right text-sm text-green-700 dark:text-green-300">
+                  <td className="py-3 px-3 text-right text-sm text-success-ink">
                     PKR {Number(trialBalance?.total_debits || 0).toLocaleString()}
                   </td>
-                  <td className="py-3 px-3 text-right text-sm text-green-700 dark:text-green-300">
+                  <td className="py-3 px-3 text-right text-sm text-success-ink">
                     PKR {Number(trialBalance?.total_credits || 0).toLocaleString()}
                   </td>
                 </tr>

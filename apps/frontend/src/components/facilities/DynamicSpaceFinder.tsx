@@ -269,16 +269,16 @@ export function DynamicSpaceFinder({
     <div className="space-y-6">
       {/* ================= ACTIVE RESERVATIONS DRAWER / NOTIFICATION ================= */}
       {activeReservationsCount > 0 && (
-        <div className="rounded-2xl border border-brand-500/40 bg-gradient-to-r from-brand-500/10 via-indigo-500/5 to-transparent p-5 shadow-sm">
+        <div className="rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/10 via-secondary/5 to-transparent p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white shadow-xs">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-on-primary shadow-xs">
                 <QrCode size={22} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-bold text-sm text-ink">Active Room Reservations</h4>
-                  <span className="rounded-full bg-brand-500/20 px-2 py-0.5 text-2xs font-extrabold text-brand-600 dark:text-brand-300">
+                  <span className="rounded-full bg-primary-soft px-2 py-0.5 text-2xs font-extrabold text-primary-ink">
                     {activeReservationsCount} Active
                   </span>
                 </div>
@@ -297,8 +297,8 @@ export function DynamicSpaceFinder({
                     onClick={() => setActiveQrModal(res)}
                     className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition border ${
                       res.status === "CONFIRMED_ACTIVE"
-                        ? "border-emerald-500/40 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
-                        : "border-amber-500/40 bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+                        ? "border-success/40 bg-success-soft text-success-ink"
+                        : "border-warning/40 bg-warning-soft text-warning-ink"
                     }`}
                   >
                     <span className="flex h-2 w-2 rounded-full bg-current animate-pulse" />
@@ -319,9 +319,9 @@ export function DynamicSpaceFinder({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="flex h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
               <h3 className="text-base font-bold text-ink">Dynamic Space Finder & Free Slot Navigator</h3>
-              <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-2xs font-semibold text-emerald-600">
+              <span className="rounded-full bg-success-soft px-2.5 py-0.5 text-2xs font-semibold text-success-ink">
                 Live Sensor Sync
               </span>
             </div>
@@ -335,14 +335,14 @@ export function DynamicSpaceFinder({
             onClick={toggleAvailableRightNow}
             className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs ${
               isRightNowActive
-                ? "bg-emerald-600 text-white ring-2 ring-emerald-500/50"
-                : "border border-line bg-surface text-ink hover:border-emerald-500 hover:text-emerald-600"
+                ? "bg-success text-success-fg ring-2 ring-success/50"
+                : "border border-line bg-surface text-ink hover:border-success hover:text-success-ink"
             }`}
           >
             <Sparkles size={15} className={isRightNowActive ? "animate-spin" : ""} />
             <span>⚡ Available Right Now</span>
             {isRightNowActive && (
-              <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-2xs font-mono">
+              <span className="rounded-md bg-success-fg/20 px-1.5 py-0.5 text-2xs font-mono">
                 {telemetry.timeString}
               </span>
             )}
@@ -450,7 +450,7 @@ export function DynamicSpaceFinder({
             onClick={() => setFilterAC((prev) => !prev)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
               filterAC
-                ? "border-sky-500/50 bg-sky-500/10 text-sky-600 dark:text-sky-300 font-bold"
+                ? "border-secondary/50 bg-secondary-soft text-secondary-ink font-bold"
                 : "border-line bg-surface text-muted hover:text-ink"
             }`}
           >
@@ -462,7 +462,7 @@ export function DynamicSpaceFinder({
             onClick={() => setFilterProjector((prev) => !prev)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
               filterProjector
-                ? "border-indigo-500/50 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-bold"
+                ? "border-primary/50 bg-primary-soft text-primary-ink font-bold"
                 : "border-line bg-surface text-muted hover:text-ink"
             }`}
           >
@@ -474,7 +474,7 @@ export function DynamicSpaceFinder({
             onClick={() => setFilterWorkstations((prev) => !prev)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
               filterWorkstations
-                ? "border-violet-500/50 bg-violet-500/10 text-violet-600 dark:text-violet-300 font-bold"
+                ? "border-accent/50 bg-accent-soft text-accent-ink font-bold"
                 : "border-line bg-surface text-muted hover:text-ink"
             }`}
           >
@@ -486,7 +486,7 @@ export function DynamicSpaceFinder({
             onClick={() => setShowOccupied((prev) => !prev)}
             className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
               showOccupied
-                ? "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-bold"
+                ? "border-warning/50 bg-warning-soft text-warning-ink font-bold"
                 : "border-line bg-surface text-muted hover:text-ink"
             }`}
           >
@@ -511,7 +511,7 @@ export function DynamicSpaceFinder({
                 setSearchQuery("");
                 setMinCapacity(0);
               }}
-              className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted hover:text-red-500 transition"
+              className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted hover:text-danger-ink transition"
             >
               <RotateCcw size={11} />
               <span>Reset Filters</span>
@@ -563,8 +563,8 @@ export function DynamicSpaceFinder({
                           }}
                           className={`w-full rounded-lg px-2 py-1.5 text-2xs font-bold transition border ${
                             isSelectedCell
-                              ? "border-brand-600 bg-brand-600 text-white shadow-xs"
-                              : "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:border-brand-500"
+                              ? "border-primary bg-primary text-on-primary shadow-xs"
+                              : "border-success/35 bg-success-soft text-success-ink hover:border-primary"
                           }`}
                         >
                           {freeCount} Free
@@ -595,16 +595,16 @@ export function DynamicSpaceFinder({
               onClick={() => setSelectedBlock(block)}
               className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
                 isSelected
-                  ? "bg-brand-600 text-white shadow-xs font-bold"
-                  : "bg-panel text-muted border border-line hover:border-brand-500/50 hover:text-ink"
+                  ? "bg-primary text-on-primary shadow-xs font-bold"
+                  : "bg-panel text-muted border border-line hover:border-primary/50 hover:text-ink"
               }`}
             >
-              <Building size={13} className={isSelected ? "text-white" : "text-muted"} />
+              <Building size={13} className={isSelected ? "text-on-primary" : "text-muted"} />
               <span>{block}</span>
               <span
                 className={`rounded-full px-2 py-0.5 text-2xs font-bold ${
                   isSelected
-                    ? "bg-white/20 text-white"
+                    ? "bg-on-primary/20 text-on-primary"
                     : "bg-surface text-muted"
                 }`}
               >
@@ -668,7 +668,7 @@ export function DynamicSpaceFinder({
                   </div>
                 </div>
 
-                <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-2xs font-bold text-emerald-600">
+                <span className="rounded-full bg-success-soft px-2.5 py-0.5 text-2xs font-bold text-success-ink">
                   {blockRooms.filter((r) => {
                     const slot = getRoomDaySchedule(r, selectedDay).find((s) => s.slot === selectedSlotNumber);
                     return slot?.isFree ?? true;
@@ -698,7 +698,7 @@ export function DynamicSpaceFinder({
                       key={room.id}
                       className={`flex flex-col justify-between rounded-2xl border p-5 shadow-2xs transition group hover:shadow-md ${
                         activeRes
-                          ? "border-amber-500/60 bg-amber-500/5 dark:bg-amber-950/10"
+                          ? "border-warning/60 bg-warning-soft/50"
                           : isSlotFree
                           ? "border-line bg-panel hover:border-brand-500/60"
                           : "border-line/60 bg-panel/60 opacity-85"
@@ -721,17 +721,17 @@ export function DynamicSpaceFinder({
 
                           {/* Status Badge */}
                           {activeRes ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-1 text-2xs font-extrabold text-amber-700 dark:text-amber-300">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2.5 py-1 text-2xs font-extrabold text-warning-ink">
                               <Lock size={10} />
                               <span>Reserved</span>
                             </span>
                           ) : isSlotFree ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-2xs font-extrabold text-emerald-600">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-1 text-2xs font-extrabold text-success-ink">
                               <Unlock size={10} />
                               <span>Available</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2.5 py-1 text-2xs font-semibold text-rose-600">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2.5 py-1 text-2xs font-semibold text-danger-ink">
                               <Lock size={10} />
                               <span>In Class</span>
                             </span>
@@ -750,16 +750,16 @@ export function DynamicSpaceFinder({
 
                           <div className="flex items-center justify-between text-xs">
                             <span className="flex items-center gap-1 text-muted">
-                              <Clock size={12} className="text-emerald-500" />
+                              <Clock size={12} className="text-success-ink" />
                               <span>Free Until</span>
                             </span>
-                            <span className="font-bold text-emerald-600">
+                            <span className="font-bold text-success-ink">
                               {currentSlot?.freeUntil || "05:15 PM"}
                             </span>
                           </div>
 
                           {!isSlotFree && currentSlot?.bookedBy && (
-                            <div className="pt-1 border-t border-line/40 text-2xs text-rose-600 flex items-center gap-1">
+                            <div className="pt-1 border-t border-line/40 text-2xs text-danger-ink flex items-center gap-1">
                               <AlertTriangle size={11} />
                               <span className="truncate">Booked: {currentSlot.bookedBy}</span>
                             </div>
@@ -780,31 +780,31 @@ export function DynamicSpaceFinder({
                             )}
                             {room.equipment.hasAC && (
                               <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Wind size={10} className="text-sky-500" />
+                                <Wind size={10} className="text-secondary-ink" />
                                 <span>AC</span>
                               </span>
                             )}
                             {room.equipment.hasWifi && (
                               <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Wifi size={10} className="text-emerald-500" />
+                                <Wifi size={10} className="text-success-ink" />
                                 <span>High-Density Wi-Fi</span>
                               </span>
                             )}
                             {room.equipment.hasPowerSockets && (
                               <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Zap size={10} className="text-amber-500" />
+                                <Zap size={10} className="text-warning-ink" />
                                 <span>Desk Outlets</span>
                               </span>
                             )}
                             {room.equipment.hasSmartPodium && (
                               <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Mic size={10} className="text-purple-500" />
+                                <Mic size={10} className="text-accent-ink" />
                                 <span>Smart Podium</span>
                               </span>
                             )}
                             {room.equipment.hasWorkstations && (
                               <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Monitor size={10} className="text-violet-500" />
+                                <Monitor size={10} className="text-primary-ink" />
                                 <span>PCs / Labs</span>
                               </span>
                             )}
@@ -831,7 +831,7 @@ export function DynamicSpaceFinder({
                                       : ""
                                   } ${
                                     slot.isFree
-                                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25"
+                                      ? "bg-success-soft text-success-ink hover:opacity-90"
                                       : "bg-surface text-muted/60 line-through"
                                   }`}
                                 >
@@ -848,7 +848,7 @@ export function DynamicSpaceFinder({
                         {activeRes ? (
                           <button
                             onClick={() => setActiveQrModal(activeRes)}
-                            className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 py-2.5 text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 transition"
+                            className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning/40 bg-warning-soft py-2.5 text-xs font-bold text-warning-ink hover:opacity-90 transition"
                           >
                             <QrCode size={14} />
                             <span>View QR Door Pass</span>
@@ -857,7 +857,7 @@ export function DynamicSpaceFinder({
                           mode === "public" ? (
                             <Link
                               to="/login"
-                              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 py-2.5 text-xs font-bold text-white hover:bg-brand-700 transition shadow-xs"
+                              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-xs font-bold text-on-primary hover:bg-primary-hover transition shadow-xs"
                             >
                               <span>Sign In to Reserve</span>
                               <ArrowRight size={14} />
@@ -868,7 +868,7 @@ export function DynamicSpaceFinder({
                                 setReserveModalRoom(room);
                                 setReservePurpose("");
                               }}
-                              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 py-2.5 text-xs font-bold text-white hover:bg-brand-700 transition shadow-xs"
+                              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-xs font-bold text-on-primary hover:bg-primary-hover transition shadow-xs"
                             >
                               <Calendar size={14} />
                               <span>
@@ -898,7 +898,7 @@ export function DynamicSpaceFinder({
 
       {/* ================= STUDY GROUP RESERVATION MODAL ================= */}
       {reserveModalRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-lg rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex items-start justify-between">
@@ -923,8 +923,8 @@ export function DynamicSpaceFinder({
             </div>
 
             {/* Governance Policy Warning */}
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
-              <ShieldCheck size={18} className="shrink-0 text-amber-600 mt-0.5" />
+            <div className="rounded-2xl border border-warning/35 bg-warning-soft p-3.5 flex items-start gap-3 text-xs text-warning-ink">
+              <ShieldCheck size={18} className="shrink-0 text-warning-ink mt-0.5" />
               <div>
                 <strong className="font-bold">University Reservation Policy:</strong> Max 90 minutes.
                 You must scan the room entrance QR code within 15 minutes of reservation start time, or the room will be automatically released back to the campus pool.
@@ -1010,7 +1010,7 @@ export function DynamicSpaceFinder({
                 type="button"
                 onClick={handleConfirmReservation}
                 disabled={!reserveAgreed}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-brand-700 transition disabled:opacity-50 shadow-xs"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-on-primary hover:bg-primary-hover transition disabled:opacity-50 shadow-xs"
               >
                 <CheckCircle2 size={15} />
                 <span>Confirm & Generate QR Pass</span>
@@ -1022,7 +1022,7 @@ export function DynamicSpaceFinder({
 
       {/* ================= DIGITAL QR PASS & CHECK-IN MODAL ================= */}
       {activeQrModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-200">
             {/* Modal Close */}
             <div className="flex items-center justify-between text-left">
@@ -1044,23 +1044,23 @@ export function DynamicSpaceFinder({
             </div>
 
             {/* QR Visual Card */}
-            <div className="rounded-2xl border-2 border-dashed border-brand-500/40 bg-surface/60 p-6 space-y-4">
-              <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-2xl bg-white p-3 shadow-inner">
+            <div className="rounded-2xl border-2 border-dashed border-primary/40 bg-surface/60 p-6 space-y-4">
+              <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-2xl border border-line bg-card p-3 shadow-inner">
                 {/* SVG QR Code Simulation */}
                 <svg
                   viewBox="0 0 100 100"
-                  className="h-full w-full text-zinc-900 fill-current"
+                  className="h-full w-full text-ink fill-current"
                 >
                   <rect x="0" y="0" width="30" height="30" rx="4" />
-                  <rect x="5" y="5" width="20" height="20" fill="white" rx="2" />
+                  <rect x="5" y="5" width="20" height="20" fill="rgb(var(--rgb-card))" rx="2" />
                   <rect x="10" y="10" width="10" height="10" />
 
                   <rect x="70" y="0" width="30" height="30" rx="4" />
-                  <rect x="75" y="5" width="20" height="20" fill="white" rx="2" />
+                  <rect x="75" y="5" width="20" height="20" fill="rgb(var(--rgb-card))" rx="2" />
                   <rect x="80" y="10" width="10" height="10" />
 
                   <rect x="0" y="70" width="30" height="30" rx="4" />
-                  <rect x="5" y="75" width="20" height="20" fill="white" rx="2" />
+                  <rect x="5" y="75" width="20" height="20" fill="rgb(var(--rgb-card))" rx="2" />
                   <rect x="10" y="80" width="10" height="10" />
 
                   {/* Matrix patterns */}
@@ -1089,23 +1089,23 @@ export function DynamicSpaceFinder({
 
             {/* Check-in Status & Countdown */}
             {activeQrModal.status === "CONFIRMED_ACTIVE" ? (
-              <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-center space-y-1">
-                <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-600">
+              <div className="rounded-2xl border border-success/40 bg-success-soft p-4 text-center space-y-1">
+                <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-success-ink">
                   <CheckCircle2 size={16} />
                   <span>Door Check-in Confirmed!</span>
                 </div>
-                <p className="text-2xs text-emerald-700 dark:text-emerald-300">
+                <p className="text-2xs text-success-ink">
                   Room access granted for {activeQrModal.durationMinutes} minutes. Enjoy your session!
                 </p>
               </div>
             ) : (
-              <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-center space-y-2">
+              <div className="rounded-2xl border border-warning/40 bg-warning-soft p-4 text-center space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1">
+                  <span className="font-semibold text-warning-ink flex items-center gap-1">
                     <Clock size={13} />
                     <span>Auto-Release Countdown</span>
                   </span>
-                  <span className="font-mono font-extrabold text-amber-900 dark:text-amber-200">
+                  <span className="font-mono font-extrabold text-warning-ink">
                     {formatTimer(activeQrModal.expiresInSeconds)}
                   </span>
                 </div>
@@ -1116,7 +1116,7 @@ export function DynamicSpaceFinder({
                 {/* Simulate Door Check-in Button */}
                 <button
                   onClick={() => handleSimulateCheckIn(activeQrModal.id)}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-xs mt-2"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-success py-2.5 text-xs font-bold text-success-fg hover:opacity-90 transition shadow-xs mt-2"
                 >
                   <CheckCircle2 size={15} />
                   <span>Simulate Door QR Check-in</span>
@@ -1128,7 +1128,7 @@ export function DynamicSpaceFinder({
             <div className="flex items-center justify-between pt-2 border-t border-line/60">
               <button
                 onClick={() => handleCancelReservation(activeQrModal.id)}
-                className="text-xs font-bold text-rose-600 hover:underline"
+                className="text-xs font-bold text-danger-ink hover:underline"
               >
                 Release Room
               </button>

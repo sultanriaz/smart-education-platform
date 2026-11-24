@@ -3,6 +3,7 @@ import { useState, type PropsWithChildren } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { ToastProvider } from "../components/ui/ToastProvider";
 import { AuthProvider } from "../features/auth/AuthContext";
+import { ThemeProvider } from "../theme/ThemeContext";
 
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(
@@ -31,12 +32,14 @@ export function AppProviders({ children }: PropsWithChildren) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ToastProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </ToastProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ToastProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ToastProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

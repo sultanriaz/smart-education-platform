@@ -178,8 +178,8 @@ export function TeacherDashboardPage() {
                 <div
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl font-bold font-mono text-xs shadow-xs ${
                     lec.attendanceMarked
-                      ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
-                      : "bg-brand-500/10 text-brand-600 border border-brand-500/30"
+                      ? "bg-success-soft text-success-ink border border-success/35"
+                      : "bg-primary-soft text-primary-ink border border-primary/35"
                   }`}
                 >
                   {lec.slot}
@@ -187,17 +187,17 @@ export function TeacherDashboardPage() {
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-brand-600">{lec.courseCode}</span>
-                    <span className="rounded-md bg-surface px-2 py-0.5 text-xs font-semibold text-text">
+                    <span className="font-mono text-xs font-bold text-primary-ink">{lec.courseCode}</span>
+                    <span className="rounded-md bg-surface px-2 py-0.5 text-xs font-semibold text-ink">
                       Section: {lec.section}
                     </span>
                     <span className="text-xs text-muted font-medium">({lec.enrolledStudents} Students)</span>
                     {lec.attendanceMarked ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success-ink">
                         <Check size={12} /> Attendance Taken
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-600">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning-ink">
                         <Clock size={12} /> Pending Submission
                       </span>
                     )}
@@ -207,12 +207,12 @@ export function TeacherDashboardPage() {
 
                   <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted">
                     <span className="flex items-center gap-1">
-                      <Clock size={13} className="text-brand-600" />
+                      <Clock size={13} className="text-primary-ink" />
                       <span>{lec.time}</span>
                     </span>
                     <span>·</span>
                     <span className="flex items-center gap-1">
-                      <MapPin size={13} className="text-brand-600" />
+                      <MapPin size={13} className="text-primary-ink" />
                       <span>{lec.room}</span>
                     </span>
                   </div>
@@ -226,7 +226,7 @@ export function TeacherDashboardPage() {
                   className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition shadow-2xs ${
                     lec.attendanceMarked
                       ? "border border-line bg-surface text-muted hover:text-ink"
-                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                      : "bg-success text-success-fg hover:opacity-90"
                   }`}
                 >
                   {lec.attendanceMarked ? "Mark as Pending" : "1-Click Attendance"}
@@ -234,7 +234,7 @@ export function TeacherDashboardPage() {
 
                 <Link
                   to="/app/teacher/attendance"
-                  className="inline-flex items-center gap-1 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-brand-700 transition shadow-xs"
+                  className="inline-flex items-center gap-1 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-on-primary hover:bg-primary-hover transition shadow-xs"
                 >
                   <span>Open Roster</span>
                   <ArrowUpRight size={14} />
@@ -255,7 +255,7 @@ export function TeacherDashboardPage() {
                 <p className="font-bold text-sm text-ink">Compiler Construction: Assignment 1 (Flex)</p>
                 <p className="text-xs text-muted mt-0.5">Section BCS-7C · 52 of 54 submitted</p>
               </div>
-              <span className="rounded-md bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-600">
+              <span className="rounded-md bg-warning-soft px-2.5 py-1 text-xs font-bold text-warning-ink">
                 4 to Grade
               </span>
             </div>
@@ -265,14 +265,14 @@ export function TeacherDashboardPage() {
                 <p className="font-bold text-sm text-ink">Artificial Intelligence: Midterm Lab Project</p>
                 <p className="text-xs text-muted mt-0.5">Section BCS-8B · 48 of 50 submitted</p>
               </div>
-              <span className="rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-600">
+              <span className="rounded-md bg-success-soft px-2.5 py-1 text-xs font-bold text-success-ink">
                 All Graded
               </span>
             </div>
 
             <Link
               to="/app/teacher/assessments"
-              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:underline"
+              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
             >
               <span>Manage all course assessments</span>
               <ArrowUpRight size={13} />
@@ -290,16 +290,16 @@ export function TeacherDashboardPage() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <Link
                 to="/explore"
-                className="rounded-xl border border-line bg-surface/60 p-3 hover:border-brand-500 transition group"
+                className="rounded-xl border border-line bg-surface/60 p-3 hover:border-primary transition group"
               >
-                <p className="font-bold text-ink group-hover:text-brand-600 transition">A Block Rooms</p>
+                <p className="font-bold text-ink group-hover:text-primary-ink transition">A Block Rooms</p>
                 <p className="text-[11px] text-muted">A-102 & A-202 Free</p>
               </Link>
               <Link
                 to="/explore"
-                className="rounded-xl border border-line bg-surface/60 p-3 hover:border-brand-500 transition group"
+                className="rounded-xl border border-line bg-surface/60 p-3 hover:border-primary transition group"
               >
-                <p className="font-bold text-ink group-hover:text-brand-600 transition">C Block Rooms</p>
+                <p className="font-bold text-ink group-hover:text-primary-ink transition">C Block Rooms</p>
                 <p className="text-[11px] text-muted">C-102 & C-201 Free</p>
               </Link>
             </div>
@@ -307,7 +307,7 @@ export function TeacherDashboardPage() {
             <div className="pt-2 flex items-center justify-between">
               <Link
                 to="/app/teacher/facilities"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 transition"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition"
               >
                 <Building size={14} />
                 <span>Reserve Facility or Lab</span>
@@ -315,7 +315,7 @@ export function TeacherDashboardPage() {
 
               <Link
                 to="/explore"
-                className="text-xs font-semibold text-brand-600 hover:underline"
+                className="text-xs font-semibold text-primary-ink hover:underline"
               >
                 View Live Free Slots
               </Link>

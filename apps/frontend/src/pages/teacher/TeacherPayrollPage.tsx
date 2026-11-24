@@ -79,7 +79,7 @@ export function TeacherPayrollPage() {
 
         {payslips.length === 0 ? (
           <Card className="p-8 text-center text-muted">
-            <Banknote className="w-10 h-10 mx-auto mb-2 text-muted-foreground opacity-50" />
+            <Banknote className="w-10 h-10 mx-auto mb-2 text-muted opacity-50" />
             <p className="text-sm">No payroll statements or payslips have been generated yet for your faculty profile.</p>
           </Card>
         ) : (
@@ -88,8 +88,8 @@ export function TeacherPayrollPage() {
               {payslips.map((p) => (
                 <div
                   key={p.id}
-                  className={`panel p-4 transition-all cursor-pointer hover:border-primary-400 ${
-                    selectedPayslip?.id === p.id ? "border-primary-600 bg-muted/20" : ""
+                  className={`panel p-4 transition-all cursor-pointer hover:border-primary/60 ${
+                    selectedPayslip?.id === p.id ? "border-primary bg-primary-soft/50" : ""
                   }`}
                   onClick={() => setSelectedPayslip(p)}
                 >
@@ -107,7 +107,7 @@ export function TeacherPayrollPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-bold text-green-600">
+                      <div className="text-sm font-bold text-success-ink">
                         PKR {Number(p.net_salary).toLocaleString()}
                       </div>
                       <div className="text-[11px] text-muted">
@@ -122,7 +122,7 @@ export function TeacherPayrollPage() {
             {/* Selected Payslip Detail Pane */}
             <div>
               {selectedPayslip ? (
-                <Card className="p-5 border-primary-200 dark:border-primary-900 sticky top-4">
+                <Card className="p-5 border-primary/40 sticky top-4">
                   <div className="flex justify-between items-start border-b pb-3 mb-3">
                     <div>
                       <h4 className="font-bold text-sm">Payslip Breakdown</h4>
@@ -139,7 +139,7 @@ export function TeacherPayrollPage() {
                   </div>
 
                   <div className="space-y-3 text-xs">
-                    <div className="bg-muted/40 p-3 rounded space-y-1.5">
+                    <div className="bg-subtle/70 p-3 rounded space-y-1.5">
                       <div className="flex justify-between">
                         <span className="text-muted">Status:</span>
                         <Badge>
@@ -153,14 +153,14 @@ export function TeacherPayrollPage() {
                     </div>
 
                     <div className="border-t pt-2 space-y-1.5">
-                      <div className="font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">Earnings</div>
+                      <div className="font-semibold text-muted uppercase text-[10px] tracking-wider">Earnings</div>
                       <div className="flex justify-between">
                         <span>Base Salary</span>
                         <span className="font-mono">PKR {Number(selectedPayslip.gross_salary - selectedPayslip.total_allowances).toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Allowances (House, Med)</span>
-                        <span className="font-mono text-green-600">+PKR {Number(selectedPayslip.total_allowances).toLocaleString()}</span>
+                        <span className="font-mono text-success-ink">+PKR {Number(selectedPayslip.total_allowances).toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between font-bold pt-1 border-t">
                         <span>Total Gross</span>
@@ -169,21 +169,21 @@ export function TeacherPayrollPage() {
                     </div>
 
                     <div className="border-t pt-2 space-y-1.5">
-                      <div className="font-semibold text-muted-foreground uppercase text-[10px] tracking-wider">Deductions</div>
+                      <div className="font-semibold text-muted uppercase text-[10px] tracking-wider">Deductions</div>
                       <div className="flex justify-between">
                         <span>Statutory & Tax Withholdings</span>
-                        <span className="font-mono text-red-600">-PKR {Number(selectedPayslip.total_deductions).toLocaleString()}</span>
+                        <span className="font-mono text-danger-ink">-PKR {Number(selectedPayslip.total_deductions).toLocaleString()}</span>
                       </div>
                     </div>
 
                     <div className="border-t-2 pt-3 flex justify-between items-center text-sm font-bold">
                       <span>Net Disbursed:</span>
-                      <span className="text-green-600 font-mono text-base">
+                      <span className="text-success-ink font-mono text-base">
                         PKR {Number(selectedPayslip.net_salary).toLocaleString()}
                       </span>
                     </div>
 
-                    <div className="bg-blue-50 dark:bg-blue-950/30 p-2.5 rounded text-[11px] text-blue-700 dark:text-blue-300 flex items-start gap-2 mt-4">
+                    <div className="bg-primary-soft p-2.5 rounded text-[11px] text-primary-ink flex items-start gap-2 mt-4">
                       <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
                       <span>This payslip was verified and certified by Institution Finance & Accounts.</span>
                     </div>

@@ -6,19 +6,12 @@ import {
   Calendar,
   Clock,
   Compass,
-  MapPin,
-  Search,
   Sparkles,
   Trophy,
   Users,
   Building,
-  BookOpen,
   ArrowRight,
   Lock,
-  CheckCircle2,
-  Moon,
-  Sun,
-  ShieldCheck,
   ChevronRight
 } from "lucide-react";
 import { useAuth } from "../features/auth/useAuth";
@@ -53,55 +46,34 @@ export function CampusExplorerPage() {
     setActiveTab(tab);
     setSearchParams(tab === "overview" ? {} : { tab });
   };
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
-
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem("sep-theme", next);
-    } catch {
-      // ignore
-    }
-  };
 
   const role = user ? primaryRole(user.roles) : null;
 
   return (
-    <div className="min-h-screen bg-bg text-ink transition">
+    <div className="min-h-screen bg-background text-ink transition">
       {/* Top Universal Header */}
       <header className="sticky top-0 z-40 border-b border-line bg-panel/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white shadow-xs">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-on-primary shadow-xs">
               <GraduationCap size={22} />
             </span>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold tracking-tight text-base sm:text-lg">COMSATS SmartEdu</span>
-                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="rounded-full bg-secondary-soft px-2 py-0.5 text-[11px] font-semibold text-secondary-ink">
                   Open Campus
                 </span>
               </div>
-              <p className="hidden text-xs text-muted sm:block">Sahiwal Campus · Academic & Facilities Portal</p>
+              <p className="hidden text-xs text-muted sm:block">Sahiwal Campus · Academic &amp; Facilities Portal</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-line bg-surface text-muted hover:text-ink transition shadow-2xs"
-            >
-              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-
             {state === "authenticated" && user ? (
               <Link
                 to={role ? `/app/${role}` : "/app"}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-brand-700 transition"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition"
               >
                 <span>Workspace ({role})</span>
                 <ArrowRight size={14} />
@@ -109,7 +81,7 @@ export function CampusExplorerPage() {
             ) : (
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-brand-700 transition"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition"
               >
                 <span>Universal Sign In</span>
                 <ArrowRight size={14} />
@@ -120,16 +92,16 @@ export function CampusExplorerPage() {
       </header>
 
       {/* Hero Welcome Banner */}
-      <div className="border-b border-line bg-surface/50">
+      <div className="border-b border-line bg-subtle/40">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-semibold text-brand-700 dark:text-brand-300 mb-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-ink mb-3">
               <Compass size={14} />
               <span>Universal Adaptive Campus Gateway</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-ink">
               One Connected Campus.<br />
-              <span className="text-brand-600 dark:text-brand-400">Every resource at your fingertips.</span>
+              <span className="text-primary-ink">Every resource at your fingertips.</span>
             </h1>
             <p className="mt-3 text-sm sm:text-base text-muted leading-relaxed">
               Explore public transit shuttle schedules, free study rooms across blocks, university directory, sports week fixtures, and curriculum portals without credentials.
@@ -154,8 +126,8 @@ export function CampusExplorerPage() {
                   onClick={() => selectTab(tab.id as ExplorerTab)}
                   className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition ${
                     isActive
-                      ? "bg-brand-600 text-white shadow-xs"
-                      : "bg-panel text-muted hover:text-ink hover:bg-surface border border-line"
+                      ? "bg-primary text-on-primary shadow-xs"
+                      : "bg-panel text-muted hover:text-ink hover:bg-subtle/60 border border-line"
                   }`}
                 >
                   <Icon size={16} />
@@ -173,7 +145,7 @@ export function CampusExplorerPage() {
         {activeTab === "overview" && (
           <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold">Main Dashboard</h2>
+              <h2 className="text-xl font-bold text-ink">Main Dashboard</h2>
               <p className="text-xs text-muted mt-1">Select any module card below to open its screen.</p>
             </div>
 
@@ -181,10 +153,10 @@ export function CampusExplorerPage() {
               {/* 1. Student Portal */}
               <Link
                 to={state === "authenticated" && role === "student" ? "/app/student" : "/login/student"}
-                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-primary transition flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 mb-4 group-hover:scale-105 transition">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary-ink mb-4 group-hover:scale-105 transition">
                     <GraduationCap size={24} />
                   </div>
                   <h3 className="font-bold text-base text-ink">Student Portal</h3>
@@ -193,8 +165,8 @@ export function CampusExplorerPage() {
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-brand-600">Student Login</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-600">
+                  <span className="text-xs font-semibold text-primary-ink">Student Login</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-ink">
                     <span>Open</span>
                     <ArrowRight size={13} />
                   </span>
@@ -205,10 +177,10 @@ export function CampusExplorerPage() {
               <button
                 type="button"
                 onClick={() => selectTab("free_slots")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-accent transition flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 mb-4 group-hover:scale-105 transition">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-ink mb-4 group-hover:scale-105 transition">
                     <Clock size={24} />
                   </div>
                   <h3 className="font-bold text-base text-ink">Free Slots</h3>
@@ -217,8 +189,8 @@ export function CampusExplorerPage() {
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-amber-600">Block-Wise Rooms</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600">
+                  <span className="text-xs font-semibold text-accent-ink">Block-Wise Rooms</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-accent-ink">
                     <span>View Slots</span>
                     <ChevronRight size={14} />
                   </span>
@@ -229,10 +201,10 @@ export function CampusExplorerPage() {
               <button
                 type="button"
                 onClick={() => selectTab("timetable")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-secondary transition flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 mb-4 group-hover:scale-105 transition">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-soft text-secondary-ink mb-4 group-hover:scale-105 transition">
                     <Calendar size={24} />
                   </div>
                   <h3 className="font-bold text-base text-ink">Timetable</h3>
@@ -241,8 +213,8 @@ export function CampusExplorerPage() {
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-emerald-600">Student &amp; Teacher</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600">
+                  <span className="text-xs font-semibold text-secondary-ink">Student &amp; Teacher</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-secondary-ink">
                     <span>Inspect</span>
                     <ChevronRight size={14} />
                   </span>
@@ -253,10 +225,10 @@ export function CampusExplorerPage() {
               <button
                 type="button"
                 onClick={() => selectTab("hub")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-primary transition flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 mb-4 group-hover:scale-105 transition">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary-ink mb-4 group-hover:scale-105 transition">
                     <Building size={24} />
                   </div>
                   <h3 className="font-bold text-base text-ink">Campus Hub</h3>
@@ -265,8 +237,8 @@ export function CampusExplorerPage() {
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-purple-600">6 Directories</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-purple-600">
+                  <span className="text-xs font-semibold text-primary-ink">6 Directories</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-ink">
                     <span>Explore</span>
                     <ChevronRight size={14} />
                   </span>
@@ -277,10 +249,10 @@ export function CampusExplorerPage() {
               <button
                 type="button"
                 onClick={() => selectTab("transport")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-secondary transition flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-950/60 mb-4 group-hover:scale-105 transition">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-soft text-secondary-ink mb-4 group-hover:scale-105 transition">
                     <Bus size={24} />
                   </div>
                   <h3 className="font-bold text-base text-ink">Transport Service</h3>
@@ -289,8 +261,8 @@ export function CampusExplorerPage() {
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-cyan-600">Routes &amp; Shuttles</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-cyan-600">
+                  <span className="text-xs font-semibold text-secondary-ink">Routes &amp; Shuttles</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-secondary-ink">
                     <span>View Bus Info</span>
                     <ChevronRight size={14} />
                   </span>
@@ -300,10 +272,10 @@ export function CampusExplorerPage() {
               {/* 6. Faculty */}
               <Link
                 to={state === "authenticated" && role === "teacher" ? "/app/teacher" : "/login/faculty"}
-                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-primary transition flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 mb-4 group-hover:scale-105 transition">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-subtle text-ink border border-line mb-4 group-hover:scale-105 transition">
                     <Lock size={24} />
                   </div>
                   <h3 className="font-bold text-base text-ink">Faculty</h3>
@@ -312,8 +284,8 @@ export function CampusExplorerPage() {
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-indigo-600">Teachers Only</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600">
+                  <span className="text-xs font-semibold text-primary-ink">Teachers Only</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-ink">
                     <span>Faculty Sign In</span>
                     <ArrowRight size={13} />
                   </span>
@@ -324,10 +296,10 @@ export function CampusExplorerPage() {
               <button
                 type="button"
                 onClick={() => selectTab("sports")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-accent transition flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 mb-4 group-hover:scale-105 transition">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-ink mb-4 group-hover:scale-105 transition">
                     <Trophy size={24} />
                   </div>
                   <h3 className="font-bold text-base text-ink">Sports Week</h3>
@@ -336,8 +308,8 @@ export function CampusExplorerPage() {
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-rose-600">Day-by-Day</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-600">
+                  <span className="text-xs font-semibold text-accent-ink">Day-by-Day</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-accent-ink">
                     <span>Fixtures</span>
                     <ChevronRight size={14} />
                   </span>
@@ -347,10 +319,10 @@ export function CampusExplorerPage() {
               {/* 8. Self Assessment */}
               <Link
                 to="/app/student/learning"
-                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/80 transition flex flex-col justify-between group"
+                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-secondary transition flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-50 text-violet-600 dark:bg-violet-950/60 mb-4 group-hover:scale-105 transition">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-soft text-secondary-ink mb-4 group-hover:scale-105 transition">
                     <Sparkles size={24} />
                   </div>
                   <h3 className="font-bold text-base text-ink">Self Assessment</h3>
@@ -359,8 +331,8 @@ export function CampusExplorerPage() {
                   </p>
                 </div>
                 <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-violet-600">Adaptive AI</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-violet-600">
+                  <span className="text-xs font-semibold text-secondary-ink">Adaptive AI</span>
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-secondary-ink">
                     <span>Practice Now</span>
                     <ArrowRight size={13} />
                   </span>
@@ -374,7 +346,7 @@ export function CampusExplorerPage() {
         {activeTab === "timetable" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold">Timetable</h2>
+              <h2 className="text-xl font-bold text-ink">Timetable</h2>
               <p className="text-xs text-muted mt-1">
                 Choose Student or Teacher to inspect the full weekly schedule with lecture counts, slots, classrooms, and sections.
               </p>
@@ -388,9 +360,9 @@ export function CampusExplorerPage() {
         {activeTab === "hub" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold">Campus Hub, Directory & Spatial Wayfinding</h2>
+              <h2 className="text-xl font-bold text-ink">Campus Hub, Directory &amp; Spatial Wayfinding</h2>
               <p className="text-xs text-muted mt-1">
-                Faculty directory, administrative queue tickets, equipped classrooms & labs, library seat telemetry, and interactive vector floor blueprints.
+                Faculty directory, administrative queue tickets, equipped classrooms &amp; labs, library seat telemetry, and interactive vector floor blueprints.
               </p>
             </div>
 
@@ -402,7 +374,7 @@ export function CampusExplorerPage() {
         {activeTab === "free_slots" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold">Dynamic Space Finder & Free Slots Navigator</h2>
+              <h2 className="text-xl font-bold text-ink">Dynamic Space Finder &amp; Free Slots Navigator</h2>
               <p className="text-xs text-muted mt-1">
                 Filter available lecture rooms, labs, and study pods block-wise with equipment telemetry and live availability.
               </p>
@@ -416,7 +388,7 @@ export function CampusExplorerPage() {
         {activeTab === "transport" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold">Smart Transit & Fleet Telemetry</h2>
+              <h2 className="text-xl font-bold text-ink">Smart Transit &amp; Fleet Telemetry</h2>
               <p className="text-xs text-muted mt-1">
                 Real-time city route networks (Farid Town Point, Mall Road, Canal Line), intra-day campus shuttles, driver telemetry, and live disruption notices.
               </p>
@@ -430,7 +402,7 @@ export function CampusExplorerPage() {
         {activeTab === "sports" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold">Campus Life, Marquee Events & Sports Olympiad</h2>
+              <h2 className="text-xl font-bold text-ink">Campus Life, Marquee Events &amp; Sports Olympiad</h2>
               <p className="text-xs text-muted mt-1">
                 Live athletic fixtures, knockout elimination brackets, department trophy standings, plus Fall Hackathon and Winter Career Fair modes.
               </p>
@@ -442,12 +414,12 @@ export function CampusExplorerPage() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-16 border-t border-line bg-panel py-8">
+      <footer className="mt-16 border-t border-line bg-panel pt-8 pb-24 sm:pb-10">
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6">
           <p className="text-xs text-muted">
             COMSATS University Islamabad · Sahiwal Campus · Smart Education Platform 2026
           </p>
-          <div className="mt-2 flex items-center justify-center gap-4 text-xs font-semibold text-brand-600">
+          <div className="mt-2 flex items-center justify-center gap-4 text-xs font-semibold text-primary-ink">
             <Link to="/login" className="hover:underline">
               Universal Sign In
             </Link>

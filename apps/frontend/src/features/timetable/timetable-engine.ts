@@ -56,10 +56,10 @@ export const STUDENT_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 58,
     day: "Monday",
     colorScheme: {
-      bg: "bg-blue-500/10 dark:bg-blue-950/40",
-      border: "border-blue-500/30",
-      text: "text-blue-700 dark:text-blue-300",
-      badge: "bg-blue-500/20 text-blue-700 dark:text-blue-300"
+      bg: "bg-primary-soft",
+      border: "border-primary/35",
+      text: "text-primary-ink",
+      badge: "bg-primary/15 text-primary-ink"
     }
   },
   {
@@ -80,10 +80,10 @@ export const STUDENT_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 54,
     day: "Monday",
     colorScheme: {
-      bg: "bg-purple-500/10 dark:bg-purple-950/40",
-      border: "border-purple-500/30",
-      text: "text-purple-700 dark:text-purple-300",
-      badge: "bg-purple-500/20 text-purple-700 dark:text-purple-300"
+      bg: "bg-secondary-soft",
+      border: "border-secondary/35",
+      text: "text-secondary-ink",
+      badge: "bg-secondary/15 text-secondary-ink"
     }
   },
   {
@@ -104,10 +104,10 @@ export const STUDENT_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 52,
     day: "Tuesday",
     colorScheme: {
-      bg: "bg-emerald-500/10 dark:bg-emerald-950/40",
-      border: "border-emerald-500/30",
-      text: "text-emerald-700 dark:text-emerald-300",
-      badge: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+      bg: "bg-success-soft",
+      border: "border-success/35",
+      text: "text-success-ink",
+      badge: "bg-success/15 text-success-ink"
     }
   },
   {
@@ -128,10 +128,10 @@ export const STUDENT_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 48,
     day: "Tuesday",
     colorScheme: {
-      bg: "bg-amber-500/10 dark:bg-amber-950/40",
-      border: "border-amber-500/30",
-      text: "text-amber-700 dark:text-amber-300",
-      badge: "bg-amber-500/20 text-amber-700 dark:text-amber-300"
+      bg: "bg-warning-soft",
+      border: "border-warning/35",
+      text: "text-warning-ink",
+      badge: "bg-warning/15 text-warning-ink"
     },
     swapAlert: {
       type: "ROOM_SWAP",
@@ -158,10 +158,10 @@ export const STUDENT_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 54,
     day: "Wednesday",
     colorScheme: {
-      bg: "bg-purple-500/10 dark:bg-purple-950/40",
-      border: "border-purple-500/30",
-      text: "text-purple-700 dark:text-purple-300",
-      badge: "bg-purple-500/20 text-purple-700 dark:text-purple-300"
+      bg: "bg-secondary-soft",
+      border: "border-secondary/35",
+      text: "text-secondary-ink",
+      badge: "bg-secondary/15 text-secondary-ink"
     }
   },
   {
@@ -182,10 +182,10 @@ export const STUDENT_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 62,
     day: "Wednesday",
     colorScheme: {
-      bg: "bg-cyan-500/10 dark:bg-cyan-950/40",
-      border: "border-cyan-500/30",
-      text: "text-cyan-700 dark:text-cyan-300",
-      badge: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300"
+      bg: "bg-subtle/75",
+      border: "border-line",
+      text: "text-ink",
+      badge: "bg-panel text-muted"
     }
   },
   {
@@ -206,10 +206,10 @@ export const STUDENT_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 58,
     day: "Thursday",
     colorScheme: {
-      bg: "bg-blue-500/10 dark:bg-blue-950/40",
-      border: "border-blue-500/30",
-      text: "text-blue-700 dark:text-blue-300",
-      badge: "bg-blue-500/20 text-blue-700 dark:text-blue-300"
+      bg: "bg-primary-soft",
+      border: "border-primary/35",
+      text: "text-primary-ink",
+      badge: "bg-primary/15 text-primary-ink"
     }
   },
   {
@@ -230,10 +230,10 @@ export const STUDENT_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 45,
     day: "Thursday",
     colorScheme: {
-      bg: "bg-cyan-500/10 dark:bg-cyan-950/40",
-      border: "border-cyan-500/30",
-      text: "text-cyan-700 dark:text-cyan-300",
-      badge: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300"
+      bg: "bg-subtle/75",
+      border: "border-line",
+      text: "text-ink",
+      badge: "bg-panel text-muted"
     }
   },
   {
@@ -254,10 +254,10 @@ export const STUDENT_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 52,
     day: "Friday",
     colorScheme: {
-      bg: "bg-emerald-500/10 dark:bg-emerald-950/40",
-      border: "border-emerald-500/30",
-      text: "text-emerald-700 dark:text-emerald-300",
-      badge: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+      bg: "bg-success-soft",
+      border: "border-success/35",
+      text: "text-success-ink",
+      badge: "bg-success/15 text-success-ink"
     }
   }
 ];
@@ -281,10 +281,10 @@ export const TEACHER_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 54,
     day: "Monday",
     colorScheme: {
-      bg: "bg-purple-500/10 dark:bg-purple-950/40",
-      border: "border-purple-500/30",
-      text: "text-purple-700 dark:text-purple-300",
-      badge: "bg-purple-500/20 text-purple-700 dark:text-purple-300"
+      bg: "bg-secondary-soft",
+      border: "border-secondary/35",
+      text: "text-secondary-ink",
+      badge: "bg-secondary/15 text-secondary-ink"
     }
   },
   {
@@ -305,10 +305,10 @@ export const TEACHER_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 48,
     day: "Monday",
     colorScheme: {
-      bg: "bg-purple-500/10 dark:bg-purple-950/40",
-      border: "border-purple-500/30",
-      text: "text-purple-700 dark:text-purple-300",
-      badge: "bg-purple-500/20 text-purple-700 dark:text-purple-300"
+      bg: "bg-secondary-soft",
+      border: "border-secondary/35",
+      text: "text-secondary-ink",
+      badge: "bg-secondary/15 text-secondary-ink"
     }
   },
   {
@@ -329,10 +329,10 @@ export const TEACHER_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 54,
     day: "Wednesday",
     colorScheme: {
-      bg: "bg-purple-500/10 dark:bg-purple-950/40",
-      border: "border-purple-500/30",
-      text: "text-purple-700 dark:text-purple-300",
-      badge: "bg-purple-500/20 text-purple-700 dark:text-purple-300"
+      bg: "bg-secondary-soft",
+      border: "border-secondary/35",
+      text: "text-secondary-ink",
+      badge: "bg-secondary/15 text-secondary-ink"
     }
   },
   {
@@ -353,10 +353,10 @@ export const TEACHER_SCHEDULE: TimetableSlot[] = [
     enrolledStudents: 28,
     day: "Thursday",
     colorScheme: {
-      bg: "bg-indigo-500/10 dark:bg-indigo-950/40",
-      border: "border-indigo-500/30",
-      text: "text-indigo-700 dark:text-indigo-300",
-      badge: "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300"
+      bg: "bg-accent-soft",
+      border: "border-accent/35",
+      text: "text-accent-ink",
+      badge: "bg-accent/20 text-accent-ink"
     }
   }
 ];
@@ -382,10 +382,10 @@ export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
       enrolledStudents: 58,
       day: "Monday",
       colorScheme: {
-        bg: "bg-blue-500/10 dark:bg-blue-950/40",
-        border: "border-blue-500/30",
-        text: "text-blue-700 dark:text-blue-300",
-        badge: "bg-blue-500/20 text-blue-700 dark:text-blue-300"
+        bg: "bg-primary-soft",
+        border: "border-primary/35",
+        text: "text-primary-ink",
+        badge: "bg-primary/15 text-primary-ink"
       }
     },
     {
@@ -406,10 +406,10 @@ export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
       enrolledStudents: 48,
       day: "Monday",
       colorScheme: {
-        bg: "bg-purple-500/10 dark:bg-purple-950/40",
-        border: "border-purple-500/30",
-        text: "text-purple-700 dark:text-purple-300",
-        badge: "bg-purple-500/20 text-purple-700 dark:text-purple-300"
+        bg: "bg-secondary-soft",
+        border: "border-secondary/35",
+        text: "text-secondary-ink",
+        badge: "bg-secondary/15 text-secondary-ink"
       }
     },
     {
@@ -430,10 +430,10 @@ export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
       enrolledStudents: 60,
       day: "Wednesday",
       colorScheme: {
-        bg: "bg-cyan-500/10 dark:bg-cyan-950/40",
-        border: "border-cyan-500/30",
-        text: "text-cyan-700 dark:text-cyan-300",
-        badge: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300"
+        bg: "bg-subtle/75",
+        border: "border-line",
+        text: "text-ink",
+        badge: "bg-panel text-muted"
       }
     },
     {
@@ -454,10 +454,10 @@ export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
       enrolledStudents: 58,
       day: "Thursday",
       colorScheme: {
-        bg: "bg-blue-500/10 dark:bg-blue-950/40",
-        border: "border-blue-500/30",
-        text: "text-blue-700 dark:text-blue-300",
-        badge: "bg-blue-500/20 text-blue-700 dark:text-blue-300"
+        bg: "bg-primary-soft",
+        border: "border-primary/35",
+        text: "text-primary-ink",
+        badge: "bg-primary/15 text-primary-ink"
       }
     }
   ],
@@ -480,10 +480,10 @@ export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
       enrolledStudents: 56,
       day: "Tuesday",
       colorScheme: {
-        bg: "bg-emerald-500/10 dark:bg-emerald-950/40",
-        border: "border-emerald-500/30",
-        text: "text-emerald-700 dark:text-emerald-300",
-        badge: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+        bg: "bg-success-soft",
+        border: "border-success/35",
+        text: "text-success-ink",
+        badge: "bg-success/15 text-success-ink"
       }
     },
     {
@@ -504,10 +504,10 @@ export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
       enrolledStudents: 62,
       day: "Wednesday",
       colorScheme: {
-        bg: "bg-cyan-500/10 dark:bg-cyan-950/40",
-        border: "border-cyan-500/30",
-        text: "text-cyan-700 dark:text-cyan-300",
-        badge: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300"
+        bg: "bg-subtle/75",
+        border: "border-line",
+        text: "text-ink",
+        badge: "bg-panel text-muted"
       }
     },
     {
@@ -528,10 +528,10 @@ export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
       enrolledStudents: 45,
       day: "Thursday",
       colorScheme: {
-        bg: "bg-cyan-500/10 dark:bg-cyan-950/40",
-        border: "border-cyan-500/30",
-        text: "text-cyan-700 dark:text-cyan-300",
-        badge: "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300"
+        bg: "bg-subtle/75",
+        border: "border-line",
+        text: "text-ink",
+        badge: "bg-panel text-muted"
       }
     }
   ]

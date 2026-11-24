@@ -1,10 +1,42 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-palette="university" data-mode="light">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Smart Education Platform" />
     <title>Smart Education Platform</title>
+    <script>
+      (function () {
+        try {
+          var validPalettes = ["university", "editorial", "premium", "minimal", "natural"];
+          var storedPalette = localStorage.getItem("sep-palette");
+          var palette = storedPalette && validPalettes.indexOf(storedPalette) !== -1 ? storedPalette : "university";
+          var storedMode = localStorage.getItem("sep-mode");
+          if (storedMode !== "light" && storedMode !== "dark") {
+            var legacy = localStorage.getItem("sep-theme");
+            if (legacy === "light" || legacy === "dark") {
+              storedMode = legacy;
+            } else {
+              storedMode =
+                window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+                  ? "dark"
+                  : "light";
+            }
+          }
+          var root = document.documentElement;
+          root.dataset.palette = palette;
+          root.dataset.mode = storedMode;
+          root.dataset.theme = storedMode;
+          root.style.colorScheme = storedMode;
+        } catch (err) {
+          var fallbackRoot = document.documentElement;
+          fallbackRoot.dataset.palette = "university";
+          fallbackRoot.dataset.mode = "light";
+          fallbackRoot.dataset.theme = "light";
+          fallbackRoot.style.colorScheme = "light";
+        }
+      })();
+    </script>
     <script src="/runtime-config.js"></script>
   </head>
   <body>

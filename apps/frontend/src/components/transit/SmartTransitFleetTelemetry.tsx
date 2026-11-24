@@ -113,16 +113,16 @@ export function SmartTransitFleetTelemetry({
     <div className="space-y-6">
       {/* ================= SERVICE DISRUPTION NOTICES FEED ================= */}
       {!isAlertsDismissed && TRANSIT_ALERTS.length > 0 && (
-        <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-4 sm:p-5 shadow-xs space-y-3">
+        <div className="rounded-2xl border border-warning/40 bg-gradient-to-r from-warning/10 via-warning/5 to-transparent p-4 sm:p-5 shadow-xs space-y-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-white shadow-xs shrink-0">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning text-warning-fg shadow-xs shrink-0">
                 <AlertTriangle size={18} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-extrabold text-sm text-ink">Active Fleet & Route Disruption Notices</h4>
-                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-2xs font-extrabold text-amber-800 dark:text-amber-300">
+                  <span className="rounded-full bg-warning-soft px-2 py-0.5 text-2xs font-extrabold text-warning-ink">
                     {TRANSIT_ALERTS.length} Active Bulletins
                   </span>
                 </div>
@@ -145,10 +145,10 @@ export function SmartTransitFleetTelemetry({
             {TRANSIT_ALERTS.map((alert) => (
               <div
                 key={alert.id}
-                className="rounded-xl border border-amber-500/30 bg-panel/80 p-3.5 space-y-2 text-xs"
+                className="rounded-xl border border-warning/35 bg-panel/80 p-3.5 space-y-2 text-xs"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                  <span className="font-bold text-warning-ink flex items-center gap-1.5">
                     <ShieldAlert size={13} />
                     <span>{alert.affectedRoutes.join(", ")}</span>
                   </span>
@@ -173,8 +173,8 @@ export function SmartTransitFleetTelemetry({
           onClick={() => setSelectedCategory("CITY_ROUTE")}
           className={`cursor-pointer rounded-3xl border p-6 transition shadow-2xs group flex flex-col justify-between ${
             selectedCategory === "CITY_ROUTE"
-              ? "border-brand-600 bg-panel ring-2 ring-brand-500/30 shadow-md"
-              : "border-line bg-panel hover:border-brand-500/60"
+              ? "border-primary bg-panel ring-2 ring-primary/30 shadow-md"
+              : "border-line bg-panel hover:border-primary/60"
           }`}
         >
           <div>
@@ -182,18 +182,18 @@ export function SmartTransitFleetTelemetry({
               <div
                 className={`flex h-12 w-12 items-center justify-center rounded-2xl transition ${
                   selectedCategory === "CITY_ROUTE"
-                    ? "bg-brand-600 text-white shadow-xs scale-105"
-                    : "bg-brand-500/10 text-brand-600 group-hover:scale-105"
+                    ? "bg-primary text-on-primary shadow-xs scale-105"
+                    : "bg-primary-soft text-primary-ink group-hover:scale-105"
                 }`}
               >
                 <Bus size={24} />
               </div>
-              <span className="rounded-full bg-brand-500/10 px-3 py-1 text-xs font-extrabold text-brand-600">
+              <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-extrabold text-primary-ink">
                 {cityCount} Lines Configured
               </span>
             </div>
 
-            <h3 className="font-extrabold text-lg text-ink group-hover:text-brand-600 transition">
+            <h3 className="font-extrabold text-lg text-ink group-hover:text-primary-ink transition">
               Planned Routes
             </h3>
             <p className="text-xs text-muted mt-1 leading-relaxed">
@@ -205,7 +205,7 @@ export function SmartTransitFleetTelemetry({
             <span className="font-semibold text-muted">Long-Distance & Commuters</span>
             <span
               className={`font-bold flex items-center gap-1 ${
-                selectedCategory === "CITY_ROUTE" ? "text-brand-600" : "text-muted"
+                selectedCategory === "CITY_ROUTE" ? "text-primary-ink" : "text-muted"
               }`}
             >
               <span>{selectedCategory === "CITY_ROUTE" ? "Active View" : "Switch to Routes"}</span>
@@ -219,8 +219,8 @@ export function SmartTransitFleetTelemetry({
           onClick={() => setSelectedCategory("CAMPUS_SHUTTLE")}
           className={`cursor-pointer rounded-3xl border p-6 transition shadow-2xs group flex flex-col justify-between ${
             selectedCategory === "CAMPUS_SHUTTLE"
-              ? "border-cyan-600 bg-panel ring-2 ring-cyan-500/30 shadow-md"
-              : "border-line bg-panel hover:border-cyan-500/60"
+              ? "border-secondary bg-panel ring-2 ring-secondary/30 shadow-md"
+              : "border-line bg-panel hover:border-secondary/60"
           }`}
         >
           <div>
@@ -228,18 +228,18 @@ export function SmartTransitFleetTelemetry({
               <div
                 className={`flex h-12 w-12 items-center justify-center rounded-2xl transition ${
                   selectedCategory === "CAMPUS_SHUTTLE"
-                    ? "bg-cyan-600 text-white shadow-xs scale-105"
-                    : "bg-cyan-500/10 text-cyan-600 group-hover:scale-105"
+                    ? "bg-secondary text-secondary-fg shadow-xs scale-105"
+                    : "bg-secondary-soft text-secondary-ink group-hover:scale-105"
                 }`}
               >
                 <Navigation size={24} />
               </div>
-              <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-extrabold text-cyan-600">
+              <span className="rounded-full bg-secondary-soft px-3 py-1 text-xs font-extrabold text-secondary-ink">
                 Every 15–20 Mins Loop
               </span>
             </div>
 
-            <h3 className="font-extrabold text-lg text-ink group-hover:text-cyan-600 transition">
+            <h3 className="font-extrabold text-lg text-ink group-hover:text-secondary-ink transition">
               Shuttle Schedule
             </h3>
             <p className="text-xs text-muted mt-1 leading-relaxed">
@@ -251,7 +251,7 @@ export function SmartTransitFleetTelemetry({
             <span className="font-semibold text-muted">Continuous Intra-Day Transit</span>
             <span
               className={`font-bold flex items-center gap-1 ${
-                selectedCategory === "CAMPUS_SHUTTLE" ? "text-cyan-600" : "text-muted"
+                selectedCategory === "CAMPUS_SHUTTLE" ? "text-secondary-ink" : "text-muted"
               }`}
             >
               <span>{selectedCategory === "CAMPUS_SHUTTLE" ? "Active View" : "Switch to Shuttles"}</span>
@@ -334,7 +334,7 @@ export function SmartTransitFleetTelemetry({
           {stopSearchQuery && (
             <button
               onClick={() => setStopSearchQuery("")}
-              className="ml-auto text-2xs font-semibold text-muted hover:text-red-500 transition"
+              className="ml-auto text-2xs font-semibold text-muted hover:text-danger-ink transition"
             >
               Clear Search
             </button>
@@ -368,8 +368,8 @@ export function SmartTransitFleetTelemetry({
                   <span
                     className={`rounded-full px-2 py-0.5 text-2xs font-bold ${
                       stop.delayMinutes === 0
-                        ? "bg-emerald-500/15 text-emerald-600"
-                        : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+                        ? "bg-success-soft text-success-ink"
+                        : "bg-warning-soft text-warning-ink"
                     }`}
                   >
                     {stop.delayMinutes === 0 ? "On Time" : `+${stop.delayMinutes}m Delay`}
@@ -454,10 +454,10 @@ export function SmartTransitFleetTelemetry({
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-2xs font-extrabold ${
                           route.overallStatus === "ON_TIME"
-                            ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                            ? "bg-success-soft text-success-ink"
                             : route.overallStatus === "MINOR_DELAY"
-                            ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
-                            : "bg-rose-500/15 text-rose-700 dark:text-rose-300"
+                            ? "bg-warning-soft text-warning-ink"
+                            : "bg-danger-soft text-danger-ink"
                         }`}
                       >
                         <span className="flex h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
@@ -495,12 +495,12 @@ export function SmartTransitFleetTelemetry({
                         <span className="font-semibold text-ink flex items-center gap-1 mt-0.5">
                           {route.bus.hasAC && (
                             <span title="Air Conditioned">
-                              <Wind size={11} className="text-sky-500" />
+                              <Wind size={11} className="text-secondary-ink" />
                             </span>
                           )}
                           {route.bus.hasWifi && (
                             <span title="High-Speed Wi-Fi">
-                              <Wifi size={11} className="text-emerald-500" />
+                              <Wifi size={11} className="text-success-ink" />
                             </span>
                           )}
                           <span>{route.bus.hasAC ? "AC Active" : "Non-AC"}</span>
@@ -523,10 +523,10 @@ export function SmartTransitFleetTelemetry({
                       <span
                         className={`font-bold rounded-full px-2 py-0.5 text-2xs ${
                           isFull
-                            ? "bg-rose-500/15 text-rose-600"
+                            ? "bg-danger-soft text-danger-ink"
                             : isStanding
-                            ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
-                            : "bg-emerald-500/15 text-emerald-600"
+                            ? "bg-warning-soft text-warning-ink"
+                            : "bg-success-soft text-success-ink"
                         }`}
                       >
                         {isFull ? "Full / At Capacity" : isStanding ? "Standing Only" : "Seats Available"} (
@@ -537,7 +537,7 @@ export function SmartTransitFleetTelemetry({
                     <div className="h-2 w-full rounded-full bg-surface overflow-hidden border border-line/60">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
-                          isFull ? "bg-rose-500" : isStanding ? "bg-amber-500" : "bg-emerald-500"
+                          isFull ? "bg-danger" : isStanding ? "bg-warning" : "bg-success"
                         }`}
                         style={{
                           width: `${Math.min((route.bus.occupiedSeats / route.bus.totalSeats) * 100, 100)}%`
@@ -595,16 +595,16 @@ export function SmartTransitFleetTelemetry({
                             <span
                               className={`absolute -left-[27px] top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 bg-panel transition ${
                                 isPassed
-                                  ? "border-emerald-500 text-emerald-500"
+                                  ? "border-success text-success-ink"
                                   : isApproaching
-                                  ? "border-amber-500 text-amber-500 ring-4 ring-amber-500/20"
+                                  ? "border-warning text-warning-ink ring-4 ring-warning/20"
                                   : "border-muted/60 text-muted"
                               }`}
                             >
                               {isPassed ? (
                                 <CheckCircle2 size={10} className="fill-current" />
                               ) : isApproaching ? (
-                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-ping" />
+                                <span className="h-1.5 w-1.5 rounded-full bg-warning animate-ping" />
                               ) : (
                                 <span className="h-1.5 w-1.5 rounded-full bg-muted/60" />
                               )}
@@ -616,7 +616,7 @@ export function SmartTransitFleetTelemetry({
                                   <span
                                     className={`font-bold transition ${
                                       isApproaching
-                                        ? "text-amber-700 dark:text-amber-300 font-extrabold"
+                                        ? "text-warning-ink font-extrabold"
                                         : isPassed
                                         ? "text-muted line-through"
                                         : "text-ink"
@@ -625,7 +625,7 @@ export function SmartTransitFleetTelemetry({
                                     {stop.name}
                                   </span>
                                   {isApproaching && (
-                                    <span className="rounded-full bg-amber-500/20 px-2 py-0.2 text-[9px] font-extrabold text-amber-800 dark:text-amber-300 animate-pulse">
+                                    <span className="rounded-full bg-warning-soft px-2 py-0.2 text-[9px] font-extrabold text-warning-ink animate-pulse">
                                       NEXT STOP
                                     </span>
                                   )}
@@ -642,8 +642,8 @@ export function SmartTransitFleetTelemetry({
                                   <span
                                     className={`font-mono font-extrabold text-xs ${
                                       stop.delayMinutes === 0
-                                        ? "text-emerald-600"
-                                        : "text-amber-600 font-bold"
+                                        ? "text-success-ink"
+                                        : "text-warning-ink font-bold"
                                     }`}
                                   >
                                     {stop.estimatedArrival}

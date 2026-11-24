@@ -55,7 +55,7 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
         <div className="rounded-2xl border border-line bg-panel p-5 shadow-xs">
           <span className="text-xs font-semibold text-muted uppercase">Overall Mastery</span>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-brand-600 font-mono">
+            <span className="text-3xl font-extrabold text-primary-ink font-mono">
               {overall.toFixed(1)}%
             </span>
           </div>
@@ -67,9 +67,9 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
         <div className="rounded-2xl border border-line bg-panel p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted uppercase">Strong (≥75%)</span>
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
+            <CheckCircle className="h-4 w-4 text-success-ink" />
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-emerald-600 font-mono">
+          <div className="mt-2 text-3xl font-extrabold text-success-ink font-mono">
             {mastery.strong_topics_count}
           </div>
           <p className="text-xs text-muted mt-1">Exam-ready syllabus mastery</p>
@@ -78,9 +78,9 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
         <div className="rounded-2xl border border-line bg-panel p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted uppercase">Moderate (50–74%)</span>
-            <HelpCircle className="h-4 w-4 text-amber-500" />
+            <HelpCircle className="h-4 w-4 text-warning-ink" />
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-amber-600 font-mono">
+          <div className="mt-2 text-3xl font-extrabold text-warning-ink font-mono">
             {mastery.moderate_topics_count}
           </div>
           <p className="text-xs text-muted mt-1">Approaching solid mastery</p>
@@ -89,9 +89,9 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
         <div className="rounded-2xl border border-line bg-panel p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted uppercase">Weak (&lt;50%)</span>
-            <AlertCircle className="h-4 w-4 text-red-500" />
+            <AlertCircle className="h-4 w-4 text-danger-ink" />
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-red-600 font-mono">
+          <div className="mt-2 text-3xl font-extrabold text-danger-ink font-mono">
             {mastery.weak_topics_count}
           </div>
           <p className="text-xs text-muted mt-1">High-priority remediation targets</p>
@@ -104,7 +104,7 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
         <div className="rounded-2xl border border-line bg-panel p-6 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Radar className="h-5 w-5 text-brand-600" />
+              <Radar className="h-5 w-5 text-primary-ink" />
               <div>
                 <h3 className="text-base font-bold">Syllabus Topic Mastery Radar</h3>
                 <p className="text-xs text-muted">
@@ -133,7 +133,7 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
         <div className="flex flex-col justify-between rounded-2xl border border-line bg-panel p-6 shadow-xs space-y-5">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-brand-600" />
+              <Target className="h-5 w-5 text-primary-ink" />
               <div>
                 <h3 className="text-base font-bold">Adaptive Remediation Engine</h3>
                 <p className="text-xs text-muted">
@@ -143,8 +143,8 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
             </div>
 
             {weakTopics.length > 0 ? (
-              <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 p-4 space-y-2.5">
-                <div className="flex items-center gap-2 text-xs font-bold text-red-700 dark:text-red-300">
+              <div className="rounded-xl border border-danger/40 bg-danger-soft/70 p-4 space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-danger-ink">
                   <TrendingDown className="h-4 w-4 shrink-0" />
                   <span>Priority Knowledge Gaps Detected ({weakTopics.length})</span>
                 </div>
@@ -152,7 +152,7 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
                   {weakTopics.slice(0, 4).map((w) => (
                     <li key={w.topic} className="flex items-center justify-between gap-2">
                       <span className="font-semibold text-ink truncate">{w.topic}</span>
-                      <span className="font-mono font-bold text-red-600 shrink-0">
+                      <span className="font-mono font-bold text-danger-ink shrink-0">
                         {w.mastery_percentage}%
                       </span>
                     </li>
@@ -160,7 +160,7 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
                 </ul>
               </div>
             ) : (
-              <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 text-xs text-emerald-800 dark:text-emerald-300">
+              <div className="rounded-xl border border-success/40 bg-success-soft/70 p-4 text-xs text-success-ink">
                 <strong>Great standing!</strong> No critical weak topics below 50%. Use Smart Regenerate to push Moderate topics past the 75% Strong mastery threshold.
               </div>
             )}
@@ -186,7 +186,7 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
                           {new Date(t.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <span className="rounded-md bg-panel border border-line px-2 py-0.5 text-[10px] font-bold uppercase text-brand-600 shrink-0">
+                      <span className="rounded-md bg-panel border border-line px-2 py-0.5 text-[10px] font-bold uppercase text-primary-ink shrink-0">
                         {t.status}
                       </span>
                     </div>
@@ -202,7 +202,7 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
               type="button"
               disabled={isRegenerating || gapTopicNames.length === 0}
               onClick={() => void onSmartRegenerateGaps(gapTopicNames)}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white shadow-xs hover:bg-brand-700 disabled:opacity-50 transition"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-on-primary shadow-xs hover:bg-primary-hover disabled:opacity-50 transition"
             >
               <Sparkles className="h-4 w-4" />
               <span>
@@ -232,17 +232,17 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
             return (
               <div
                 key={idx}
-                className="rounded-xl border border-line bg-surface p-4 transition hover:border-brand-200"
+                className="rounded-xl border border-line bg-surface p-4 transition hover:border-primary/40"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
                         isStrong
-                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                          ? "bg-success-soft text-success-ink"
                           : isModerate
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                          : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                          ? "bg-warning-soft text-warning-ink"
+                          : "bg-danger-soft text-danger-ink"
                       }`}
                     >
                       {item.status}
@@ -253,15 +253,15 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
                   <div className="flex items-center gap-4">
                     <span className="text-xs text-muted">
                       {item.total_correct} / {item.total_attempted} correct (
-                      <strong className="text-text font-mono">{item.mastery_percentage}%</strong>)
+                      <strong className="text-ink font-mono">{item.mastery_percentage}%</strong>)
                     </span>
 
                     <button
                       type="button"
                       onClick={() => onTakeTestForTopic(item.topic)}
-                      className="inline-flex items-center gap-1 rounded-lg bg-panel border border-line px-3 py-1.5 text-xs font-semibold hover:bg-brand-50 hover:text-brand-700 transition"
+                      className="inline-flex items-center gap-1 rounded-lg bg-panel border border-line px-3 py-1.5 text-xs font-semibold hover:bg-primary-soft hover:text-primary-ink transition"
                     >
-                      <Sparkles className="h-3.5 w-3.5 text-brand-600" />
+                      <Sparkles className="h-3.5 w-3.5 text-primary-ink" />
                       <span>Target Test</span>
                     </button>
                   </div>
@@ -272,10 +272,10 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
                   <div
                     className={`h-full transition-all duration-500 ${
                       isStrong
-                        ? "bg-emerald-500"
+                        ? "bg-success"
                         : isModerate
-                        ? "bg-amber-500"
-                        : "bg-red-500"
+                        ? "bg-warning"
+                        : "bg-danger"
                     }`}
                     style={{ width: `${Math.max(2, item.mastery_percentage)}%` }}
                   />

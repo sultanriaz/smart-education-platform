@@ -148,8 +148,8 @@ export function AdminAcademicPage() {
           onClick={() => setActiveTab("structure")}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
             activeTab === "structure"
-              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-              : "text-muted hover:text-text hover:bg-panel"
+              ? "bg-primary-soft text-primary-ink"
+              : "text-muted hover:text-ink hover:bg-panel"
           }`}
         >
           <span>🏢 Campuses & Departments</span>
@@ -159,8 +159,8 @@ export function AdminAcademicPage() {
           onClick={() => setActiveTab("calendar")}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
             activeTab === "calendar"
-              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-              : "text-muted hover:text-text hover:bg-panel"
+              ? "bg-primary-soft text-primary-ink"
+              : "text-muted hover:text-ink hover:bg-panel"
           }`}
         >
           <span>📅 Calendar & Semesters</span>
@@ -170,8 +170,8 @@ export function AdminAcademicPage() {
           onClick={() => setActiveTab("courses")}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
             activeTab === "courses"
-              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-              : "text-muted hover:text-text hover:bg-panel"
+              ? "bg-primary-soft text-primary-ink"
+              : "text-muted hover:text-ink hover:bg-panel"
           }`}
         >
           <span>📚 Courses & Sections</span>
@@ -181,8 +181,8 @@ export function AdminAcademicPage() {
           onClick={() => setActiveTab("enrollment")}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition ${
             activeTab === "enrollment"
-              ? "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300"
-              : "text-muted hover:text-text hover:bg-panel"
+              ? "bg-primary-soft text-primary-ink"
+              : "text-muted hover:text-ink hover:bg-panel"
           }`}
         >
           <span>👥 Profiles & Enrollment</span>

@@ -7,14 +7,9 @@ import {
   GraduationCap,
   Eye,
   EyeOff,
-  Moon,
-  Sun,
   Sparkles,
   Compass,
-  ArrowRight,
-  UserCheck,
-  Building2,
-  BookOpen
+  ArrowRight
 } from "lucide-react";
 
 import { Button } from "../components/ui/Button";
@@ -44,7 +39,6 @@ export function LoginPage() {
   const location = useLocation();
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
   const [mode, setMode] = useState<"universal" | "student_reg">("universal");
   const [selectedDept, setSelectedDept] = useState("BCS");
   const [regNumber, setRegNumber] = useState("");
@@ -59,17 +53,6 @@ export function LoginPage() {
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" }
   });
-
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem("sep-theme", next);
-    } catch {
-      // ignore
-    }
-  };
 
   if (state === "authenticated" && user) {
     const role = primaryRole(user.roles);
@@ -120,18 +103,6 @@ export function LoginPage() {
 
   return (
     <main className="auth-layout relative">
-      {/* Quick Theme Toggle in Top Right */}
-      <div className="absolute right-5 top-5 z-20">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-panel text-muted hover:text-ink transition shadow-xs"
-        >
-          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-      </div>
-
       <aside className="auth-story">
         <div className="flex items-center gap-3">
           <span className="brand-mark">
@@ -140,7 +111,7 @@ export function LoginPage() {
           <strong className="text-xl tracking-tight">SmartEdu Platform</strong>
         </div>
         <div>
-          <div className="text-xs font-semibold tracking-widest text-violet-300">UNIVERSAL CAMPUS GATEWAY</div>
+          <div className="text-xs font-semibold tracking-widest text-hero-accent">UNIVERSAL CAMPUS GATEWAY</div>
           <h2>
             Unified Academic Access.<br />
             <span>Students, Faculty & Community.</span>
@@ -158,7 +129,7 @@ export function LoginPage() {
             <p className="auth-overline">{runtimeConfig.appName}</p>
             <Link
               to="/explore"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-ink hover:underline transition"
             >
               <Compass size={14} />
               <span>Campus Explorer</span>
@@ -172,7 +143,7 @@ export function LoginPage() {
 
           {/* 1-Click Demo Accounts Quick-Select */}
           <div className="mt-4 rounded-2xl border border-line bg-surface/70 p-3 shadow-2xs">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-brand-400">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-primary-ink">
               <Sparkles size={14} />
               <span>Quick-Fill Live Personas:</span>
             </div>
@@ -180,21 +151,21 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => fillDemoAccount("student")}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-text hover:border-brand-500 hover:text-brand-600 transition shadow-2xs"
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-ink hover:border-primary hover:text-primary-ink transition shadow-2xs"
               >
                 🎓 <span>Student (155)</span>
               </button>
               <button
                 type="button"
                 onClick={() => fillDemoAccount("teacher")}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-text hover:border-brand-500 hover:text-brand-600 transition shadow-2xs"
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-ink hover:border-primary hover:text-primary-ink transition shadow-2xs"
               >
                 📚 <span>Faculty (Munir)</span>
               </button>
               <button
                 type="button"
                 onClick={() => fillDemoAccount("admin")}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-text hover:border-brand-500 hover:text-brand-600 transition shadow-2xs"
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-ink hover:border-primary hover:text-primary-ink transition shadow-2xs"
               >
                 🛡️ <span>Admin</span>
               </button>
@@ -208,8 +179,8 @@ export function LoginPage() {
               onClick={() => setMode("universal")}
               className={`flex-1 rounded-lg py-1.5 font-medium transition ${
                 mode === "universal"
-                  ? "bg-panel text-brand-700 dark:text-brand-300 font-semibold shadow-xs"
-                  : "text-muted hover:text-text"
+                  ? "bg-panel text-primary-ink font-semibold shadow-xs"
+                  : "text-muted hover:text-ink"
               }`}
             >
               Universal ID / Email
@@ -222,8 +193,8 @@ export function LoginPage() {
               }}
               className={`flex-1 rounded-lg py-1.5 font-medium transition ${
                 mode === "student_reg"
-                  ? "bg-panel text-brand-700 dark:text-brand-300 font-semibold shadow-xs"
-                  : "text-muted hover:text-text"
+                  ? "bg-panel text-primary-ink font-semibold shadow-xs"
+                  : "text-muted hover:text-ink"
               }`}
             >
               Student Reg No Helper
@@ -245,11 +216,11 @@ export function LoginPage() {
             ) : (
               <div className="space-y-3 rounded-xl border border-line/70 bg-surface/40 p-3">
                 <div>
-                  <label className="block text-xs font-semibold text-text mb-1">Department</label>
+                  <label className="block text-xs font-semibold text-ink mb-1">Department</label>
                   <select
                     value={selectedDept}
                     onChange={(e) => handleStudentRegChange(e.target.value, regNumber)}
-                    className="w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm text-text focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                    className="w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-primary"
                   >
                     {DEPARTMENTS.map((d) => (
                       <option key={d.code} value={d.code}>
@@ -259,16 +230,16 @@ export function LoginPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-text mb-1">Registration Number</label>
+                  <label className="block text-xs font-semibold text-ink mb-1">Registration Number</label>
                   <input
                     type="text"
                     placeholder="e.g. 155"
                     value={regNumber}
                     onChange={(e) => handleStudentRegChange(selectedDept, e.target.value)}
-                    className="w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm text-text focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                    className="w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-primary"
                   />
                   <p className="mt-1 text-xs text-muted">
-                    Resolved identifier: <span className="font-mono font-semibold text-brand-600">{watch("email") || "—"}</span>
+                    Resolved identifier: <span className="font-mono font-semibold text-primary-ink">{watch("email") || "—"}</span>
                   </p>
                 </div>
               </div>
@@ -286,7 +257,7 @@ export function LoginPage() {
                 type="button"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[38px] text-muted hover:text-text transition"
+                className="absolute right-3 top-[38px] text-muted hover:text-ink transition"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -294,7 +265,7 @@ export function LoginPage() {
 
             <div className="text-right">
               <Link
-                className="text-xs font-semibold text-brand-700 hover:underline"
+                className="text-xs font-semibold text-primary-ink hover:underline"
                 to="/forgot-password"
               >
                 Forgot password?
@@ -303,7 +274,7 @@ export function LoginPage() {
 
             {serverError ? (
               <div
-                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger dark:border-red-900/60 dark:bg-red-950/40"
+                className="rounded-xl border border-danger/40 bg-danger-soft px-3 py-2 text-sm text-danger-ink"
                 role="alert"
               >
                 {serverError}
@@ -318,8 +289,8 @@ export function LoginPage() {
           {/* Open Campus Explorer Callout */}
           <div className="mt-6 rounded-2xl border border-line bg-surface/50 p-3.5 flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-bold text-text flex items-center gap-1.5">
-                <Compass size={14} className="text-brand-600" />
+              <p className="text-xs font-bold text-ink flex items-center gap-1.5">
+                <Compass size={14} className="text-primary-ink" />
                 Visiting or Prospective Student?
               </p>
               <p className="text-xs text-muted mt-0.5">
@@ -328,7 +299,7 @@ export function LoginPage() {
             </div>
             <Link
               to="/explore"
-              className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-panel px-3 py-1.5 text-xs font-semibold text-brand-600 border border-line hover:border-brand-500 transition shadow-2xs"
+              className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-panel px-3 py-1.5 text-xs font-semibold text-primary-ink border border-line hover:border-primary transition shadow-2xs"
             >
               <span>Explore</span>
               <ArrowRight size={13} />
@@ -338,14 +309,14 @@ export function LoginPage() {
           <div className="mt-5 space-y-2 text-center text-xs text-muted">
             <p>
               Need a Student account?{" "}
-              <Link className="font-semibold text-brand-700 hover:underline" to="/register">
+              <Link className="font-semibold text-primary-ink hover:underline" to="/register">
                 Register with Email
               </Link>
             </p>
             <p>
               Missing verification email?{" "}
               <Link
-                className="font-semibold text-brand-700 hover:underline"
+                className="font-semibold text-primary-ink hover:underline"
                 to="/verify-email/request"
               >
                 Request another

@@ -93,14 +93,14 @@ export const SPORTS_FIXTURES: TournamentMatch[] = [
       department: "Computer Science",
       score: "162/4 (19.1 ov)",
       isWinner: true,
-      jerseyColor: "bg-blue-600 text-white"
+      jerseyColor: "bg-primary text-on-primary"
     },
     teamB: {
       name: "EE Spark Warriors",
       department: "Electrical Engineering",
       score: "158/8 (20.0 ov)",
       isWinner: false,
-      jerseyColor: "bg-amber-600 text-white"
+      jerseyColor: "bg-accent text-accent-fg"
     },
     status: "COMPLETED",
     summaryResult: "CS Cyber Knights won by 6 wickets with 5 balls remaining",
@@ -119,14 +119,14 @@ export const SPORTS_FIXTURES: TournamentMatch[] = [
       department: "Software Engineering",
       score: "3",
       isWinner: true,
-      jerseyColor: "bg-emerald-600 text-white"
+      jerseyColor: "bg-success text-success-fg"
     },
     teamB: {
       name: "MS Business Titans",
       department: "Management Sciences",
       score: "1",
       isWinner: false,
-      jerseyColor: "bg-purple-600 text-white"
+      jerseyColor: "bg-secondary text-secondary-fg"
     },
     status: "COMPLETED",
     summaryResult: "SE Agile Strikers advance to Grand Final (3 - 1)",
@@ -144,13 +144,13 @@ export const SPORTS_FIXTURES: TournamentMatch[] = [
       name: "CS Cyber Knights",
       department: "Computer Science",
       score: "134/2 (14.4 ov)",
-      jerseyColor: "bg-blue-600 text-white"
+      jerseyColor: "bg-primary text-on-primary"
     },
     teamB: {
       name: "MS Business Titans",
       department: "Management Sciences",
       score: "130/10 (18.3 ov)",
-      jerseyColor: "bg-purple-600 text-white"
+      jerseyColor: "bg-secondary text-secondary-fg"
     },
     status: "LIVE_NOW",
     summaryResult: "CS needs 0 runs to win; targeted run rate 0.00",
@@ -168,13 +168,13 @@ export const SPORTS_FIXTURES: TournamentMatch[] = [
       name: "CS Smashers (Girls)",
       department: "Computer Science",
       score: "21-18, 19-21, 14-11",
-      jerseyColor: "bg-blue-600 text-white"
+      jerseyColor: "bg-primary text-on-primary"
     },
     teamB: {
       name: "EE Volts (Girls)",
       department: "Electrical Engineering",
       score: "18-21, 21-19, 11-14",
-      jerseyColor: "bg-amber-600 text-white"
+      jerseyColor: "bg-accent text-accent-fg"
     },
     status: "LIVE_NOW",
     summaryResult: "Set 3 deciding set currently in play at Court 2",
@@ -191,12 +191,12 @@ export const SPORTS_FIXTURES: TournamentMatch[] = [
     teamA: {
       name: "SE Agile Strikers",
       department: "Software Engineering",
-      jerseyColor: "bg-emerald-600 text-white"
+      jerseyColor: "bg-success text-success-fg"
     },
     teamB: {
       name: "CS Cyber Knights",
       department: "Computer Science",
-      jerseyColor: "bg-blue-600 text-white"
+      jerseyColor: "bg-primary text-on-primary"
     },
     status: "UPCOMING",
     summaryResult: "Grand Final Clash scheduled for Thursday afternoon"
@@ -214,14 +214,14 @@ export const SPORTS_FIXTURES: TournamentMatch[] = [
       department: "Management Sciences",
       score: "3 Sets",
       isWinner: true,
-      jerseyColor: "bg-purple-600 text-white"
+      jerseyColor: "bg-secondary text-secondary-fg"
     },
     teamB: {
       name: "NS Science Guild",
       department: "Natural Sciences",
       score: "1 Set",
       isWinner: false,
-      jerseyColor: "bg-teal-600 text-white"
+      jerseyColor: "bg-subtle text-ink border border-line"
     },
     status: "COMPLETED",
     summaryResult: "MS Titans won 3-1 sets"
@@ -237,12 +237,12 @@ export const SPORTS_FIXTURES: TournamentMatch[] = [
     teamA: {
       name: "CS Grandmasters",
       department: "Computer Science",
-      jerseyColor: "bg-blue-600 text-white"
+      jerseyColor: "bg-primary text-on-primary"
     },
     teamB: {
       name: "SE Logic Masters",
       department: "Software Engineering",
-      jerseyColor: "bg-emerald-600 text-white"
+      jerseyColor: "bg-success text-success-fg"
     },
     status: "UPCOMING",
     summaryResult: "Best of 3 Classical FIDE Rapid 15+10 time control"
@@ -260,8 +260,8 @@ export const DEPARTMENT_STANDINGS: DepartmentStanding[] = [
     totalPoints: 185,
     keyStrength: "Cricket Champions, Badminton & Chess Dominance",
     colorScheme: {
-      badge: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-      border: "border-blue-500/40"
+      badge: "bg-primary-soft text-primary-ink",
+      border: "border-primary/40"
     }
   },
   {
@@ -274,8 +274,8 @@ export const DEPARTMENT_STANDINGS: DepartmentStanding[] = [
     totalPoints: 155,
     keyStrength: "Futsal Champions & Basketball Finalists",
     colorScheme: {
-      badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      border: "border-emerald-500/40"
+      badge: "bg-success-soft text-success-ink",
+      border: "border-success/40"
     }
   },
   {
@@ -288,8 +288,8 @@ export const DEPARTMENT_STANDINGS: DepartmentStanding[] = [
     totalPoints: 120,
     keyStrength: "Volleyball Winners & Cricket Runners-up",
     colorScheme: {
-      badge: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-      border: "border-amber-500/40"
+      badge: "bg-accent-soft text-accent-ink",
+      border: "border-accent/40"
     }
   },
   {
@@ -302,8 +302,8 @@ export const DEPARTMENT_STANDINGS: DepartmentStanding[] = [
     totalPoints: 95,
     keyStrength: "Table Tennis Champions & Athletics Sprints",
     colorScheme: {
-      badge: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-      border: "border-purple-500/40"
+      badge: "bg-secondary-soft text-secondary-ink",
+      border: "border-secondary/40"
     }
   },
   {
@@ -316,8 +316,8 @@ export const DEPARTMENT_STANDINGS: DepartmentStanding[] = [
     totalPoints: 60,
     keyStrength: "Athletics 400m Silver & Relay",
     colorScheme: {
-      badge: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
-      border: "border-teal-500/40"
+      badge: "bg-subtle text-ink border border-line",
+      border: "border-line"
     }
   }
 ];

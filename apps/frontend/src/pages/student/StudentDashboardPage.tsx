@@ -93,19 +93,19 @@ export function StudentDashboardPage() {
 
       {/* ================= 1. REGULATORY ATTENDANCE ALERT BAR ================= */}
       {riskCourse && (
-        <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-4 sm:p-5 text-red-900 dark:text-red-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="rounded-2xl border border-danger/40 bg-danger-soft p-4 sm:p-5 text-danger-ink shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger text-white shadow-xs">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-danger text-danger-fg shadow-xs">
               <ShieldAlert size={22} />
             </span>
             <div>
               <div className="flex items-center gap-2">
                 <strong className="text-sm font-bold">Attendance Regulatory Compliance Alert</strong>
-                <span className="rounded-full bg-danger px-2 py-0.2 text-[10px] font-bold uppercase text-white">
+                <span className="rounded-full bg-danger px-2 py-0.2 text-[10px] font-bold uppercase text-danger-fg">
                   Exam Risk
                 </span>
               </div>
-              <p className="mt-1 text-xs leading-relaxed text-red-800 dark:text-red-300">
+              <p className="mt-1 text-xs leading-relaxed text-danger-ink">
                 Your attendance in <strong>{riskCourse.title} ({riskCourse.code})</strong> is currently{" "}
                 <span className="font-bold underline">{riskCourse.attendance.percentage}%</span>, falling below the mandatory{" "}
                 <strong>75% HEC / University regulatory examination cutoff</strong>. You must attend the next{" "}
@@ -115,26 +115,26 @@ export function StudentDashboardPage() {
           </div>
           <Link
             to={`/app/student/courses/${riskCourse.id}`}
-            className="shrink-0 rounded-xl bg-danger px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-red-700 transition"
+            className="shrink-0 rounded-xl bg-danger px-4 py-2 text-xs font-bold text-danger-fg shadow-xs hover:opacity-90 transition"
           >
-            Open Attendance Ledger & Excuses
+            Open Attendance Ledger &amp; Excuses
           </Link>
         </div>
       )}
 
       {/* ================= 2. UPCOMING CLASS COUNTDOWN BANNER ================= */}
-      <div className="rounded-2xl border border-brand-500/30 bg-gradient-to-r from-brand-600/10 via-brand-500/5 to-transparent p-5 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="rounded-2xl border border-primary/30 bg-gradient-to-r from-primary-soft/80 via-primary-soft/30 to-transparent p-5 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-start gap-3.5">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-xs">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-xs">
             <Clock size={22} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-primary-ink">
                 Next Upcoming Class
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success-ink">
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
                 Starts in {countdownMinutes} mins
               </span>
             </div>
@@ -143,7 +143,7 @@ export function StudentDashboardPage() {
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted">
               <span className="flex items-center gap-1">
-                <MapPin size={13} className="text-brand-600" />
+                <MapPin size={13} className="text-primary-ink" />
                 <strong>Room C-204</strong> (C Block, 2nd Floor)
               </span>
               <span>·</span>
@@ -159,13 +159,13 @@ export function StudentDashboardPage() {
         <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
           <Link
             to="/app/student/courses/compiler"
-            className="rounded-xl border border-line bg-panel px-3.5 py-2 text-xs font-bold text-brand-600 hover:border-brand-500 transition shadow-2xs"
+            className="rounded-xl border border-line bg-panel px-3.5 py-2 text-xs font-bold text-primary-ink hover:border-primary transition shadow-2xs"
           >
             Course Command Center
           </Link>
           <Link
             to="/app/student/timetable"
-            className="inline-flex items-center gap-1 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-brand-700 transition shadow-xs"
+            className="inline-flex items-center gap-1 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-on-primary hover:bg-primary-hover transition shadow-xs"
           >
             <span>Full Schedule</span>
             <ArrowUpRight size={14} />
@@ -206,7 +206,7 @@ export function StudentDashboardPage() {
               High-density interactive cards. Click any course to launch its 4-tab consolidated workspace.
             </p>
           </div>
-          <span className="text-xs font-semibold text-brand-600 hidden sm:inline">
+          <span className="text-xs font-semibold text-primary-ink hidden sm:inline">
             Active Semester: Fall 2026 / Spring 2026
           </span>
         </div>
@@ -222,12 +222,12 @@ export function StudentDashboardPage() {
               <div
                 key={course.id}
                 onClick={() => navigate(`/app/student/courses/${course.id}`)}
-                className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500 hover:shadow-md transition flex flex-col justify-between group space-y-4"
+                className="cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-primary hover:shadow-md transition flex flex-col justify-between group space-y-4"
               >
                 {/* Course Header & Section Badge */}
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-black text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md">
+                    <span className="font-mono text-xs font-black text-primary-ink bg-primary-soft px-2 py-0.5 rounded-md">
                       {course.code}
                     </span>
                     <span className="rounded-md bg-surface px-2 py-0.5 text-[11px] font-bold text-muted border border-line">
@@ -235,19 +235,19 @@ export function StudentDashboardPage() {
                     </span>
                   </div>
 
-                  <h3 className="mt-2.5 text-base font-bold text-ink group-hover:text-brand-600 transition leading-snug">
+                  <h3 className="mt-2.5 text-base font-bold text-ink group-hover:text-primary-ink transition leading-snug">
                     {course.title}
                   </h3>
 
                   {/* Instructor with Avatar & Online Status */}
                   <div className="mt-2.5 flex items-center gap-2 pt-2 border-t border-line/60">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface font-bold text-xs text-brand-600 border border-line">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface font-bold text-xs text-primary-ink border border-line">
                       {course.teacher.avatar}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-ink truncate">{course.teacher.name}</p>
                       <p className="text-[10px] text-muted truncate">
-                        <span className={course.teacher.status.includes("Office") ? "text-emerald-600" : "text-amber-600"}>●</span> {course.teacher.status}
+                        <span className={course.teacher.status.includes("Office") ? "text-success-ink" : "text-warning-ink"}>●</span> {course.teacher.status}
                       </p>
                     </div>
                   </div>
@@ -258,7 +258,7 @@ export function StudentDashboardPage() {
                       <span className="font-medium text-muted">Attendance</span>
                       <span
                         className={`font-mono font-bold ${
-                          isGreen ? "text-emerald-600" : isAmber ? "text-amber-600" : "text-danger"
+                          isGreen ? "text-success-ink" : isAmber ? "text-warning-ink" : "text-danger-ink"
                         }`}
                       >
                         {course.attendance.percentage}% ({course.attendance.attended}/{course.attendance.total})
@@ -268,7 +268,7 @@ export function StudentDashboardPage() {
                     <div className="h-2 w-full overflow-hidden rounded-full bg-surface">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
-                          isGreen ? "bg-emerald-500" : isAmber ? "bg-amber-500" : "bg-danger"
+                          isGreen ? "bg-success" : isAmber ? "bg-warning" : "bg-danger"
                         }`}
                         style={{ width: `${Math.min(course.attendance.percentage, 100)}%` }}
                       />
@@ -278,7 +278,7 @@ export function StudentDashboardPage() {
                       <span>Status:</span>
                       <span
                         className={`font-semibold ${
-                          isGreen ? "text-emerald-600" : isAmber ? "text-amber-600" : "text-danger font-bold"
+                          isGreen ? "text-success-ink" : isAmber ? "text-warning-ink" : "text-danger-ink font-bold"
                         }`}
                       >
                         {isGreen ? "Compliant (≥80%)" : isAmber ? "Borderline (75-79%)" : "At Risk (<75%)"}
@@ -293,13 +293,13 @@ export function StudentDashboardPage() {
                       <span className="font-mono font-bold text-ink">{course.standing.estimatedGrade}</span>
                     </div>
                     <div className="text-[11px] text-muted line-clamp-1 pt-0.5">
-                      <strong className="text-text">Next:</strong> {course.standing.nextDeadline}
+                      <strong className="text-ink">Next:</strong> {course.standing.nextDeadline}
                     </div>
                   </div>
                 </div>
 
                 {/* Bottom Action Footer */}
-                <div className="pt-3 border-t border-line/60 flex items-center justify-between text-xs font-bold text-brand-600 group-hover:text-brand-700">
+                <div className="pt-3 border-t border-line/60 flex items-center justify-between text-xs font-bold text-primary-ink">
                   <span>Course Command Center</span>
                   <ArrowRight size={14} className="group-hover:translate-x-1 transition" />
                 </div>
@@ -313,53 +313,53 @@ export function StudentDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link
           to="/app/student/facilities"
-          className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-brand-500 transition flex items-center gap-3.5 group"
+          className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-primary transition flex items-center gap-3.5 group"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent-ink">
             <Clock size={20} />
           </div>
           <div>
-            <p className="text-sm font-bold text-ink group-hover:text-brand-600 transition">Free Slots Finder</p>
+            <p className="text-sm font-bold text-ink group-hover:text-primary-ink transition">Free Slots Finder</p>
             <p className="text-xs text-muted">A, C, D Block study rooms</p>
           </div>
         </Link>
 
         <Link
           to="/app/student/transit"
-          className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-brand-500 transition flex items-center gap-3.5 group"
+          className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-secondary transition flex items-center gap-3.5 group"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary-soft text-secondary-ink">
             <Bus size={20} />
           </div>
           <div>
-            <p className="text-sm font-bold text-ink group-hover:text-brand-600 transition">Shuttle Tracker</p>
-            <p className="text-xs text-muted">Farid Town & City bus timings</p>
+            <p className="text-sm font-bold text-ink group-hover:text-secondary-ink transition">Shuttle Tracker</p>
+            <p className="text-xs text-muted">Farid Town &amp; City bus timings</p>
           </div>
         </Link>
 
         <Link
           to="/app/student/learning"
-          className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-brand-500 transition flex items-center gap-3.5 group"
+          className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-primary transition flex items-center gap-3.5 group"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-ink">
             <Sparkles size={20} />
           </div>
           <div>
-            <p className="text-sm font-bold text-ink group-hover:text-brand-600 transition">AI Self-Assessment</p>
-            <p className="text-xs text-muted">Smart practice & KaTeX solutions</p>
+            <p className="text-sm font-bold text-ink group-hover:text-primary-ink transition">AI Self-Assessment</p>
+            <p className="text-xs text-muted">Smart practice &amp; KaTeX solutions</p>
           </div>
         </Link>
 
         <Link
-          to="/app/student/transit"
-          className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-brand-500 transition flex items-center gap-3.5 group"
+          to="/app/student/hub"
+          className="rounded-2xl border border-line bg-panel p-4 shadow-2xs hover:border-accent transition flex items-center gap-3.5 group"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent-ink">
             <Compass size={20} />
           </div>
           <div>
-            <p className="text-sm font-bold text-ink group-hover:text-brand-600 transition">Campus Directory</p>
-            <p className="text-xs text-muted">Faculty offices & department labs</p>
+            <p className="text-sm font-bold text-ink group-hover:text-accent-ink transition">Campus Directory</p>
+            <p className="text-xs text-muted">Faculty offices &amp; department labs</p>
           </div>
         </Link>
       </div>

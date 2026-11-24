@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { BookOpen, ChevronDown, Plus, Sparkles, X } from "lucide-react";
+import { useTheme } from "../../../theme/themeContextState";
 import type { SelfLearningSubject, SubjectCreatePayload } from "../types";
 
 interface SubjectSwitcherProps {
@@ -21,15 +22,14 @@ const DEPARTMENTS = [
   "General",
 ];
 
-const PRESET_COLORS = [
-  "#4F46E5", // Indigo
-  "#2563EB", // Blue
-  "#0891B2", // Cyan
-  "#059669", // Emerald
-  "#D97706", // Amber
-  "#DC2626", // Red
-  "#7C3AED", // Purple
-  "#DB2777", // Pink
+type ColorSlotKey = "primary" | "secondary" | "accent" | "success" | "warning";
+
+const PRESET_TOKEN_SLOTS: { key: ColorSlotKey; label: string; cssVar: string; dotClass: string }[] = [
+  { key: "primary", label: "Primary", cssVar: "--primary", dotClass: "bg-primary" },
+  { key: "secondary", label: "Secondary", cssVar: "--secondary", dotClass: "bg-secondary" },
+  { key: "accent", label: "Accent", cssVar: "--accent", dotClass: "bg-accent" },
+  { key: "success", label: "Success", cssVar: "--success", dotClass: "bg-success" },
+  { key: "warning", label: "Highlight", cssVar: "--warning", dotClass: "bg-warning" },
 ];
 
 export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
@@ -39,13 +39,14 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
   onCreateSubject,
   isLoading = false,
 }) => {
+  const { activePalette, mode } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("Computer Science");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
-  const [colorHex, setColorHex] = useState("#4F46E5");
+  const [colorSlot, setColorSlot] = useState<ColorSlotKey>("primary");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,12 +59,14 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
     setError(null);
     setSubmitting(true);
     try {
+      const modeTokens = activePalette.modes[mode];
+      const resolvedHex = modeTokens[colorSlot] ?? modeTokens.primary;
       await onCreateSubject({
         name: name.trim(),
         department,
         code: code.trim() || undefined,
         description: description.trim() || undefined,
-        color_hex: colorHex,
+        color_hex: resolvedHex,
       });
       setName("");
       setCode("");
@@ -81,10 +84,7 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-panel p-4 shadow-xs">
         {/* Active Subject Selector */}
         <div className="flex items-center gap-3">
-          <div
-            className="flex h-12 w-12 items-center justify-center rounded-xl text-white shadow-xs"
-            style={{ backgroundColor: activeSubject?.color_hex || "#4F46E5" }}
-          >
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-on-primary shadow-xs">
             <BookOpen className="h-6 w-6" />
           </div>
 
@@ -115,7 +115,7 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
             {dropdownOpen && (
               <div className="absolute left-0 top-full z-30 mt-2 w-72 rounded-xl border border-line bg-panel p-2 shadow-xl">
                 <div className="max-h-60 overflow-y-auto space-y-1">
-                  {subjects.map((sub) => (
+                  {subjects.map((sub, idx) => (
                     <button
                       key={sub.id}
                       type="button"
@@ -125,14 +125,15 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
                       }}
                       className={`flex w-full items-center justify-between rounded-lg p-2.5 text-left text-sm transition ${
                         sub.id === activeSubject?.id
-                          ? "bg-brand-50 text-brand-700 font-semibold dark:bg-brand-950/40"
+                          ? "bg-primary-soft text-primary-ink font-semibold"
                           : "hover:bg-surface"
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
                         <span
-                          className="h-2.5 w-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: sub.color_hex }}
+                          className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                            idx % 3 === 0 ? "bg-primary" : idx % 3 === 1 ? "bg-secondary" : "bg-accent"
+                          }`}
                         />
                         <span className="truncate">{sub.name}</span>
                       </div>
@@ -154,7 +155,7 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-brand-700 transition"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition"
         >
           <Plus className="h-4 w-4" />
           <span>Add Subject</span>
@@ -163,11 +164,11 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
 
       {/* Add Subject Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4">
           <div className="w-full max-w-lg rounded-2xl border border-line bg-panel p-6 shadow-2xl">
             <div className="flex items-center justify-between pb-4 border-b border-line">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-brand-600" />
+                <Sparkles className="h-5 w-5 text-primary-ink" />
                 <h3 className="text-lg font-bold">Create Dynamic Subject</h3>
               </div>
               <button
@@ -181,7 +182,7 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               {error && (
-                <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+                <div className="rounded-xl bg-danger-soft p-3 text-sm text-danger-ink border border-danger/40">
                   {error}
                 </div>
               )}
@@ -194,7 +195,7 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
                   placeholder="e.g. Advanced Deep Learning & Transformers"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm"
+                  className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm text-ink"
                 />
               </div>
 
@@ -206,7 +207,7 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
                     placeholder="e.g. CS-501"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm"
+                    className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm text-ink"
                   />
                 </div>
                 <div>
@@ -214,7 +215,7 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
                   <select
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm"
+                    className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm text-ink"
                   >
                     {DEPARTMENTS.map((d) => (
                       <option key={d} value={d}>
@@ -232,22 +233,22 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
                   placeholder="Goals, target competencies, and curriculum focus..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm"
+                  className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm text-ink"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted uppercase">Subject Color</label>
-                <div className="mt-2 flex items-center gap-2">
-                  {PRESET_COLORS.map((c) => (
+                <label className="block text-xs font-semibold text-muted uppercase">Subject Accent Token</label>
+                <div className="mt-2 flex items-center gap-2.5">
+                  {PRESET_TOKEN_SLOTS.map((slot) => (
                     <button
-                      key={c}
+                      key={slot.key}
                       type="button"
-                      onClick={() => setColorHex(c)}
-                      className={`h-7 w-7 rounded-full transition ${
-                        colorHex === c ? "ring-2 ring-offset-2 ring-brand-600 scale-110" : ""
+                      aria-label={`Select ${slot.label} swatch`}
+                      onClick={() => setColorSlot(slot.key)}
+                      className={`h-7 w-7 rounded-full border border-line/50 transition ${slot.dotClass} ${
+                        colorSlot === slot.key ? "ring-2 ring-offset-2 ring-primary scale-110" : ""
                       }`}
-                      style={{ backgroundColor: c }}
                     />
                   ))}
                 </div>
@@ -264,7 +265,7 @@ export const SubjectSwitcher: React.FC<SubjectSwitcherProps> = ({
                 <button
                   type="submit"
                   disabled={submitting || isLoading}
-                  className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-xs hover:bg-brand-700 disabled:opacity-50"
+                  className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover disabled:opacity-50"
                 >
                   {submitting ? "Creating..." : "Create Subject"}
                 </button>

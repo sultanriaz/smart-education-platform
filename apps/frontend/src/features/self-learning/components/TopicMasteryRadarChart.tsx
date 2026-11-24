@@ -83,21 +83,21 @@ export const TopicMasteryRadarChart: React.FC<TopicMasteryRadarChartProps> = ({
               points={ringPolygon(ring)}
               fill={
                 ring === 100
-                  ? "rgba(16, 185, 129, 0.04)"
+                  ? "rgb(var(--rgb-success) / 0.04)"
                   : ring === 75
-                  ? "rgba(16, 185, 129, 0.06)"
+                  ? "rgb(var(--rgb-success) / 0.07)"
                   : ring === 50
-                  ? "rgba(245, 158, 11, 0.07)"
-                  : "rgba(239, 68, 68, 0.07)"
+                  ? "rgb(var(--rgb-warning) / 0.07)"
+                  : "rgb(var(--rgb-error) / 0.07)"
               }
               stroke={
                 ring === 75
-                  ? "rgba(16, 185, 129, 0.45)"
+                  ? "rgb(var(--rgb-success) / 0.55)"
                   : ring === 50
-                  ? "rgba(245, 158, 11, 0.45)"
+                  ? "rgb(var(--rgb-warning) / 0.55)"
                   : "currentColor"
               }
-              strokeOpacity={ring === 75 || ring === 50 ? 0.8 : 0.16}
+              strokeOpacity={ring === 75 || ring === 50 ? 0.85 : 0.18}
               strokeDasharray={ring === 75 || ring === 50 ? "4 3" : undefined}
               strokeWidth={ring === 75 || ring === 50 ? 1.25 : 1}
               className="text-muted"
@@ -142,7 +142,7 @@ export const TopicMasteryRadarChart: React.FC<TopicMasteryRadarChartProps> = ({
                   x2={outer.x}
                   y2={outer.y}
                   stroke="currentColor"
-                  strokeOpacity={0.18}
+                  strokeOpacity={0.2}
                   strokeWidth={1}
                   className="text-muted"
                 />
@@ -156,7 +156,7 @@ export const TopicMasteryRadarChart: React.FC<TopicMasteryRadarChartProps> = ({
                     item.isPlaceholder
                       ? "fill-muted/50"
                       : hoveredIdx === i
-                      ? "fill-brand-600 font-bold cursor-pointer"
+                      ? "fill-current text-primary-ink font-bold cursor-pointer"
                       : "fill-current text-ink cursor-pointer"
                   }`}
                   onMouseEnter={() => !item.isPlaceholder && setHoveredIdx(i)}
@@ -172,8 +172,8 @@ export const TopicMasteryRadarChart: React.FC<TopicMasteryRadarChartProps> = ({
           {/* Student Mastery Area Polygon */}
           <polygon
             points={dataPolygon}
-            fill="rgba(79, 70, 229, 0.22)"
-            stroke="#4f46e5"
+            fill="rgb(var(--rgb-primary) / 0.22)"
+            stroke="rgb(var(--rgb-primary))"
             strokeWidth={2.5}
             strokeLinejoin="round"
             className="transition-all duration-500"
@@ -185,10 +185,10 @@ export const TopicMasteryRadarChart: React.FC<TopicMasteryRadarChartProps> = ({
             const pt = getPoint(i, item.mastery_percentage);
             const dotColor =
               item.status === "Strong"
-                ? "#10b981"
+                ? "rgb(var(--rgb-success))"
                 : item.status === "Moderate"
-                ? "#f59e0b"
-                : "#ef4444";
+                ? "rgb(var(--rgb-warning))"
+                : "rgb(var(--rgb-error))";
 
             return (
               <g
@@ -203,7 +203,7 @@ export const TopicMasteryRadarChart: React.FC<TopicMasteryRadarChartProps> = ({
                   cy={pt.y}
                   r={hoveredIdx === i ? 7 : 5}
                   fill={dotColor}
-                  stroke="white"
+                  stroke="rgb(var(--rgb-card))"
                   strokeWidth={2}
                   className="transition-all duration-150"
                 />
@@ -217,15 +217,15 @@ export const TopicMasteryRadarChart: React.FC<TopicMasteryRadarChartProps> = ({
       <div className="mt-2 w-full space-y-2">
         <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] text-muted">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            <span className="h-2.5 w-2.5 rounded-full bg-success" />
             Strong (≥75%)
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+            <span className="h-2.5 w-2.5 rounded-full bg-warning" />
             Moderate (50–74%)
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+            <span className="h-2.5 w-2.5 rounded-full bg-danger" />
             Weak (&lt;50%)
           </span>
         </div>
@@ -234,7 +234,7 @@ export const TopicMasteryRadarChart: React.FC<TopicMasteryRadarChartProps> = ({
           {hoveredTopic && !hoveredTopic.isPlaceholder ? (
             <div className="flex flex-wrap items-center justify-center gap-2">
               <strong className="text-ink">{hoveredTopic.topic}:</strong>
-              <span className="font-mono font-bold text-brand-600">
+              <span className="font-mono font-bold text-primary-ink">
                 {hoveredTopic.mastery_percentage}%
               </span>
               <span className="text-muted">

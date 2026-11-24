@@ -107,7 +107,7 @@ export function IntelligentTimetableEngine({
                 onClick={() => setViewMode("day_timeline")}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition ${
                   viewMode === "day_timeline"
-                    ? "bg-brand-600 text-white shadow-2xs"
+                    ? "bg-primary text-on-primary shadow-2xs"
                     : "text-muted hover:text-ink"
                 }`}
               >
@@ -119,7 +119,7 @@ export function IntelligentTimetableEngine({
                 onClick={() => setViewMode("weekly_matrix")}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-bold transition ${
                   viewMode === "weekly_matrix"
-                    ? "bg-brand-600 text-white shadow-2xs"
+                    ? "bg-primary text-on-primary shadow-2xs"
                     : "text-muted hover:text-ink"
                 }`}
               >
@@ -142,7 +142,7 @@ export function IntelligentTimetableEngine({
               <button
                 type="button"
                 onClick={handleExportGoogle}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-on-primary shadow-xs hover:bg-primary-hover transition"
                 title="Add to Google Calendar"
               >
                 <CalendarDays size={14} />
@@ -154,14 +154,14 @@ export function IntelligentTimetableEngine({
 
         {/* Real-Time Swap Alert Notification Bar */}
         {activeSwaps.length > 0 && (
-          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3">
+          <div className="rounded-xl border border-warning/35 bg-warning-soft p-3 text-xs text-warning-ink flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+              <AlertTriangle size={16} className="text-warning-ink shrink-0" />
               <span>
                 <strong>Live Schedule Notice:</strong> {activeSwaps[0]?.swapAlert?.message}
               </span>
             </div>
-            <span className="rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white shrink-0">
+            <span className="rounded-full bg-warning px-2 py-0.5 text-[10px] font-bold uppercase text-warning-fg shrink-0">
               Room Swapped
             </span>
           </div>
@@ -180,14 +180,14 @@ export function IntelligentTimetableEngine({
                     onClick={() => setSelectedDay(day)}
                     className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                       isSelected
-                        ? "bg-brand-600 text-white shadow-xs"
+                        ? "bg-primary text-on-primary shadow-xs"
                         : "bg-surface text-muted hover:text-ink hover:bg-panel border border-line"
                     }`}
                   >
                     <span>{day}</span>
                     <span
                       className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
-                        isSelected ? "bg-white/20 text-white" : "bg-panel text-muted"
+                        isSelected ? "bg-on-primary/20 text-on-primary" : "bg-panel text-muted"
                       }`}
                     >
                       {count}
@@ -199,7 +199,7 @@ export function IntelligentTimetableEngine({
 
             {nextSlot && (
               <div className="text-xs text-muted flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                <span className="h-2 w-2 rounded-full bg-success animate-ping" />
                 <span>
                   Next on {selectedDay}: <strong>{nextSlot.courseCode}</strong> in <strong>{nextSlot.room}</strong> ({nextSlot.timeRange.split("–")[0]?.trim()})
                 </span>
@@ -218,7 +218,7 @@ export function IntelligentTimetableEngine({
               <p className="text-xs text-muted">Chronological slots with classroom location, faculty, and room occupancy.</p>
             </div>
             {isWithinClassHours && (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-2.5 py-0.5 text-xs font-bold text-danger">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-bold text-danger-ink">
                 <span className="h-1.5 w-1.5 rounded-full bg-danger animate-pulse" />
                 <span>Live Time Indicator Active</span>
               </div>
@@ -233,7 +233,7 @@ export function IntelligentTimetableEngine({
                 className="absolute left-0 right-0 z-20 flex items-center pointer-events-none transition-all duration-1000"
                 style={{ top: `${Math.max(4, Math.min(currentLinePercent, 96))}%` }}
               >
-                <span className="rounded-r-md bg-danger px-1.5 py-0.5 font-mono text-[10px] font-bold text-white shadow-xs">
+                <span className="rounded-r-md bg-danger px-1.5 py-0.5 font-mono text-[10px] font-bold text-danger-fg shadow-xs">
                   NOW
                 </span>
                 <div className="flex-1 h-0.5 bg-danger shadow-xs" />
@@ -267,7 +267,7 @@ export function IntelligentTimetableEngine({
                             Section: <strong>{slot.section}</strong>
                           </span>
                           {slot.swapAlert && (
-                            <span className="rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 text-[10px] font-bold uppercase">
+                            <span className="rounded-full bg-warning-soft text-warning-ink px-2 py-0.5 text-[10px] font-bold uppercase">
                               🔄 Swapped
                             </span>
                           )}
@@ -302,7 +302,7 @@ export function IntelligentTimetableEngine({
                           </div>
                           <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden mt-1">
                             <div
-                              className={`h-full rounded-full ${occupancyPct > 90 ? "bg-amber-500" : "bg-emerald-500"}`}
+                              className={`h-full rounded-full ${occupancyPct > 90 ? "bg-warning" : "bg-success"}`}
                               style={{ width: `${Math.min(occupancyPct, 100)}%` }}
                             />
                           </div>
@@ -323,7 +323,7 @@ export function IntelligentTimetableEngine({
                         ) : (
                           <Link
                             to="/app/teacher/attendance"
-                            className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
+                            className="inline-flex items-center gap-1 rounded-xl bg-success px-3 py-2 text-xs font-bold text-success-fg shadow-xs hover:opacity-90 transition"
                           >
                             <span>Mark Attendance</span>
                             <CheckCircle2 size={13} />
@@ -333,7 +333,7 @@ export function IntelligentTimetableEngine({
                     </div>
 
                     {slot.swapAlert && (
-                      <div className="rounded-lg bg-surface/80 p-2.5 text-xs text-muted border-l-2 border-amber-500">
+                      <div className="rounded-lg bg-surface/80 p-2.5 text-xs text-muted border-l-2 border-warning">
                         <strong>Swap Note:</strong> {slot.swapAlert.message}
                       </div>
                     )}
@@ -408,7 +408,7 @@ export function IntelligentTimetableEngine({
 
       {/* ================= 4. CAMPUS MAP & ROOM LOCATOR MODAL ================= */}
       {selectedRoomModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 p-4 backdrop-blur-xs">
           <div className="w-full max-w-lg rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div>
@@ -445,7 +445,7 @@ export function IntelligentTimetableEngine({
                   <div className="rounded-lg border border-line/60 bg-surface p-2 text-muted">
                     Wing Stairs & Elevator
                   </div>
-                  <div className="rounded-lg border-2 border-brand-600 bg-brand-500/20 p-2 font-bold text-brand-700 dark:text-brand-300 shadow-xs">
+                  <div className="rounded-lg border-2 border-primary bg-primary-soft p-2 font-bold text-primary-ink shadow-xs">
                     📍 {selectedRoomModal.room}
                     <div className="text-[10px] font-normal">Active Class</div>
                   </div>
@@ -478,7 +478,7 @@ export function IntelligentTimetableEngine({
               <button
                 type="button"
                 onClick={() => setSelectedRoomModal(null)}
-                className="rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition"
+                className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-on-primary shadow-xs hover:bg-primary-hover transition"
               >
                 Close Map
               </button>

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Check, X as XIcon, Eye, EyeOff, Moon, Sun, GraduationCap } from "lucide-react";
+import { Check, X as XIcon, Eye, EyeOff, GraduationCap } from "lucide-react";
 
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -40,7 +40,6 @@ export function RegisterPage() {
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
 
   const {
     register,
@@ -58,17 +57,6 @@ export function RegisterPage() {
     { label: "One number (0-9)", met: /[0-9]/.test(watchedPassword) },
     { label: "One special symbol (!@#$...)", met: /[^A-Za-z0-9]/.test(watchedPassword) },
   ];
-
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem("sep-theme", next);
-    } catch {
-      // ignore
-    }
-  };
 
   const onSubmit = handleSubmit(async (input) => {
     const values = { full_name: input.full_name, email: input.email, password: input.password };
@@ -95,20 +83,8 @@ export function RegisterPage() {
 
   return (
     <main className="subtle-grid relative flex min-h-screen items-center justify-center px-4 py-10">
-      {/* Quick Theme Toggle */}
-      <div className="absolute right-5 top-5 z-20">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-panel text-muted hover:text-ink transition shadow-xs"
-        >
-          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-      </div>
-
       <section className="panel w-full max-w-md p-7 sm:p-8 shadow-md">
-        <div className="flex items-center gap-2 mb-4 text-brand-700">
+        <div className="flex items-center gap-2 mb-4 text-primary-ink">
           <GraduationCap size={28} />
           <span className="font-bold text-xl tracking-tight text-ink">EduSphere</span>
         </div>
@@ -146,7 +122,7 @@ export function RegisterPage() {
               type="button"
               aria-label={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-[38px] text-muted hover:text-text transition"
+              className="absolute right-3 top-[38px] text-muted hover:text-ink transition"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -160,11 +136,11 @@ export function RegisterPage() {
                 <div
                   key={i}
                   className={`flex items-center gap-2 transition ${
-                    c.met ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-muted"
+                    c.met ? "text-success-ink font-medium" : "text-muted"
                   }`}
                 >
                   {c.met ? (
-                    <Check size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <Check size={14} className="text-success-ink shrink-0" />
                   ) : (
                     <XIcon size={14} className="text-muted/60 shrink-0" />
                   )}
@@ -186,7 +162,7 @@ export function RegisterPage() {
               type="button"
               aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
               onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute right-3 top-[38px] text-muted hover:text-text transition"
+              className="absolute right-3 top-[38px] text-muted hover:text-ink transition"
             >
               {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -194,7 +170,7 @@ export function RegisterPage() {
 
           {serverError ? (
             <div
-              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-danger dark:border-red-900/60 dark:bg-red-950/40"
+              className="rounded-xl border border-danger/40 bg-danger-soft px-3 py-2 text-sm text-danger-ink"
               role="alert"
             >
               {serverError}
@@ -208,7 +184,7 @@ export function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-muted">
           Already have an account?{" "}
-          <Link className="font-semibold text-brand-700 hover:underline" to="/login">
+          <Link className="font-semibold text-primary-ink hover:underline" to="/login">
             Sign in
           </Link>
         </p>

@@ -81,7 +81,7 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="mt-4 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white"
+          className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
         >
           Return to Dashboard
         </button>
@@ -94,7 +94,7 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
       {/* Top Header & Countdown Timer */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-panel p-4 shadow-xs">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-brand-600">
+          <span className="text-xs font-semibold uppercase tracking-wider text-primary-ink">
             {test.difficulty.toUpperCase()} CALIBRATION
           </span>
           <h2 className="text-lg font-bold">{test.title}</h2>
@@ -105,8 +105,8 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
           <div
             className={`flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-sm font-mono font-bold ${
               timeLeft < 120
-                ? "bg-red-50 text-red-600 dark:bg-red-950/50 border border-red-200 animate-pulse"
-                : "bg-surface border border-line text-text"
+                ? "bg-danger-soft text-danger-ink border border-danger/40 animate-pulse"
+                : "bg-surface border border-line text-ink"
             }`}
           >
             <Clock className="h-4 w-4" />
@@ -117,7 +117,7 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
             type="button"
             onClick={() => setShowConfirmModal(true)}
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-emerald-700 disabled:opacity-50 transition"
+            className="inline-flex items-center gap-2 rounded-xl bg-success px-4 py-2 text-sm font-semibold text-success-fg shadow-xs hover:opacity-90 disabled:opacity-50 transition"
           >
             <Send className="h-4 w-4" />
             <span>Finish Test</span>
@@ -142,7 +142,7 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 {currentQuestion.is_quantitative && (
-                  <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-indigo-600 dark:text-indigo-300 font-bold">
+                  <span className="rounded-full bg-secondary-soft px-2.5 py-0.5 text-secondary-ink font-bold">
                     Numerical Solver (LaTeX)
                   </span>
                 )}
@@ -171,14 +171,14 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
                     onClick={() => handleSelectOption(currentQuestion.id, key)}
                     className={`flex w-full items-start gap-3.5 rounded-xl border p-4 text-left text-sm transition ${
                       isSelected
-                        ? "border-brand-600 bg-brand-50/60 font-semibold text-brand-900 dark:bg-brand-950/40 dark:text-brand-200 ring-1 ring-brand-600"
-                        : "border-line bg-surface hover:border-brand-300"
+                        ? "border-primary bg-primary-soft font-semibold text-primary-ink ring-1 ring-primary"
+                        : "border-line bg-surface hover:border-primary/50"
                     }`}
                   >
                     <span
                       className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                         isSelected
-                          ? "bg-brand-600 text-white"
+                          ? "bg-primary text-on-primary"
                           : "bg-panel border border-line text-muted"
                       }`}
                     >
@@ -208,7 +208,7 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
                 type="button"
                 disabled={currentIndex === questions.length - 1}
                 onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-xs hover:bg-brand-700 disabled:opacity-40 transition"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover disabled:opacity-40 transition"
               >
                 <span>Next Question</span>
                 <ChevronRight className="h-4 w-4" />
@@ -237,10 +237,10 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
                     onClick={() => setCurrentIndex(idx)}
                     className={`h-9 w-9 rounded-xl text-xs font-bold transition flex items-center justify-center ${
                       isCurrent
-                        ? "ring-2 ring-brand-600 ring-offset-2 bg-brand-600 text-white"
+                        ? "ring-2 ring-primary ring-offset-2 bg-primary text-on-primary"
                         : isAnswered
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 font-semibold"
-                        : "bg-surface border border-line text-muted hover:border-brand-400"
+                        ? "bg-success-soft text-success-ink font-semibold"
+                        : "bg-surface border border-line text-muted hover:border-primary/50"
                     }`}
                   >
                     {idx + 1}
@@ -251,7 +251,7 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
 
             <div className="mt-6 flex flex-col gap-2 pt-4 border-t border-line text-xs text-muted">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                <span className="h-2.5 w-2.5 rounded-full bg-success" />
                 <span>Answered</span>
               </div>
               <div className="flex items-center gap-2">
@@ -265,10 +265,10 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4">
           <div className="w-full max-w-md rounded-2xl border border-line bg-panel p-6 shadow-2xl">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/50">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning-soft text-warning-ink">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
@@ -293,7 +293,7 @@ export const TestRunner: React.FC<TestRunnerProps> = ({
                 type="button"
                 onClick={handleManualSubmit}
                 disabled={isSubmitting}
-                className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-xs hover:bg-emerald-700 disabled:opacity-50"
+                className="rounded-xl bg-success px-5 py-2 text-sm font-semibold text-success-fg shadow-xs hover:opacity-90 disabled:opacity-50"
               >
                 {isSubmitting ? "Grading..." : "Confirm & Submit"}
               </button>

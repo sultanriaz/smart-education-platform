@@ -61,8 +61,8 @@ export function TimetableHub({ initialRole = "student" }: { initialRole?: "stude
             <div
               className={`flex h-12 w-12 items-center justify-center rounded-xl transition ${
                 selectedRole === "student"
-                  ? "bg-brand-600 text-white"
-                  : "bg-brand-500/10 text-brand-600"
+                  ? "bg-primary text-on-primary"
+                  : "bg-primary-soft text-primary-ink"
               }`}
             >
               <GraduationCap size={24} />
@@ -77,7 +77,7 @@ export function TimetableHub({ initialRole = "student" }: { initialRole?: "stude
           <span
             className={`rounded-full px-3 py-1 text-xs font-bold shrink-0 ${
               selectedRole === "student"
-                ? "bg-brand-600 text-white"
+                ? "bg-primary text-on-primary"
                 : "bg-surface text-muted border border-line"
             }`}
           >
@@ -90,16 +90,16 @@ export function TimetableHub({ initialRole = "student" }: { initialRole?: "stude
           onClick={() => setSelectedRole("teacher")}
           className={`flex items-center justify-between rounded-2xl border p-5 text-left transition shadow-2xs ${
             selectedRole === "teacher"
-              ? "border-indigo-600 bg-panel ring-2 ring-indigo-500/30 shadow-sm"
-              : "border-line bg-panel hover:border-indigo-500/50"
+              ? "border-secondary bg-panel ring-2 ring-secondary/30 shadow-sm"
+              : "border-line bg-panel hover:border-secondary/50"
           }`}
         >
           <div className="flex items-center gap-3.5">
             <div
               className={`flex h-12 w-12 items-center justify-center rounded-xl transition ${
                 selectedRole === "teacher"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-indigo-500/10 text-indigo-600"
+                  ? "bg-secondary text-secondary-fg"
+                  : "bg-secondary-soft text-secondary-ink"
               }`}
             >
               <BookOpen size={24} />
@@ -114,7 +114,7 @@ export function TimetableHub({ initialRole = "student" }: { initialRole?: "stude
           <span
             className={`rounded-full px-3 py-1 text-xs font-bold shrink-0 ${
               selectedRole === "teacher"
-                ? "bg-indigo-600 text-white"
+                ? "bg-secondary text-secondary-fg"
                 : "bg-surface text-muted border border-line"
             }`}
           >
@@ -153,7 +153,7 @@ export function TimetableHub({ initialRole = "student" }: { initialRole?: "stude
                 id="tt-teacher-select"
                 value={selectedTeacher}
                 onChange={(e) => setSelectedTeacher(e.target.value)}
-                className="rounded-xl border border-line bg-surface px-3.5 py-2 text-xs font-bold text-ink focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                className="rounded-xl border border-line bg-surface px-3.5 py-2 text-xs font-bold text-ink focus:outline-hidden focus:ring-2 focus:ring-secondary"
               >
                 {teacherNames.map((tName) => (
                   <option key={tName} value={tName}>
@@ -177,7 +177,7 @@ export function TimetableHub({ initialRole = "student" }: { initialRole?: "stude
               onClick={() => setDisplayStyle("weekly_list")}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition ${
                 displayStyle === "weekly_list"
-                  ? "bg-brand-600 text-white"
+                  ? "bg-primary text-on-primary"
                   : "text-muted hover:text-ink"
               }`}
             >
@@ -189,7 +189,7 @@ export function TimetableHub({ initialRole = "student" }: { initialRole?: "stude
               onClick={() => setDisplayStyle("interactive_engine")}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-semibold transition ${
                 displayStyle === "interactive_engine"
-                  ? "bg-brand-600 text-white"
+                  ? "bg-primary text-on-primary"
                   : "text-muted hover:text-ink"
               }`}
             >
@@ -292,7 +292,7 @@ export function TimetableHub({ initialRole = "student" }: { initialRole?: "stude
                             </p>
                           ) : (
                             <p className="flex items-center gap-1.5">
-                              <GraduationCap size={13} className="text-indigo-600 shrink-0" />
+                              <GraduationCap size={13} className="text-secondary-ink shrink-0" />
                               <span>
                                 Section: <strong className="text-ink">{slot.section}</strong>
                               </span>
@@ -308,7 +308,7 @@ export function TimetableHub({ initialRole = "student" }: { initialRole?: "stude
 
                           {selectedRole === "student" && (
                             <p className="flex items-center gap-1.5">
-                              <Users size={13} className="text-emerald-600 shrink-0" />
+                              <Users size={13} className="text-success-ink shrink-0" />
                               <span>
                                 Class Capacity: <strong className="text-ink">{slot.capacity} students</strong>{" "}
                                 <span className="text-2xs">({slot.enrolledStudents} enrolled)</span>

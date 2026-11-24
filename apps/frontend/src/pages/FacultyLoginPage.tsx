@@ -4,8 +4,6 @@ import {
   BookOpen,
   Eye,
   EyeOff,
-  Moon,
-  Sun,
   ArrowLeft,
   Sparkles,
   Lock
@@ -27,18 +25,6 @@ export function FacultyLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
-
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem("sep-theme", next);
-    } catch {
-      // ignore
-    }
-  };
 
   if (state === "authenticated" && user && hasAnyRole(user.roles, ["teacher"])) {
     const requested =
@@ -95,17 +81,6 @@ export function FacultyLoginPage() {
 
   return (
     <main className="auth-layout relative">
-      <div className="absolute right-5 top-5 z-20">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-panel text-muted hover:text-ink transition shadow-xs"
-        >
-          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-      </div>
-
       <aside className="auth-story">
         <div className="flex items-center gap-3">
           <span className="brand-mark">
@@ -114,7 +89,7 @@ export function FacultyLoginPage() {
           <strong className="text-xl tracking-tight">Faculty Portal</strong>
         </div>
         <div>
-          <div className="text-xs font-semibold tracking-widest text-indigo-300">
+          <div className="text-xs font-semibold tracking-widest text-hero-accent">
             TEACHER-ONLY RESTRICTED ACCESS
           </div>
           <h2>
@@ -134,7 +109,7 @@ export function FacultyLoginPage() {
             <p className="auth-overline">{runtimeConfig.appName}</p>
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-ink hover:underline transition"
             >
               <ArrowLeft size={14} />
               <span>Main Dashboard</span>
@@ -147,15 +122,15 @@ export function FacultyLoginPage() {
           </p>
 
           {/* Demo Faculty Quick-Fill */}
-          <div className="mt-4 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 p-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+          <div className="mt-4 rounded-2xl border border-secondary/35 bg-secondary-soft/45 p-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-secondary-ink">
               <Sparkles size={14} />
               <span>Demo Teacher: Sir Munir (FAC-101)</span>
             </div>
             <button
               type="button"
               onClick={fillDemoFaculty}
-              className="rounded-lg border border-line bg-panel px-2.5 py-1 text-xs font-semibold text-ink hover:border-indigo-500 hover:text-indigo-600 transition"
+              className="rounded-lg border border-line bg-panel px-2.5 py-1 text-xs font-semibold text-ink hover:border-secondary hover:text-secondary-ink transition"
             >
               Auto-Fill FAC-101
             </button>
@@ -193,7 +168,7 @@ export function FacultyLoginPage() {
             {serverError && (
               <div
                 role="alert"
-                className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-xs font-semibold text-danger"
+                className="rounded-xl border border-danger/40 bg-danger-soft p-3 text-xs font-semibold text-danger-ink"
               >
                 {serverError}
               </div>
@@ -206,10 +181,10 @@ export function FacultyLoginPage() {
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4 text-xs text-muted">
             <span className="inline-flex items-center gap-1">
-              <Lock size={13} className="text-indigo-600" />
+              <Lock size={13} className="text-secondary-ink" />
               <span>Teacher credentials strictly enforced</span>
             </span>
-            <Link to="/login/student" className="font-semibold text-brand-600 hover:underline">
+            <Link to="/login/student" className="font-semibold text-primary-ink hover:underline">
               Student? Go to Student Portal →
             </Link>
           </div>

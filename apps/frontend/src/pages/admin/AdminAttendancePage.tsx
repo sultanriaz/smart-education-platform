@@ -46,15 +46,15 @@ async function pages<T>(base: string): Promise<T[]> {
 function statusBadge(status: string) {
   const s = status.toUpperCase();
   if (s === "PRESENT") {
-    return <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">Present</span>;
+    return <span className="inline-flex items-center rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink">Present</span>;
   }
   if (s === "ABSENT") {
-    return <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-700 dark:bg-red-950/50 dark:text-red-400">Absent</span>;
+    return <span className="inline-flex items-center rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger-ink">Absent</span>;
   }
   if (s === "LATE") {
-    return <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-950/50 dark:text-amber-400">Late</span>;
+    return <span className="inline-flex items-center rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-semibold text-warning-ink">Late</span>;
   }
-  return <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-400">{status}</span>;
+  return <span className="inline-flex items-center rounded-full bg-secondary-soft px-2.5 py-0.5 text-xs font-semibold text-secondary-ink">{status}</span>;
 }
 
 export function AdminAttendancePage() {
@@ -151,7 +151,7 @@ export function AdminAttendancePage() {
                     }}
                     className={`flex items-center justify-between rounded-xl border p-3 text-left transition ${
                       selectedId === session.id
-                        ? "border-brand-600 bg-brand-50/50 dark:bg-brand-950/30 font-semibold"
+                        ? "border-primary bg-primary-soft/60 font-semibold"
                         : "border-line bg-panel hover:bg-surface"
                     }`}
                   >
@@ -237,8 +237,8 @@ export function AdminAttendancePage() {
             )}
 
             {studentId && (
-              <div className="mt-5 rounded-xl border border-brand-200 bg-brand-50/40 p-4 dark:border-brand-900/60 dark:bg-brand-950/20 space-y-3">
-                <p className="text-sm font-semibold text-brand-700">
+              <div className="mt-5 rounded-xl border border-primary/30 bg-primary-soft/45 p-4 space-y-3">
+                <p className="text-sm font-semibold text-primary-ink">
                   Correcting Record: <span className="font-mono text-xs">{studentId}</span>
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">

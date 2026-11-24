@@ -4,8 +4,6 @@ import {
   GraduationCap,
   Eye,
   EyeOff,
-  Moon,
-  Sun,
   ArrowLeft,
   Sparkles,
   ShieldCheck
@@ -37,18 +35,6 @@ export function StudentLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme ?? "light");
-
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    try {
-      localStorage.setItem("sep-theme", next);
-    } catch {
-      // ignore
-    }
-  };
 
   if (state === "authenticated" && user && hasAnyRole(user.roles, ["student"])) {
     const requested =
@@ -110,17 +96,6 @@ export function StudentLoginPage() {
 
   return (
     <main className="auth-layout relative">
-      <div className="absolute right-5 top-5 z-20">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-panel text-muted hover:text-ink transition shadow-xs"
-        >
-          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-      </div>
-
       <aside className="auth-story">
         <div className="flex items-center gap-3">
           <span className="brand-mark">
@@ -129,7 +104,7 @@ export function StudentLoginPage() {
           <strong className="text-xl tracking-tight">Student Portal</strong>
         </div>
         <div>
-          <div className="text-xs font-semibold tracking-widest text-blue-300">
+          <div className="text-xs font-semibold tracking-widest text-hero-accent">
             STUDENT ACADEMIC ACCESS
           </div>
           <h2>
@@ -149,7 +124,7 @@ export function StudentLoginPage() {
             <p className="auth-overline">{runtimeConfig.appName}</p>
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-ink hover:underline transition"
             >
               <ArrowLeft size={14} />
               <span>Main Dashboard</span>
@@ -163,14 +138,14 @@ export function StudentLoginPage() {
 
           {/* Demo Student Quick-Fill */}
           <div className="mt-4 rounded-2xl border border-line bg-surface/70 p-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-brand-400">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-primary-ink">
               <Sparkles size={14} />
               <span>Demo Student: BCS-155</span>
             </div>
             <button
               type="button"
               onClick={fillDemoStudent}
-              className="rounded-lg border border-line bg-panel px-2.5 py-1 text-xs font-semibold text-ink hover:border-brand-500 hover:text-brand-600 transition"
+              className="rounded-lg border border-line bg-panel px-2.5 py-1 text-xs font-semibold text-ink hover:border-primary hover:text-primary-ink transition"
             >
               Auto-Fill BCS-155
             </button>
@@ -185,7 +160,7 @@ export function StudentLoginPage() {
                 id="student-dept"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                className="w-full rounded-xl border border-line bg-panel px-3.5 py-2.5 text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                className="w-full rounded-xl border border-line bg-panel px-3.5 py-2.5 text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-primary"
               >
                 {DEPARTMENTS.map((d) => (
                   <option key={d.code} value={d.code}>
@@ -207,7 +182,7 @@ export function StudentLoginPage() {
             {registrationNumber.trim() && (
               <p className="text-xs text-muted -mt-2">
                 Signing in as:{" "}
-                <strong className="font-mono text-brand-600">
+                <strong className="font-mono text-primary-ink">
                   {registrationNumber.trim().includes("-") || registrationNumber.trim().includes("@")
                     ? registrationNumber.trim()
                     : `${department}-${registrationNumber.trim()}`}
@@ -237,7 +212,7 @@ export function StudentLoginPage() {
             {serverError && (
               <div
                 role="alert"
-                className="rounded-xl border border-danger/30 bg-danger/10 p-3 text-xs font-semibold text-danger"
+                className="rounded-xl border border-danger/40 bg-danger-soft p-3 text-xs font-semibold text-danger-ink"
               >
                 {serverError}
               </div>
@@ -250,10 +225,10 @@ export function StudentLoginPage() {
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4 text-xs text-muted">
             <span className="inline-flex items-center gap-1">
-              <ShieldCheck size={14} className="text-emerald-600" />
+              <ShieldCheck size={14} className="text-success-ink" />
               <span>Student-only access enforced</span>
             </span>
-            <Link to="/login/faculty" className="font-semibold text-indigo-600 hover:underline">
+            <Link to="/login/faculty" className="font-semibold text-secondary-ink hover:underline">
               Are you a Teacher? Faculty Login →
             </Link>
           </div>

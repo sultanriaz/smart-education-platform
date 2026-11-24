@@ -104,7 +104,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-brand-700 transition"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition"
         >
           <Plus className="h-4 w-4" />
           <span>Generate New Assessment</span>
@@ -114,7 +114,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
       {/* Bloom's Taxonomy Pillars Overview */}
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-line bg-panel p-3.5 flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary-ink">
             <Layers className="h-4 w-4" />
           </div>
           <div>
@@ -126,7 +126,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
         </div>
 
         <div className="rounded-xl border border-line bg-panel p-3.5 flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary-soft text-secondary-ink">
             <Brain className="h-4 w-4" />
           </div>
           <div>
@@ -138,7 +138,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
         </div>
 
         <div className="rounded-xl border border-line bg-panel p-3.5 flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent-ink">
             <Sigma className="h-4 w-4" />
           </div>
           <div>
@@ -153,8 +153,8 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
       {/* Test Inventory */}
       {tests.length === 0 ? (
         <div className="rounded-2xl border border-line bg-panel p-10 text-center text-muted">
-          <FileQuestion className="h-10 w-10 mx-auto mb-3 opacity-40 text-brand-600" />
-          <p className="text-base font-bold text-text">No practice tests generated yet.</p>
+          <FileQuestion className="h-10 w-10 mx-auto mb-3 opacity-40 text-primary-ink" />
+          <p className="text-base font-bold text-ink">No practice tests generated yet.</p>
           <p className="text-xs mt-1 max-w-sm mx-auto">
             Click &quot;Generate New Assessment&quot; to create a custom test calibrated to your syllabus materials.
           </p>
@@ -164,7 +164,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
           {tests.map((t) => (
             <div
               key={t.id}
-              className="flex flex-col justify-between rounded-2xl border border-line bg-panel p-5 shadow-xs transition hover:border-brand-200"
+              className="flex flex-col justify-between rounded-2xl border border-line bg-panel p-5 shadow-xs transition hover:border-primary/40"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
@@ -172,10 +172,10 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
                     <span
                       className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                         t.difficulty === "hard"
-                          ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300"
+                          ? "bg-accent-soft text-accent-ink"
                           : t.difficulty === "basic"
-                          ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                          : "bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300"
+                          ? "bg-secondary-soft text-secondary-ink"
+                          : "bg-primary-soft text-primary-ink"
                       }`}
                     >
                       {t.difficulty}
@@ -189,7 +189,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
                   <button
                     type="button"
                     onClick={() => onDeleteTest(t.id)}
-                    className="rounded-lg p-1.5 text-muted hover:bg-red-50 hover:text-red-600 transition"
+                    className="rounded-lg p-1.5 text-muted hover:bg-danger-soft hover:text-danger-ink transition"
                     title="Delete test"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -227,7 +227,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
                 <button
                   type="button"
                   onClick={() => onStartTest(t)}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition"
                 >
                   <Play className="h-3.5 w-3.5" />
                   <span>Start Test</span>
@@ -240,11 +240,11 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
 
       {/* Generate Assessment Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4">
           <div className="w-full max-w-lg rounded-2xl border border-line bg-panel p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-line">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-brand-600" />
+                <Sparkles className="h-5 w-5 text-primary-ink" />
                 <h3 className="text-lg font-bold">Generate Practice Assessment</h3>
               </div>
               <button
@@ -258,7 +258,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
 
             <form onSubmit={handleCreateTest} className="mt-4 space-y-4">
               {error && (
-                <div className="rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
+                <div className="rounded-xl bg-danger-soft p-3 text-xs text-danger-ink border border-danger/40">
                   {error}
                 </div>
               )}
@@ -270,7 +270,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
                   placeholder="e.g. Unit 3: Transformers & Attention Synthesis"
                   value={testTitle}
                   onChange={(e) => setTestTitle(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm"
+                  className="mt-1 w-full rounded-xl border border-line bg-surface p-2.5 text-sm text-ink"
                 />
               </div>
 
@@ -278,7 +278,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
               <div>
                 <div className="flex justify-between items-center text-xs font-semibold text-muted uppercase">
                   <span>Questions Count</span>
-                  <span className="font-mono text-brand-600 text-sm font-bold">{count} Questions</span>
+                  <span className="font-mono text-primary-ink text-sm font-bold">{count} Questions</span>
                 </div>
                 <input
                   type="range"
@@ -287,7 +287,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
                   step="1"
                   value={count}
                   onChange={(e) => setCount(parseInt(e.target.value, 10))}
-                  className="mt-2 w-full accent-brand-600 cursor-pointer"
+                  className="mt-2 w-full accent-primary cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] text-muted font-mono mt-0.5">
                   <span>5 (Quick Quiz)</span>
@@ -314,8 +314,8 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
                       onClick={() => setDifficulty(d.key as any)}
                       className={`p-3 rounded-xl border text-left transition ${
                         difficulty === d.key
-                          ? "border-brand-600 bg-brand-50/70 text-brand-900 dark:bg-brand-950/40 dark:text-brand-200 font-semibold ring-1 ring-brand-600"
-                          : "border-line bg-surface hover:border-brand-300"
+                          ? "border-primary bg-primary-soft text-primary-ink font-semibold ring-1 ring-primary"
+                          : "border-line bg-surface hover:border-primary/40"
                       }`}
                     >
                       <p className="font-bold">{d.label}</p>
@@ -344,14 +344,14 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
                           onClick={() => toggleTopic(top)}
                           className={`flex items-center gap-2 w-full text-left p-1.5 rounded-lg text-xs transition ${
                             isChecked
-                              ? "bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 font-semibold"
+                              ? "bg-primary-soft text-primary-ink font-semibold"
                               : "hover:bg-panel"
                           }`}
                         >
                           <span
                             className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${
                               isChecked
-                                ? "bg-brand-600 border-brand-600 text-white"
+                                ? "bg-primary border-primary text-on-primary"
                                 : "border-line bg-panel"
                             }`}
                           >
@@ -376,7 +376,7 @@ export const PracticeTestsTab: React.FC<PracticeTestsTabProps> = ({
                 <button
                   type="submit"
                   disabled={submitting || isGenerating}
-                  className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-xs hover:bg-brand-700 disabled:opacity-50"
+                  className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover disabled:opacity-50"
                 >
                   {submitting || isGenerating ? "Executing LangGraph Pipeline..." : "Generate Test"}
                 </button>
