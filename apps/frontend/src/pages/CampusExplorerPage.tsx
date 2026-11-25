@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../features/auth/useAuth";
 import { primaryRole } from "../features/auth/permissions";
-import { DynamicSpaceFinder } from "../components/facilities/DynamicSpaceFinder";
+import { FreeSlotsNavigator } from "../components/facilities/FreeSlotsNavigator";
 import { SmartTransitFleetTelemetry } from "../components/transit/SmartTransitFleetTelemetry";
 import { CampusHubWayfindingEngine } from "../components/campushub/CampusHubWayfindingEngine";
 import { MarqueeEventsPortal } from "../components/events/MarqueeEventsPortal";
@@ -48,6 +48,10 @@ export function CampusExplorerPage() {
   };
 
   const role = user ? primaryRole(user.roles) : null;
+
+  if (activeTab === "free_slots") {
+    return <FreeSlotsNavigator onBack={() => selectTab("overview")} />;
+  }
 
   return (
     <div className="min-h-screen bg-background text-ink transition">
@@ -370,19 +374,6 @@ export function CampusExplorerPage() {
           </div>
         )}
 
-        {/* ================= SECTION 3: FREE SLOTS FINDER ================= */}
-        {activeTab === "free_slots" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-ink">Dynamic Space Finder &amp; Free Slots Navigator</h2>
-              <p className="text-xs text-muted mt-1">
-                Filter available lecture rooms, labs, and study pods block-wise with equipment telemetry and live availability.
-              </p>
-            </div>
-
-            <DynamicSpaceFinder mode="public" />
-          </div>
-        )}
 
         {/* ================= SECTION 4: TRANSPORT SERVICE ================= */}
         {activeTab === "transport" && (

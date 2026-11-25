@@ -5,7 +5,7 @@
   "functions": {
     "api/index.py": {
       "includeFiles": "{services,libs}/**",
-      "excludeFiles": "{**/tests/**,**/.pytest_cache/**,**/.ruff_cache/**,**/.venv/**,**/__pycache__/**}",
+      "excludeFiles": "{**/tests/**,**/.pytest_cache/**,**/.ruff_cache/**,**/.venv/**,**/__pycache__/**,**/requirements*.txt,**/*.md,**/Dockerfile*}",
       "maxDuration": 30
     }
   },

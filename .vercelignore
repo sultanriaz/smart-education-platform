@@ -1,0 +1,55 @@
+# VCS & local tooling
+.git
+.github
+.vscode
+.idea
+.venv
+venv
+env
+node_modules
+__pycache__
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.eslintcache
+*.tsbuildinfo
+
+# Local build outputs (Vercel builds dist fresh via npm run build)
+dist
+build
+dist-ssr
+
+# Test suites & reports (not needed for Vercel runtime)
+tests
+**/tests
+**/*_test.py
+**/*.test.py
+test-results
+playwright-report
+artifacts
+.integration
+scratch
+readiness
+stabilization
+uat
+launch
+
+# Ops / K8s / Terraform (not needed by api/index.py or Vite SPA build)
+deploy
+infra
+infrastructure
+data
+.wave-patch-backups
+SmartEdu_*
+
+# Documentation, scripts, diagrams, & Office docs
+docs
+scripts
+**/*.docx
+**/*.pdf
+**/*.md
+ref_p*.png
+test_diagram.docx
+~$*
+*.bak
+*.backup-*
