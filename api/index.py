@@ -47,7 +47,7 @@ def resolve_database_url() -> str:
         or os.environ.get("POSTGRES_URL")
         or os.environ.get("POSTGRES_PRISMA_URL")
         or os.environ.get("POSTGRES_URL_NON_POOLING")
-        or "postgresql://neondb_owner:npg_oCP9Bh3zNgFG@ep-square-violet-bdeonh6f-pooler.c-8.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+        or "postgresql://neondb_owner:npg_ZaFJXBUmo3Y2@ep-square-violet-bdeonh6f-pooler.c-8.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
     ).strip()
 
     if raw_url:
