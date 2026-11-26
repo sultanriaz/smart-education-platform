@@ -26,7 +26,11 @@ logging.basicConfig(level=logging.INFO)
 # ==============================================================================
 ROOT = Path(__file__).resolve().parent.parent
 
-# Add libs to sys.path
+# Add staged Vercel _libs and local libs/python packages to sys.path
+api_libs_dir = Path(__file__).resolve().parent / "_libs"
+if api_libs_dir.exists() and str(api_libs_dir) not in sys.path:
+    sys.path.insert(0, str(api_libs_dir))
+
 libs_dir = ROOT / "libs" / "python"
 if libs_dir.exists():
     for lib in sorted(libs_dir.iterdir()):
@@ -504,17 +508,16 @@ logger.info("Mounted services on Vercel: %s", mounted_services)
 @app.get("/api/v1/health")
 async def health_check():
     is_neon = "neon.tech" in DB_URL or "postgresql" in DB_URL
-    libs_py = ROOT / "libs" / "python"
-    return {
+    payload = {
         "status": "healthy",
         "platform": "SmartEdu",
         "runtime": "Vercel Serverless Python",
         "database_type": "Neon PostgreSQL" if is_neon else "SQLite Ephemeral",
         "mounted_services": mounted_services,
-        "mount_errors": mount_errors,
-        "root_dirs": sorted([p.name for p in ROOT.iterdir() if p.is_dir()]) if ROOT.exists() else [],
-        "libs_py_exists": libs_py.exists(),
     }
+    if mount_errors:
+        payload["mount_errors"] = mount_errors
+    return payload
 
 
 @app.get("/api")
