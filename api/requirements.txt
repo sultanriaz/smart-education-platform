@@ -18,3 +18,13 @@ python-docx>=1.1.0
 python-pptx>=1.0.2
 pypdf>=5.0.0
 langgraph>=0.2.0
+
+# Shared SmartEdu runtime packages, installed into the Lambda's site-packages at
+# build time. This is the authoritative mechanism that makes `smartedu_*`
+# importable on Vercel (site-packages is always bundled), independent of whether
+# `includeFiles`/`api/_libs` is picked up by the Python builder. Paths resolve
+# from the repo root (the build CWD); all three are listed together so pip can
+# satisfy smartedu-infra's `smartedu-contracts==0.1.0` dep from the local source.
+./libs/python/smartedu_contracts
+./libs/python/smartedu_infra
+./libs/python/smartedu_security
