@@ -423,16 +423,40 @@ app = FastAPI(
 # Vercel Path Fix Middleware
 @app.middleware("http")
 async def vercel_path_fix_middleware(request: Request, call_next):
-    matched_path = (
-        request.headers.get("x-matched-path")
-        or request.headers.get("x-vercel-matched-path")
-        or request.headers.get("x-forwarded-uri")
-        or ""
-    ).strip()
-    if matched_path:
-        clean_path = matched_path.split("?")[0]
-        if request.scope.get("path") in ("/api/index.py", "/api/index", "/api", "/api/"):
-            request.scope["path"] = clean_path
+    # Paths that mean "Vercel handed us the serverless entrypoint, not the real
+    # request path" — i.e. the /api/(.*) rewrite resolved to the function file.
+    _ENTRYPOINT_PATHS = ("/api/index.py", "/api/index", "/api", "/api/")
+    curr_path = request.scope.get("path", "")
+
+    if curr_path in _ENTRYPOINT_PATHS:
+        # 1. Preferred: the original path is carried explicitly by the rewrite as
+        #    ?__vpath=/api/... (deterministic, independent of Vercel header names).
+        real_path = (request.query_params.get("__vpath") or "").strip()
+
+        # 2. Fallback: headers Vercel/edge proxies may set with the matched path.
+        if not real_path:
+            real_path = (
+                request.headers.get("x-matched-path")
+                or request.headers.get("x-vercel-matched-path")
+                or request.headers.get("x-forwarded-uri")
+                or request.headers.get("x-now-route-matches")
+                or ""
+            ).strip()
+
+        if real_path:
+            clean_path = real_path.split("?")[0]
+            # Only adopt it if it actually points at an API route; never loop back
+            # to the entrypoint itself (that is what causes the 405 fallthrough).
+            if clean_path.startswith("/api") and clean_path not in _ENTRYPOINT_PATHS:
+                request.scope["path"] = clean_path
+                request.scope["raw_path"] = clean_path.encode("utf-8")
+
+    # Drop the internal __vpath marker so downstream handlers never see it.
+    qs = request.scope.get("query_string", b"")
+    if b"__vpath=" in qs:
+        from urllib.parse import parse_qsl, urlencode
+        filtered = [(k, v) for k, v in parse_qsl(qs.decode("latin-1"), keep_blank_values=True) if k != "__vpath"]
+        request.scope["query_string"] = urlencode(filtered).encode("latin-1")
 
     # Normalize trailing slash to match route handlers without 307/308 redirects
     curr_path = request.scope.get("path", "")

@@ -12,11 +12,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "destination": "/api/index.py?__vpath=/api/$1"
     },
     {
       "source": "/api",
-      "destination": "/api/index.py"
+      "destination": "/api/index.py?__vpath=/api"
     },
     {
       "source": "/((?!api).*)",
