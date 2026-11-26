@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build && rm -rf api/_libs && mkdir -p api/_libs && cp -r libs/python/smartedu_contracts/smartedu_contracts libs/python/smartedu_infra/smartedu_infra libs/python/smartedu_observability/smartedu_observability libs/python/smartedu_perf/smartedu_perf libs/python/smartedu_security/smartedu_security api/_libs/",
+  "buildCommand": "npm run build && rm -rf api/_libs && mkdir -p api/_libs && cp -r libs/python/*/smartedu_* api/_libs/ && rm -rf api/_libs/*.egg-info",
   "outputDirectory": "dist",
   "functions": {
     "api/index.py": {
