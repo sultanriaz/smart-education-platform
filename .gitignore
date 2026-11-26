@@ -131,6 +131,3 @@ SmartEdu_*_Hotfix/
 
 # Scratch directory
 scratch/
-
-# Vercel staged shared Python libraries copied at build time
-api/_libs/
