@@ -541,6 +541,31 @@ async def health_check():
     }
     if mount_errors:
         payload["mount_errors"] = mount_errors
+
+    # --- Bundle/import diagnostics (so a single deploy reveals what Vercel shipped) ---
+    def _safe_listdir(p: Path) -> list[str]:
+        try:
+            return sorted(c.name for c in p.iterdir())
+        except Exception:
+            return []
+
+    smartedu_importable = {}
+    for _m in ("smartedu_contracts", "smartedu_infra", "smartedu_security"):
+        try:
+            __import__(_m)
+            smartedu_importable[_m] = True
+        except Exception as _e:
+            smartedu_importable[_m] = f"{type(_e).__name__}: {_e}"
+
+    payload["diagnostics"] = {
+        "root": str(ROOT),
+        "api_libs_dir": str(api_libs_dir),
+        "api_libs_exists": api_libs_dir.exists(),
+        "api_libs_contents": _safe_listdir(api_libs_dir),
+        "libs_python_exists": (ROOT / "libs" / "python").exists(),
+        "smartedu_importable": smartedu_importable,
+        "sys_path_head": sys.path[:8],
+    }
     return payload
 
 
