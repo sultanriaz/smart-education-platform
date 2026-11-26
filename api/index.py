@@ -504,6 +504,7 @@ logger.info("Mounted services on Vercel: %s", mounted_services)
 @app.get("/api/v1/health")
 async def health_check():
     is_neon = "neon.tech" in DB_URL or "postgresql" in DB_URL
+    libs_py = ROOT / "libs" / "python"
     return {
         "status": "healthy",
         "platform": "SmartEdu",
@@ -511,6 +512,8 @@ async def health_check():
         "database_type": "Neon PostgreSQL" if is_neon else "SQLite Ephemeral",
         "mounted_services": mounted_services,
         "mount_errors": mount_errors,
+        "root_dirs": sorted([p.name for p in ROOT.iterdir() if p.is_dir()]) if ROOT.exists() else [],
+        "libs_py_exists": libs_py.exists(),
     }
 
 

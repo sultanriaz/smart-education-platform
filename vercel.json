@@ -4,8 +4,8 @@
   "outputDirectory": "dist",
   "functions": {
     "api/index.py": {
-      "includeFiles": "**",
-      "excludeFiles": "{apps/**,**/tests/**,**/.pytest_cache/**,**/.ruff_cache/**,**/.venv/**,**/__pycache__/**,**/requirements*.txt,**/*.md,**/Dockerfile*}",
+      "includeFiles": "{services,libs}/**",
+      "excludeFiles": "{**/tests/**,**/.pytest_cache/**,**/.ruff_cache/**,**/.venv/**,**/__pycache__/**,**/requirements*.txt,**/*.md,**/Dockerfile*}",
       "maxDuration": 30
     }
   },
