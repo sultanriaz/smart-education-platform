@@ -1,10 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build && rm -rf api/_libs && mkdir -p api/_libs && cp -r libs/python/*/smartedu_* api/_libs/ && rm -rf api/_libs/*.egg-info",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
     "api/index.py": {
-      "includeFiles": "{services,api/_libs}/**",
+      "includeFiles": "services/**",
       "excludeFiles": "{**/tests/**,**/.pytest_cache/**,**/.ruff_cache/**,**/.venv/**,**/__pycache__/**,**/requirements*.txt,**/*.md,**/Dockerfile*}",
       "maxDuration": 30
     }
