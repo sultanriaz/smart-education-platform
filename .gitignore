@@ -131,3 +131,6 @@ SmartEdu_*_Hotfix/
 
 # Scratch directory
 scratch/
+
+.vercel
+.env*

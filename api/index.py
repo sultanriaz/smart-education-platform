@@ -26,11 +26,7 @@ logging.basicConfig(level=logging.INFO)
 # ==============================================================================
 ROOT = Path(__file__).resolve().parent.parent
 
-# Add bundled services/shared_libs (Vercel) and local libs/python packages to sys.path
-shared_libs_dir = ROOT / "services" / "shared_libs"
-if shared_libs_dir.exists() and str(shared_libs_dir) not in sys.path:
-    sys.path.insert(0, str(shared_libs_dir))
-
+# Add local libs/python packages to sys.path
 libs_dir = ROOT / "libs" / "python"
 if libs_dir.exists():
     for lib in sorted(libs_dir.iterdir()):
@@ -541,31 +537,6 @@ async def health_check():
     }
     if mount_errors:
         payload["mount_errors"] = mount_errors
-
-    # --- Bundle/import diagnostics (so a single deploy reveals what Vercel shipped) ---
-    def _safe_listdir(p: Path) -> list[str]:
-        try:
-            return sorted(c.name for c in p.iterdir())
-        except Exception:
-            return []
-
-    smartedu_importable = {}
-    for _m in ("smartedu_contracts", "smartedu_infra", "smartedu_security"):
-        try:
-            __import__(_m)
-            smartedu_importable[_m] = True
-        except Exception as _e:
-            smartedu_importable[_m] = f"{type(_e).__name__}: {_e}"
-
-    payload["diagnostics"] = {
-        "root": str(ROOT),
-        "shared_libs_dir": str(shared_libs_dir),
-        "shared_libs_exists": shared_libs_dir.exists(),
-        "shared_libs_contents": _safe_listdir(shared_libs_dir),
-        "libs_python_exists": (ROOT / "libs" / "python").exists(),
-        "smartedu_importable": smartedu_importable,
-        "sys_path_head": sys.path[:8],
-    }
     return payload
 
 

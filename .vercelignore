@@ -40,7 +40,10 @@ infra
 infrastructure
 data
 .wave-patch-backups
-SmartEdu_*
+/SmartEdu_*
+/sprint_*.zip
+/.vercel
+.env*
 
 # Documentation, scripts, diagrams, & Office docs
 docs
