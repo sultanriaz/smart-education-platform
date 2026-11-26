@@ -367,10 +367,14 @@ def init_database_tables():
 # ==============================================================================
 # 5. Dynamic Router Loader
 # ==============================================================================
+mount_errors: dict[str, str] = {}
+
+
 def load_service_router(service_dir_name: str) -> Any:
     """Dynamically import a microservice router without module namespace collisions."""
     router_file = ROOT / "services" / service_dir_name / "app" / "api" / "v1" / "router.py"
     if not router_file.exists():
+        mount_errors[service_dir_name] = f"missing router file: {router_file}"
         return None
 
     service_path = str(ROOT / "services" / service_dir_name)
@@ -387,6 +391,7 @@ def load_service_router(service_dir_name: str) -> Any:
         return getattr(mod, "api_router", getattr(mod, "router", None))
     except Exception as exc:
         logger.warning("Failed to load router for %s: %s", service_dir_name, exc)
+        mount_errors[service_dir_name] = f"{type(exc).__name__}: {exc}"
         return None
     finally:
         if service_path in sys.path:
@@ -505,6 +510,7 @@ async def health_check():
         "runtime": "Vercel Serverless Python",
         "database_type": "Neon PostgreSQL" if is_neon else "SQLite Ephemeral",
         "mounted_services": mounted_services,
+        "mount_errors": mount_errors,
     }
 
 
