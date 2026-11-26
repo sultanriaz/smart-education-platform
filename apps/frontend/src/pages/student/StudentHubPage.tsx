@@ -10,7 +10,7 @@ export function StudentHubPage() {
         description="Search faculty offices, inspect administrative queue tokens, browse equipment inventories across specialized labs, check live library seat availability, and explore interactive vector floor blueprints."
       />
 
-      <CampusHubWayfindingEngine initialTab="faculty" />
+      <CampusHubWayfindingEngine />
     </div>
   );
 }

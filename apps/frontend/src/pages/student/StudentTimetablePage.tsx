@@ -5,12 +5,12 @@ export function StudentTimetablePage() {
   return (
     <div className="page-container space-y-6">
       <PageHeader
-        eyebrow="Student Academic Timetable"
-        title="Class Schedule & Slot Timeline"
-        description="Day timeline with live time tracking, weekly master matrix, room locator, swap alerts, and calendar export."
+        eyebrow="Student Timetable"
+        title="Weekly Class Schedule"
+        description="See your weekly classes, lecture times, teachers, classrooms, and open seats."
       />
 
-      <TimetableHub initialRole="student" />
+      <TimetableHub initialRole="student" signedInRole="student" />
     </div>
   );
 }

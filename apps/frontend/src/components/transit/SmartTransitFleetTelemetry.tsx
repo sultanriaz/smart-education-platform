@@ -1,701 +1,578 @@
 import { useState, useMemo } from "react";
 import {
+  Map,
   Bus,
-  Clock,
-  MapPin,
-  Users,
-  Phone,
-  AlertTriangle,
-  CheckCircle2,
-  Navigation,
-  RefreshCw,
-  Search,
-  Wifi,
-  Wind,
-  Sparkles,
-  ShieldAlert,
-  Info,
+  ChevronLeft,
+  ChevronRight,
+  Building2,
   ChevronDown,
-  ChevronUp,
-  Bell,
+  Search,
+  MapPin,
+  Clock,
+  BookOpen,
+  Moon,
+  Trophy,
   ArrowRight,
-  ArrowUpDown,
-  Activity,
-  Layers,
   X
 } from "lucide-react";
 
 import {
-  TRANSIT_ROUTES,
-  TRANSIT_ALERTS,
-  type TransitRoute,
-  type RouteCategory,
-  type TransitStop
+  PLANNED_CITY_BUSES,
+  SHUTTLE_SCHEDULE_SETS,
+  type PlannedCityBus,
+  type ShuttleScheduleKey,
+  type ShuttleDirectionKey
 } from "../../features/transit/transit-data";
 
+type TransportView = "home" | "planned" | "shuttle";
+
+const SHUTTLE_CARD_ICONS: Record<ShuttleScheduleKey, { icon: typeof Bus; iconStyle: string; linkStyle: string }> = {
+  regular: { icon: Bus, iconStyle: "bg-secondary-soft text-secondary-ink", linkStyle: "text-secondary-ink" },
+  exams: { icon: BookOpen, iconStyle: "bg-subtle text-ink", linkStyle: "text-ink" },
+  ramzan: { icon: Moon, iconStyle: "bg-primary-soft text-primary-ink", linkStyle: "text-primary-ink" },
+  sports: { icon: Trophy, iconStyle: "bg-success-soft text-success-ink", linkStyle: "text-success-ink" }
+};
+
 interface Props {
-  initialCategory?: RouteCategory;
-  showExplorerLink?: boolean;
+  onBack?: () => void;
+  initialCategory?: string;
 }
 
-export function SmartTransitFleetTelemetry({
-  initialCategory = "CITY_ROUTE",
-  showExplorerLink = false
-}: Props) {
-  const [selectedCategory, setSelectedCategory] = useState<RouteCategory>(initialCategory);
-  const [stopSearchQuery, setStopSearchQuery] = useState<string>("");
-  const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
-  const [isAlertsDismissed, setIsAlertsDismissed] = useState<boolean>(false);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [lastRefreshedAt, setLastRefreshedAt] = useState<string>("Just now");
-  const [subscribedStops, setSubscribedStops] = useState<Record<string, boolean>>({});
+/** Renders clean Transport module matching Planned Routes & Shuttle Schedule screenshots. */
+export function SmartTransitFleetTelemetry({ onBack }: Props) {
+  const [view, setView] = useState<TransportView>("home");
+  const [selectedShuttleMode, setSelectedShuttleMode] = useState<ShuttleScheduleKey | null>(null);
+  const [selectedDirection, setSelectedDirection] = useState<ShuttleDirectionKey | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>("Sahiwal");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Trigger manual GPS telemetry refresh
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-      setLastRefreshedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-    }, 600);
-  };
+  const availableCities = useMemo(() => {
+    const cities = Array.from(new Set(PLANNED_CITY_BUSES.map((b) => b.city)));
+    return [...cities, "All"];
+  }, []);
 
-  // Toggle stop arrival notification simulation
-  const toggleStopAlert = (stopId: string, stopName: string) => {
-    setSubscribedStops((prev) => {
-      const next = !prev[stopId];
-      return { ...prev, [stopId]: next };
+  const filteredPlannedBuses = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return PLANNED_CITY_BUSES.filter((bus) => {
+      if (selectedCity !== "All" && bus.city !== selectedCity) return false;
+      if (!q) return true;
+      return (
+        bus.busName.toLowerCase().includes(q) ||
+        bus.routeTitle.toLowerCase().includes(q) ||
+        bus.city.toLowerCase().includes(q) ||
+        bus.stops.some((s) => s.name.toLowerCase().includes(q) || s.time.toLowerCase().includes(q))
+      );
     });
-  };
+  }, [selectedCity, searchQuery]);
 
-  // Filter routes by category and optional stop query
-  const filteredRoutes = useMemo(() => {
-    return TRANSIT_ROUTES.filter((route) => {
-      // Category filter
-      if (route.category !== selectedCategory) return false;
+  const activeShuttleSet = useMemo(
+    () => SHUTTLE_SCHEDULE_SETS.find((s) => s.key === selectedShuttleMode) ?? null,
+    [selectedShuttleMode]
+  );
 
-      // Stop search query
-      if (stopSearchQuery.trim()) {
-        const query = stopSearchQuery.toLowerCase();
-        const matchesRouteName = route.name.toLowerCase().includes(query);
-        const matchesBusNumber = route.bus.busNumber.toLowerCase().includes(query);
-        const matchesStop = route.stops.some(
-          (s) => s.name.toLowerCase().includes(query) || s.landmark.toLowerCase().includes(query)
-        );
-        return matchesRouteName || matchesBusNumber || matchesStop;
-      }
-
-      return true;
+  const filteredShuttleBuses = useMemo(() => {
+    if (!activeShuttleSet || !selectedDirection) return [];
+    const list = activeShuttleSet.directions[selectedDirection];
+    const q = searchQuery.trim().toLowerCase();
+    return list.filter((bus) => {
+      if (selectedCity !== "All" && bus.city !== selectedCity) return false;
+      if (!q) return true;
+      return (
+        bus.busName.toLowerCase().includes(q) ||
+        bus.routeTitle.toLowerCase().includes(q) ||
+        bus.stops.some((s) => s.name.toLowerCase().includes(q) || s.time.toLowerCase().includes(q))
+      );
     });
-  }, [selectedCategory, stopSearchQuery]);
+  }, [activeShuttleSet, selectedDirection, selectedCity, searchQuery]);
 
-  // Count active routes per category
-  const cityCount = TRANSIT_ROUTES.filter((r) => r.category === "CITY_ROUTE").length;
-  const shuttleCount = TRANSIT_ROUTES.filter((r) => r.category === "CAMPUS_SHUTTLE").length;
+  const renderBusScheduleBlock = (buses: PlannedCityBus[]) => (
+    <div className="space-y-4">
+      {/* City Dropdown */}
+      <div className="relative flex items-center rounded-2xl border border-line bg-panel px-4 py-2.5 shadow-2xs">
+        <Building2 size={16} className="shrink-0 text-primary-ink mr-2.5" />
+        <select
+          value={selectedCity}
+          onChange={(e) => setSelectedCity(e.target.value)}
+          aria-label="Select city"
+          className="flex-1 appearance-none bg-transparent pr-6 text-sm font-semibold text-ink focus:outline-hidden cursor-pointer"
+        >
+          {availableCities.map((city) => (
+            <option key={city} value={city}>
+              {city === "All" ? "All Cities" : city}
+            </option>
+          ))}
+        </select>
+        <ChevronDown size={16} className="pointer-events-none text-muted shrink-0" />
+      </div>
 
-  // Find stop matches when searching
-  const searchedStopMatches = useMemo(() => {
-    if (!stopSearchQuery.trim()) return [];
-    const query = stopSearchQuery.toLowerCase();
-    const results: { route: TransitRoute; stop: TransitStop }[] = [];
+      {/* Search Bar */}
+      <div className="flex items-center gap-2.5 rounded-2xl border border-line bg-panel px-4 py-2.5 shadow-2xs">
+        <Search size={16} className="shrink-0 text-primary-ink" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Search by route or bus number"
+          placeholder="Search by route or bus number"
+          className="flex-1 min-w-0 bg-transparent py-0.5 text-sm text-ink placeholder:text-muted focus:outline-hidden"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            aria-label="Clear bus search"
+            className="rounded-full p-1 text-muted hover:text-ink cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
 
-    TRANSIT_ROUTES.forEach((route) => {
-      route.stops.forEach((stop) => {
-        if (stop.name.toLowerCase().includes(query) || stop.landmark.toLowerCase().includes(query)) {
-          results.push({ route, stop });
-        }
-      });
-    });
+      {/* Count Line */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-xs font-medium text-muted">
+          {buses.length} {buses.length === 1 ? "bus found" : "buses found"}
+        </span>
+        {searchQuery.trim() && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="text-xs font-bold text-primary-ink hover:underline cursor-pointer"
+          >
+            Reset
+          </button>
+        )}
+      </div>
 
-    return results;
-  }, [stopSearchQuery]);
-
-  return (
-    <div className="space-y-6">
-      {/* ================= SERVICE DISRUPTION NOTICES FEED ================= */}
-      {!isAlertsDismissed && TRANSIT_ALERTS.length > 0 && (
-        <div className="rounded-2xl border border-warning/40 bg-gradient-to-r from-warning/10 via-warning/5 to-transparent p-4 sm:p-5 shadow-xs space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-warning text-warning-fg shadow-xs shrink-0">
-                <AlertTriangle size={18} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-extrabold text-sm text-ink">Active Fleet & Route Disruption Notices</h4>
-                  <span className="rounded-full bg-warning-soft px-2 py-0.5 text-2xs font-extrabold text-warning-ink">
-                    {TRANSIT_ALERTS.length} Active Bulletins
+      {/* Bus Cards */}
+      {buses.length === 0 ? (
+        <div className="rounded-3xl border border-line bg-panel p-8 text-center space-y-3">
+          <p className="text-sm font-bold text-ink">No matching buses found</p>
+          <p className="text-xs text-muted">Try another stop name, bus number, or switch city.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedCity("Sahiwal");
+            }}
+            className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-on-primary hover:bg-primary-hover transition cursor-pointer"
+          >
+            Reset Filters
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {buses.map((bus) => (
+            <div
+              key={bus.id}
+              className="overflow-hidden rounded-3xl border border-line bg-panel shadow-xs"
+            >
+              {/* Blue Header Bar matching screenshot */}
+              <div className="bg-hero-bg px-4 py-3 text-hero-fg flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-hero-fg/15 text-hero-fg">
+                    <Bus size={18} />
                   </span>
+                  <h4 className="font-bold text-base text-hero-fg">{bus.busName}</h4>
                 </div>
-                <p className="text-xs text-muted">
-                  Municipal road repairs, weather advisories, and maintenance swaps impacting scheduled ETAs.
+                <span className="text-[11px] font-medium text-hero-muted truncate">
+                  {bus.routeTitle}
+                </span>
+              </div>
+
+              {/* Stop Tiles Grid: Location Pin + Name, Clock Icon + Time directly below */}
+              <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                {bus.stops.map((stop) => (
+                  <div
+                    key={stop.id}
+                    className="rounded-2xl border border-line/70 bg-surface/65 p-3 space-y-1.5"
+                  >
+                    <div className="flex items-start gap-1.5">
+                      <MapPin size={13} className="shrink-0 text-primary-ink mt-0.5" />
+                      <span className="text-xs font-semibold text-ink leading-snug">
+                        {stop.name}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-muted">
+                      <Clock size={12} className="shrink-0 text-secondary-ink" />
+                      <span className="text-[11px] font-medium font-mono">{stop.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // ================= VIEW 1: TRANSPORT LANDING (PLANNED ROUTES & SHUTTLE SCHEDULE ONLY) =================
+  if (view === "home") {
+    return (
+      <div className="mx-auto max-w-2xl rounded-3xl border border-line bg-background overflow-hidden shadow-sm">
+        <div className="relative overflow-hidden bg-hero-bg px-5 pt-6 pb-9 text-hero-fg rounded-b-[2rem] shadow-md">
+          <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-hero-fg/10 blur-xl" />
+          <div className="pointer-events-none absolute top-4 right-12 h-24 w-24 rounded-full bg-hero-accent/20 blur-md" />
+
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  aria-label="Back to Main Dashboard"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hero-fg/15 backdrop-blur-md text-hero-fg hover:bg-hero-fg/25 transition cursor-pointer"
+                >
+                  <ChevronLeft size={20} strokeWidth={2.5} />
+                </button>
+              )}
+
+              <div className="min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-hero-fg leading-tight">
+                  Transport
+                </h2>
+                <p className="text-xs text-hero-muted mt-0.5">
+                  Campus transport services
                 </p>
               </div>
             </div>
 
+            <span className="shrink-0 rounded-full border border-hero-fg/25 bg-hero-fg/15 px-3.5 py-1.5 text-xs font-semibold text-hero-fg whitespace-nowrap">
+              2 Options
+            </span>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5 space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <span className="h-4 w-1 rounded-full bg-primary" />
+            <span className="text-xs font-extrabold uppercase tracking-wider text-muted">
+              QUICK ACCESS
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
+            {/* Planned Routes */}
             <button
-              onClick={() => setIsAlertsDismissed(true)}
-              className="text-xs text-muted hover:text-ink transition p-1"
-              title="Dismiss notices for this session"
+              type="button"
+              onClick={() => {
+                setView("planned");
+                setSearchQuery("");
+                setSelectedCity("Sahiwal");
+              }}
+              aria-label="Planned Routes"
+              className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-sm hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[144px] cursor-pointer group"
             >
-              <X size={16} />
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary-soft text-secondary-ink group-hover:scale-105 transition">
+                <Map size={21} />
+              </span>
+
+              <div className="mt-4 space-y-1">
+                <span className="block font-bold text-sm sm:text-base text-ink leading-snug">
+                  Planned Routes
+                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted leading-snug">View all bus routes</span>
+                  <ChevronRight
+                    size={15}
+                    className="shrink-0 text-muted group-hover:text-ink group-hover:translate-x-0.5 transition"
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
             </button>
-          </div>
 
-          <div className="grid gap-3 pt-1 sm:grid-cols-2 lg:grid-cols-3">
-            {TRANSIT_ALERTS.map((alert) => (
-              <div
-                key={alert.id}
-                className="rounded-xl border border-warning/35 bg-panel/80 p-3.5 space-y-2 text-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-warning-ink flex items-center gap-1.5">
-                    <ShieldAlert size={13} />
-                    <span>{alert.affectedRoutes.join(", ")}</span>
-                  </span>
-                  <span className="text-2xs text-muted">{alert.timestamp}</span>
-                </div>
-                <p className="font-bold text-ink leading-snug">{alert.title}</p>
-                <p className="text-muted text-2xs leading-relaxed">{alert.message}</p>
-                <div className="rounded-lg bg-surface border border-line/60 p-2 text-2xs text-ink flex items-start gap-1.5">
-                  <Info size={12} className="text-brand-500 shrink-0 mt-0.5" />
-                  <span>{alert.actionRecommendation}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ================= TWO CORE NAVIGATION PATHS ================= */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* CARD 1: CITY ROUTE NETWORKS */}
-        <div
-          onClick={() => setSelectedCategory("CITY_ROUTE")}
-          className={`cursor-pointer rounded-3xl border p-6 transition shadow-2xs group flex flex-col justify-between ${
-            selectedCategory === "CITY_ROUTE"
-              ? "border-primary bg-panel ring-2 ring-primary/30 shadow-md"
-              : "border-line bg-panel hover:border-primary/60"
-          }`}
-        >
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div
-                className={`flex h-12 w-12 items-center justify-center rounded-2xl transition ${
-                  selectedCategory === "CITY_ROUTE"
-                    ? "bg-primary text-on-primary shadow-xs scale-105"
-                    : "bg-primary-soft text-primary-ink group-hover:scale-105"
-                }`}
-              >
-                <Bus size={24} />
-              </div>
-              <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-extrabold text-primary-ink">
-                {cityCount} Lines Configured
-              </span>
-            </div>
-
-            <h3 className="font-extrabold text-lg text-ink group-hover:text-primary-ink transition">
-              Planned Routes
-            </h3>
-            <p className="text-xs text-muted mt-1 leading-relaxed">
-              Morning Inbound (07:15–08:30 AM) and Evening Outbound (03:45 PM) express commuter routes covering Farid Town Point, Mall Road, High Court, and Canal corridors.
-            </p>
-          </div>
-
-          <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between text-xs">
-            <span className="font-semibold text-muted">Long-Distance & Commuters</span>
-            <span
-              className={`font-bold flex items-center gap-1 ${
-                selectedCategory === "CITY_ROUTE" ? "text-primary-ink" : "text-muted"
-              }`}
+            {/* Shuttle Schedule */}
+            <button
+              type="button"
+              onClick={() => {
+                setView("shuttle");
+                setSelectedShuttleMode(null);
+                setSelectedDirection(null);
+                setSearchQuery("");
+              }}
+              aria-label="Shuttle Schedule"
+              className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-sm hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[144px] cursor-pointer group"
             >
-              <span>{selectedCategory === "CITY_ROUTE" ? "Active View" : "Switch to Routes"}</span>
-              <ArrowRight size={13} />
-            </span>
-          </div>
-        </div>
-
-        {/* CARD 2: INTER-CAMPUS & INTRA-DAY SHUTTLES */}
-        <div
-          onClick={() => setSelectedCategory("CAMPUS_SHUTTLE")}
-          className={`cursor-pointer rounded-3xl border p-6 transition shadow-2xs group flex flex-col justify-between ${
-            selectedCategory === "CAMPUS_SHUTTLE"
-              ? "border-secondary bg-panel ring-2 ring-secondary/30 shadow-md"
-              : "border-line bg-panel hover:border-secondary/60"
-          }`}
-        >
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div
-                className={`flex h-12 w-12 items-center justify-center rounded-2xl transition ${
-                  selectedCategory === "CAMPUS_SHUTTLE"
-                    ? "bg-secondary text-secondary-fg shadow-xs scale-105"
-                    : "bg-secondary-soft text-secondary-ink group-hover:scale-105"
-                }`}
-              >
-                <Navigation size={24} />
-              </div>
-              <span className="rounded-full bg-secondary-soft px-3 py-1 text-xs font-extrabold text-secondary-ink">
-                Every 15–20 Mins Loop
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-soft text-primary-ink group-hover:scale-105 transition">
+                <Bus size={21} />
               </span>
-            </div>
 
-            <h3 className="font-extrabold text-lg text-ink group-hover:text-secondary-ink transition">
-              Shuttle Schedule
-            </h3>
-            <p className="text-xs text-muted mt-1 leading-relaxed">
-              High-frequency circular loops between Allama Iqbal & Fatima Jinnah Hostels, Central Library, CS Block C Quadrangle, and the Sports Complex & Gym arena.
-            </p>
-          </div>
-
-          <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between text-xs">
-            <span className="font-semibold text-muted">Continuous Intra-Day Transit</span>
-            <span
-              className={`font-bold flex items-center gap-1 ${
-                selectedCategory === "CAMPUS_SHUTTLE" ? "text-secondary-ink" : "text-muted"
-              }`}
-            >
-              <span>{selectedCategory === "CAMPUS_SHUTTLE" ? "Active View" : "Switch to Shuttles"}</span>
-              <ArrowRight size={13} />
-            </span>
+              <div className="mt-4 space-y-1">
+                <span className="block font-bold text-sm sm:text-base text-ink leading-snug">
+                  Shuttle Schedule
+                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted leading-snug">Check timings &amp; stops</span>
+                  <ChevronRight
+                    size={15}
+                    className="shrink-0 text-muted group-hover:text-ink group-hover:translate-x-0.5 transition"
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
+            </button>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* ================= STOP LOOKUP & TELEMETRY CONTROLS BAR ================= */}
-      <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex-1 min-w-[280px]">
-            <label className="block text-xs font-bold text-ink mb-1.5 flex items-center gap-1.5">
-              <Search size={13} className="text-brand-500" />
-              <span>Where are you waiting? (Live Stop ETA Finder)</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by stop name e.g. Farid Town Point, High Court, Girls Hostel, Central Library..."
-                value={stopSearchQuery}
-                onChange={(e) => setStopSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-              />
-              <MapPin size={14} className="absolute left-3 top-2.5 text-muted" />
-              {stopSearchQuery && (
+  // ================= VIEW 2A: PLANNED ROUTES -> TRANSPORT SCHEDULE =================
+  if (view === "planned") {
+    const cityBusCount = PLANNED_CITY_BUSES.filter(
+      (b) => selectedCity === "All" || b.city === selectedCity
+    ).length;
+
+    return (
+      <div className="mx-auto max-w-2xl rounded-3xl border border-line bg-background overflow-hidden shadow-sm">
+        <div className="relative overflow-hidden bg-hero-bg px-5 pt-6 pb-8 text-hero-fg rounded-b-[2rem] shadow-md space-y-4">
+          <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-hero-fg/10 blur-xl" />
+          <div className="pointer-events-none absolute top-4 right-12 h-24 w-24 rounded-full bg-hero-accent/20 blur-md" />
+
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setView("home")}
+              aria-label="Back to Transport"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-hero-fg/15 backdrop-blur-md text-hero-fg hover:bg-hero-fg/25 transition cursor-pointer"
+            >
+              <ChevronLeft size={20} strokeWidth={2.5} />
+            </button>
+
+            <span className="shrink-0 rounded-full border border-hero-fg/25 bg-hero-fg/15 px-3.5 py-1.5 text-xs font-semibold text-hero-fg whitespace-nowrap">
+              {cityBusCount} {cityBusCount === 1 ? "Bus" : "Buses"}
+            </span>
+          </div>
+
+          <div className="relative z-10 flex items-center gap-3.5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-hero-fg/15 backdrop-blur-md text-hero-fg shadow-xs">
+              <Bus size={21} />
+            </span>
+            <div>
+              <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-hero-fg leading-tight">
+                Transport Schedule
+              </h3>
+              <p className="text-xs text-hero-muted mt-0.5">
+                City bus routes &amp; timings
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5">{renderBusScheduleBlock(filteredPlannedBuses)}</div>
+      </div>
+    );
+  }
+
+  // ================= VIEW 2B: SHUTTLE SCHEDULE OVERVIEW (4 MODES) =================
+  if (!activeShuttleSet) {
+    return (
+      <div className="mx-auto max-w-2xl rounded-3xl border border-line bg-background overflow-hidden shadow-sm">
+        <div className="relative overflow-hidden bg-hero-bg px-5 pt-6 pb-9 text-hero-fg rounded-b-[2rem] shadow-md">
+          <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-hero-fg/10 blur-xl" />
+          <div className="pointer-events-none absolute top-4 right-12 h-24 w-24 rounded-full bg-hero-accent/20 blur-md" />
+
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={() => setView("home")}
+                aria-label="Back to Transport"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hero-fg/15 backdrop-blur-md text-hero-fg hover:bg-hero-fg/25 transition cursor-pointer"
+              >
+                <ChevronLeft size={20} strokeWidth={2.5} />
+              </button>
+
+              <div className="min-w-0">
+                <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-hero-fg leading-tight">
+                  Shuttle Schedule
+                </h3>
+                <p className="text-xs text-hero-muted mt-0.5">
+                  Campus transport timings
+                </p>
+              </div>
+            </div>
+
+            <span className="shrink-0 rounded-full border border-hero-fg/25 bg-hero-fg/15 px-3.5 py-1.5 text-xs font-semibold text-hero-fg whitespace-nowrap">
+              {SHUTTLE_SCHEDULE_SETS.length} Routes
+            </span>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5 space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <span className="h-4 w-1 rounded-full bg-primary" />
+            <span className="text-xs font-extrabold uppercase tracking-wider text-muted">
+              QUICK ACCESS
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
+            {SHUTTLE_SCHEDULE_SETS.map((item) => {
+              const meta = SHUTTLE_CARD_ICONS[item.key];
+              const Icon = meta.icon;
+              return (
                 <button
-                  onClick={() => setStopSearchQuery("")}
-                  className="absolute right-3 top-2.5 text-muted hover:text-ink"
+                  key={item.key}
+                  type="button"
+                  onClick={() => {
+                    setSelectedShuttleMode(item.key);
+                    setSelectedDirection(null);
+                    setSearchQuery("");
+                  }}
+                  aria-label={item.label}
+                  className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-sm hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[144px] cursor-pointer group"
                 >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Quick Telemetry Refresh */}
-          <div className="flex items-center gap-3 self-end pt-1">
-            <div className="text-right hidden sm:block">
-              <p className="text-2xs text-muted">Sensor Ping</p>
-              <p className="font-mono text-2xs font-bold text-ink">{lastRefreshedAt}</p>
-            </div>
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-3.5 py-2 text-xs font-bold text-ink hover:border-brand-500 hover:text-brand-600 transition shadow-xs disabled:opacity-50"
-            >
-              <RefreshCw size={13} className={isRefreshing ? "animate-spin text-brand-600" : ""} />
-              <span>{isRefreshing ? "Ping GPS…" : "Refresh GPS"}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Popular Stop Chips */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-line/60">
-          <span className="text-2xs font-bold uppercase tracking-wider text-muted mr-1">
-            Popular Stops:
-          </span>
-          {[
-            "Farid Town Point",
-            "Jinnah Hall Chowk",
-            "Fatima Jinnah Girls Hostel",
-            "High Court & Bar Council",
-            "Central Library",
-            "Sports Complex"
-          ].map((chip) => (
-            <button
-              key={chip}
-              onClick={() => setStopSearchQuery(chip)}
-              className={`rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
-                stopSearchQuery === chip
-                  ? "border-brand-500 bg-brand-500/10 text-brand-600 font-bold"
-                  : "border-line bg-surface text-muted hover:text-ink hover:border-brand-500/40"
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
-          {stopSearchQuery && (
-            <button
-              onClick={() => setStopSearchQuery("")}
-              className="ml-auto text-2xs font-semibold text-muted hover:text-danger-ink transition"
-            >
-              Clear Search
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ================= STOP SEARCH MATCHES BANNER ================= */}
-      {stopSearchQuery && searchedStopMatches.length > 0 && (
-        <div className="rounded-2xl border border-brand-500/40 bg-brand-500/5 p-4 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-xs text-ink flex items-center gap-2">
-              <MapPin size={14} className="text-brand-600" />
-              <span>
-                Buses reaching stop matching: <strong className="text-brand-600">"{stopSearchQuery}"</strong>
-              </span>
-            </h4>
-            <span className="text-2xs font-semibold text-muted">
-              {searchedStopMatches.length} Line{searchedStopMatches.length > 1 ? "s" : ""} Found
-            </span>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {searchedStopMatches.map(({ route, stop }) => (
-              <div
-                key={`${route.id}-${stop.id}`}
-                className="rounded-xl border border-line bg-panel p-3 space-y-2 text-xs"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-brand-600">{route.bus.busNumber}</span>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-2xs font-bold ${
-                      stop.delayMinutes === 0
-                        ? "bg-success-soft text-success-ink"
-                        : "bg-warning-soft text-warning-ink"
-                    }`}
+                    className={`flex h-11 w-11 items-center justify-center rounded-2xl ${meta.iconStyle} group-hover:scale-105 transition`}
                   >
-                    {stop.delayMinutes === 0 ? "On Time" : `+${stop.delayMinutes}m Delay`}
+                    <Icon size={21} />
                   </span>
-                </div>
-                <div>
-                  <p className="font-bold text-ink">{stop.name}</p>
-                  <p className="text-2xs text-muted">{route.name}</p>
-                </div>
-                <div className="rounded-lg bg-surface border border-line/60 p-2 flex items-center justify-between text-2xs">
-                  <div>
-                    <span className="text-muted block">Scheduled</span>
-                    <span className="font-mono font-semibold text-ink">{stop.scheduledTime}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-muted block">Estimated ETA</span>
-                    <span className="font-mono font-extrabold text-brand-600 text-xs">
-                      {stop.estimatedArrival}
+
+                  <div className="mt-4 space-y-1">
+                    <span className="block font-bold text-sm sm:text-base text-ink leading-snug">
+                      {item.label}
                     </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ================= ROUTES LIST WITH STOP-BY-STOP ITINERARY ================= */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between px-1">
-          <div>
-            <h3 className="font-extrabold text-base text-ink">
-              {selectedCategory === "CITY_ROUTE"
-                ? "City Route Networks (Stop-by-Stop Schedule)"
-                : "Inter-Campus Shuttle Loops (High-Frequency Transit)"}
-            </h3>
-            <p className="text-xs text-muted mt-0.5">
-              Live GPS telemetry, stop-by-stop scheduled times vs ETAs, driver contacts, and seat capacity.
-            </p>
-          </div>
-
-          <span className="rounded-full bg-surface border border-line px-3 py-1 text-xs font-semibold text-muted">
-            Showing {filteredRoutes.length} Line{filteredRoutes.length > 1 ? "s" : ""}
-          </span>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          {filteredRoutes.map((route) => {
-            const isExpanded = expandedRouteId === route.id;
-            const isFull = route.bus.capacityStatus === "FULL";
-            const isStanding = route.bus.capacityStatus === "STANDING_ONLY";
-
-            return (
-              <div
-                key={route.id}
-                className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-5 flex flex-col justify-between hover:border-brand-500/50 transition group"
-              >
-                <div className="space-y-4">
-                  {/* Top Bar: Bus Number, Direction & Status */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-extrabold text-sm rounded-lg bg-brand-500/10 text-brand-600 px-2.5 py-1">
-                          {route.bus.busNumber}
-                        </span>
-                        <span className="rounded-md bg-surface border border-line px-2 py-0.5 text-2xs font-semibold text-muted">
-                          {route.direction === "INBOUND_MORNING"
-                            ? "Morning Inbound"
-                            : route.direction === "OUTBOUND_EVENING"
-                            ? "Evening Outbound"
-                            : "Circular Loop"}
-                        </span>
-                      </div>
-                      <h4 className="font-extrabold text-base text-ink mt-2 group-hover:text-brand-600 transition">
-                        {route.name}
-                      </h4>
-                      <p className="text-xs text-muted line-clamp-1">{route.subtitle}</p>
-                    </div>
-
-                    {/* Overall Status Badge */}
-                    <div className="text-right shrink-0">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-2xs font-extrabold ${
-                          route.overallStatus === "ON_TIME"
-                            ? "bg-success-soft text-success-ink"
-                            : route.overallStatus === "MINOR_DELAY"
-                            ? "bg-warning-soft text-warning-ink"
-                            : "bg-danger-soft text-danger-ink"
-                        }`}
-                      >
-                        <span className="flex h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
-                        <span>
-                          {route.overallStatus === "ON_TIME"
-                            ? "On Schedule"
-                            : route.overallStatus === "MINOR_DELAY"
-                            ? "Minor Delay"
-                            : "Disrupted"}
-                        </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`text-xs font-semibold ${meta.linkStyle}`}>
+                        View schedule
                       </span>
-                      <p className="font-mono text-2xs text-muted mt-1">
-                        Departs: <strong className="text-ink">{route.departureTime}</strong>
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Real-Time Telemetry Bar */}
-                  <div className="rounded-2xl border border-line/60 bg-surface/50 p-3.5 space-y-2.5 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-1.5 text-muted">
-                        <Navigation size={13} className="text-brand-500" />
-                        <span>Current Fleet Position</span>
-                      </span>
-                      <span className="font-bold text-ink text-right">{route.currentLocationDesc}</span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-line/40 text-2xs">
-                      <div>
-                        <span className="text-muted block">GPS Speed</span>
-                        <span className="font-mono font-bold text-ink">{route.bus.speedKmh} km/h</span>
-                      </div>
-                      <div>
-                        <span className="text-muted block">Amenities</span>
-                        <span className="font-semibold text-ink flex items-center gap-1 mt-0.5">
-                          {route.bus.hasAC && (
-                            <span title="Air Conditioned">
-                              <Wind size={11} className="text-secondary-ink" />
-                            </span>
-                          )}
-                          {route.bus.hasWifi && (
-                            <span title="High-Speed Wi-Fi">
-                              <Wifi size={11} className="text-success-ink" />
-                            </span>
-                          )}
-                          <span>{route.bus.hasAC ? "AC Active" : "Non-AC"}</span>
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-muted block">Signal Ping</span>
-                        <span className="font-mono text-muted">{route.bus.lastPingSecondsAgo}s ago</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bus Capacity Segmented Status Meter */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="flex items-center gap-1.5 text-muted">
-                        <Users size={12} className="text-brand-500" />
-                        <span>Passenger Occupancy</span>
-                      </span>
-                      <span
-                        className={`font-bold rounded-full px-2 py-0.5 text-2xs ${
-                          isFull
-                            ? "bg-danger-soft text-danger-ink"
-                            : isStanding
-                            ? "bg-warning-soft text-warning-ink"
-                            : "bg-success-soft text-success-ink"
-                        }`}
-                      >
-                        {isFull ? "Full / At Capacity" : isStanding ? "Standing Only" : "Seats Available"} (
-                        {route.bus.occupiedSeats}/{route.bus.totalSeats})
-                      </span>
-                    </div>
-
-                    <div className="h-2 w-full rounded-full bg-surface overflow-hidden border border-line/60">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          isFull ? "bg-danger" : isStanding ? "bg-warning" : "bg-success"
-                        }`}
-                        style={{
-                          width: `${Math.min((route.bus.occupiedSeats / route.bus.totalSeats) * 100, 100)}%`
-                        }}
+                      <ChevronRight
+                        size={15}
+                        className="shrink-0 text-muted group-hover:text-ink group-hover:translate-x-0.5 transition"
+                        aria-hidden="true"
                       />
                     </div>
                   </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-                  {/* Driver Contact & Vehicle Info */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line/50 bg-panel p-3 text-xs">
-                    <div>
-                      <p className="font-bold text-ink flex items-center gap-1.5">
-                        <span>{route.bus.driverName}</span>
-                        <span className="text-2xs font-normal text-muted">({route.bus.model})</span>
-                      </p>
-                      <p className="font-mono text-2xs text-muted">Plate: {route.bus.licensePlate}</p>
-                    </div>
+  // ================= VIEW 3: SHUTTLE DIRECTION + INLINE BUS SCHEDULE BELOW =================
+  return (
+    <div className="mx-auto max-w-2xl rounded-3xl border border-line bg-background overflow-hidden shadow-sm">
+      <div className="relative overflow-hidden bg-hero-bg px-5 pt-6 pb-9 text-hero-fg rounded-b-[2rem] shadow-md">
+        <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-hero-fg/10 blur-xl" />
+        <div className="pointer-events-none absolute top-4 right-12 h-24 w-24 rounded-full bg-hero-accent/20 blur-md" />
 
-                    <a
-                      href={`tel:${route.bus.driverPhone}`}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-brand-500/40 bg-brand-500/10 px-3 py-1.5 text-xs font-bold text-brand-600 hover:bg-brand-500/20 transition"
-                      title="Direct phone link to bus driver for lost items or urgent stop inquiries"
-                    >
-                      <Phone size={12} />
-                      <span>{route.bus.driverPhone}</span>
-                    </a>
-                  </div>
+        <div className="relative z-10 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedShuttleMode(null);
+                setSelectedDirection(null);
+                setSearchQuery("");
+              }}
+              aria-label="Back to Shuttle Schedule"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hero-fg/15 backdrop-blur-md text-hero-fg hover:bg-hero-fg/25 transition cursor-pointer"
+            >
+              <ChevronLeft size={20} strokeWidth={2.5} />
+            </button>
 
-                  {/* ================= STOP-BY-STOP ITINERARY TIMELINE ================= */}
-                  <div className="space-y-3 pt-2 border-t border-line/60">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-ink uppercase tracking-wider flex items-center gap-1.5">
-                        <Clock size={13} className="text-brand-500" />
-                        <span>Complete Stop-by-Stop Schedule ({route.stops.length} Stops)</span>
-                      </span>
-                      <button
-                        onClick={() => setExpandedRouteId(isExpanded ? null : route.id)}
-                        className="text-2xs font-bold text-brand-600 hover:underline flex items-center gap-0.5"
-                      >
-                        <span>{isExpanded ? "Show All Stops" : "Compact View"}</span>
-                        {isExpanded ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
-                      </button>
-                    </div>
+            <div className="min-w-0">
+              <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-hero-fg leading-tight">
+                Shuttle
+              </h3>
+              <p className="text-xs text-hero-muted mt-0.5">
+                {activeShuttleSet.subtitle}
+              </p>
+            </div>
+          </div>
 
-                    {/* Timeline stops — show ALL stops by default */}
-                    <div className="space-y-3 relative pl-5 border-l-2 border-brand-500/30">
-                      {(!isExpanded ? route.stops : route.stops.slice(0, 3)).map((stop) => {
-                        const isPassed = stop.status === "PASSED";
-                        const isApproaching = stop.status === "APPROACHING";
-                        const isSubscribed = subscribedStops[stop.id];
+          <span className="inline-flex items-center gap-1.5 shrink-0 rounded-full border border-hero-fg/25 bg-hero-fg/15 px-3.5 py-1.5 text-xs font-semibold text-hero-fg whitespace-nowrap">
+            <Bus size={13} />
+            <span>2 Routes</span>
+          </span>
+        </div>
+      </div>
 
-                        return (
-                          <div key={stop.id} className="relative group/stop">
-                            {/* Timeline Node Marker */}
-                            <span
-                              className={`absolute -left-[27px] top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 bg-panel transition ${
-                                isPassed
-                                  ? "border-success text-success-ink"
-                                  : isApproaching
-                                  ? "border-warning text-warning-ink ring-4 ring-warning/20"
-                                  : "border-muted/60 text-muted"
-                              }`}
-                            >
-                              {isPassed ? (
-                                <CheckCircle2 size={10} className="fill-current" />
-                              ) : isApproaching ? (
-                                <span className="h-1.5 w-1.5 rounded-full bg-warning animate-ping" />
-                              ) : (
-                                <span className="h-1.5 w-1.5 rounded-full bg-muted/60" />
-                              )}
-                            </span>
+      <div className="p-4 sm:p-5 space-y-5">
+        <div className="space-y-3.5">
+          <div className="flex items-center gap-2 px-1">
+            <span className="h-4 w-1 rounded-full bg-primary" />
+            <span className="text-xs font-extrabold uppercase tracking-wider text-muted">
+              SELECT DIRECTION
+            </span>
+          </div>
 
-                            <div className="flex items-start justify-between gap-3 text-xs">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span
-                                    className={`font-bold transition ${
-                                      isApproaching
-                                        ? "text-warning-ink font-extrabold"
-                                        : isPassed
-                                        ? "text-muted line-through"
-                                        : "text-ink"
-                                    }`}
-                                  >
-                                    {stop.name}
-                                  </span>
-                                  {isApproaching && (
-                                    <span className="rounded-full bg-warning-soft px-2 py-0.2 text-[9px] font-extrabold text-warning-ink animate-pulse">
-                                      NEXT STOP
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-2xs text-muted mt-0.5">{stop.landmark}</p>
-                              </div>
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
+            {/* From University */}
+            <button
+              type="button"
+              aria-pressed={selectedDirection === "from_university"}
+              onClick={() => {
+                setSelectedDirection("from_university");
+                setSearchQuery("");
+              }}
+              className={`rounded-3xl border bg-panel p-4 sm:p-5 text-left transition flex flex-col justify-between min-h-[144px] cursor-pointer group ${
+                selectedDirection === "from_university"
+                  ? "border-secondary ring-2 ring-secondary/25 shadow-md"
+                  : "border-line shadow-sm hover:shadow-md hover:border-secondary/45"
+              }`}
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary-soft text-secondary-ink group-hover:scale-105 transition">
+                <Bus size={21} />
+              </span>
 
-                              {/* Time Display */}
-                              <div className="text-right shrink-0">
-                                <div className="flex items-center gap-1.5 justify-end">
-                                  <span className="text-2xs text-muted line-through">
-                                    {stop.scheduledTime}
-                                  </span>
-                                  <span
-                                    className={`font-mono font-extrabold text-xs ${
-                                      stop.delayMinutes === 0
-                                        ? "text-success-ink"
-                                        : "text-warning-ink font-bold"
-                                    }`}
-                                  >
-                                    {stop.estimatedArrival}
-                                  </span>
-                                </div>
-                                <span className="text-[10px] text-muted block">
-                                  {stop.delayMinutes === 0
-                                    ? "On Time"
-                                    : `+${stop.delayMinutes}m ETA delay`}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Optional Notification Bell for Stop */}
-                            <div className="pt-1 flex items-center justify-end">
-                              <button
-                                onClick={() => toggleStopAlert(stop.id, stop.name)}
-                                className={`text-[10px] font-semibold inline-flex items-center gap-1 transition ${
-                                  isSubscribed
-                                    ? "text-brand-600 font-bold"
-                                    : "text-muted hover:text-ink"
-                                }`}
-                              >
-                                <Bell size={10} className={isSubscribed ? "fill-current" : ""} />
-                                <span>{isSubscribed ? "Arrival Alert Set" : "Notify Me"}</span>
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {isExpanded && route.stops.length > 3 && (
-                        <button
-                          onClick={() => setExpandedRouteId(null)}
-                          className="text-2xs font-bold text-brand-600 hover:underline pt-1 block"
-                        >
-                          + {route.stops.length - 3} more stops along this line…
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Card Bottom Status Summary */}
-                <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between text-2xs text-muted">
-                  <span>Operating: {route.operatingDays}</span>
-                  <span className="font-semibold text-ink">{route.delaySummary}</span>
+              <div className="mt-4 space-y-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold text-secondary-fg">
+                  <ArrowRight size={10} />
+                  <span>University → Stop</span>
+                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-sm text-ink">From University</span>
+                  <ChevronRight size={15} className="shrink-0 text-muted" aria-hidden="true" />
                 </div>
               </div>
-            );
-          })}
+            </button>
+
+            {/* To University */}
+            <button
+              type="button"
+              aria-pressed={selectedDirection === "to_university"}
+              onClick={() => {
+                setSelectedDirection("to_university");
+                setSearchQuery("");
+              }}
+              className={`rounded-3xl border bg-panel p-4 sm:p-5 text-left transition flex flex-col justify-between min-h-[144px] cursor-pointer group ${
+                selectedDirection === "to_university"
+                  ? "border-primary ring-2 ring-primary/25 shadow-md"
+                  : "border-line shadow-sm hover:shadow-md hover:border-primary/45"
+              }`}
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-soft text-primary-ink group-hover:scale-105 transition">
+                <Bus size={21} />
+              </span>
+
+              <div className="mt-4 space-y-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold text-on-primary">
+                  <ArrowRight size={10} />
+                  <span>Stop → University</span>
+                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-sm text-ink">To University</span>
+                  <ChevronRight size={15} className="shrink-0 text-muted" aria-hidden="true" />
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
+
+        {/* Route Details Rendered Inline Below when a direction is clicked (Planned Route UI) */}
+        {selectedDirection && (
+          <div className="pt-4 border-t border-line/60 animate-in fade-in duration-200">
+            {renderBusScheduleBlock(filteredShuttleBuses)}
+          </div>
+        )}
       </div>
     </div>
   );

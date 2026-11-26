@@ -96,6 +96,274 @@ export const TRANSIT_ALERTS: DisruptionAlert[] = [
   }
 ];
 
+export interface SimpleBusStop {
+  id: string;
+  name: string;
+  time: string;
+}
+
+export interface PlannedCityBus {
+  id: string;
+  busName: string;
+  city: "Sahiwal" | "Chichawatni";
+  routeTitle: string;
+  stops: SimpleBusStop[];
+}
+
+export type ShuttleScheduleKey = "regular" | "exams" | "ramzan" | "sports";
+export type ShuttleDirectionKey = "from_university" | "to_university";
+
+export interface ShuttleScheduleRouteSet {
+  key: ShuttleScheduleKey;
+  label: string;
+  subtitle: string;
+  directions: Record<ShuttleDirectionKey, PlannedCityBus[]>;
+}
+
+export const PLANNED_CITY_BUSES: PlannedCityBus[] = [
+  {
+    id: "planned-bus-1",
+    busName: "Bus 1",
+    city: "Sahiwal",
+    routeTitle: "Jeewan City · Stadium Road",
+    stops: [
+      { id: "pb1-1", name: "Jeewan City", time: "10:00 AM" },
+      { id: "pb1-2", name: "College Chowk", time: "10:15 AM" },
+      { id: "pb1-3", name: "Faridia Park", time: "10:30 AM" },
+      { id: "pb1-4", name: "Civil Hospital", time: "10:45 AM" },
+      { id: "pb1-5", name: "GT Road", time: "11:00 AM" },
+      { id: "pb1-6", name: "Stadium Road", time: "11:15 AM" }
+    ]
+  },
+  {
+    id: "planned-bus-2",
+    busName: "Bus 2",
+    city: "Sahiwal",
+    routeTitle: "Pakka Anna · Farid Town Point",
+    stops: [
+      { id: "pb2-1", name: "Pakka Anna", time: "07:25 AM" },
+      { id: "pb2-2", name: "Sahiwal Adda", time: "07:40 AM" },
+      { id: "pb2-3", name: "Railway Station", time: "07:55 AM" },
+      { id: "pb2-4", name: "Farid Town Point", time: "08:10 AM" },
+      { id: "pb2-5", name: "Jinnah Hall Chowk", time: "08:20 AM" },
+      { id: "pb2-6", name: "Campus Terminal", time: "08:30 AM" }
+    ]
+  },
+  {
+    id: "planned-bus-3",
+    busName: "Bus 3",
+    city: "Sahiwal",
+    routeTitle: "Mall Road · Bypass Line",
+    stops: [
+      { id: "pb3-1", name: "Mall Road GPO", time: "07:30 AM" },
+      { id: "pb3-2", name: "High Court Point", time: "07:45 AM" },
+      { id: "pb3-3", name: "Canal Bridge", time: "08:00 AM" },
+      { id: "pb3-4", name: "Girls Hostel Gate", time: "08:15 AM" },
+      { id: "pb3-5", name: "Bypass Chowk", time: "08:25 AM" },
+      { id: "pb3-6", name: "Campus Terminal", time: "08:35 AM" }
+    ]
+  },
+  {
+    id: "planned-bus-cw-1",
+    busName: "Bus 4",
+    city: "Chichawatni",
+    routeTitle: "Chichawatni · Harappa Express",
+    stops: [
+      { id: "pbc-1", name: "Chichawatni Adda", time: "07:00 AM" },
+      { id: "pbc-2", name: "Harappa Station", time: "07:25 AM" },
+      { id: "pbc-3", name: "N-5 Bypass", time: "07:50 AM" },
+      { id: "pbc-4", name: "Campus Terminal", time: "08:20 AM" }
+    ]
+  }
+];
+
+export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
+  {
+    key: "regular",
+    label: "Regular Days",
+    subtitle: "Regular Days schedule",
+    directions: {
+      from_university: [
+        {
+          id: "reg-out-1",
+          busName: "Bus 1",
+          city: "Sahiwal",
+          routeTitle: "Afternoon Departure — City Line",
+          stops: [
+            { id: "ro1-1", name: "University Gate 1", time: "01:30 PM" },
+            { id: "ro1-2", name: "Farid Town Point", time: "01:45 PM" },
+            { id: "ro1-3", name: "Jeewan City", time: "02:00 PM" },
+            { id: "ro1-4", name: "College Chowk", time: "02:10 PM" },
+            { id: "ro1-5", name: "Faridia Park", time: "02:20 PM" },
+            { id: "ro1-6", name: "Stadium Road", time: "02:30 PM" }
+          ]
+        },
+        {
+          id: "reg-out-2",
+          busName: "Bus 2",
+          city: "Sahiwal",
+          routeTitle: "Evening Departure — Mall Line",
+          stops: [
+            { id: "ro2-1", name: "University Gate 1", time: "04:00 PM" },
+            { id: "ro2-2", name: "Girls Hostel Gate", time: "04:10 PM" },
+            { id: "ro2-3", name: "High Court Point", time: "04:22 PM" },
+            { id: "ro2-4", name: "Civil Hospital", time: "04:32 PM" },
+            { id: "ro2-5", name: "Railway Station", time: "04:42 PM" },
+            { id: "ro2-6", name: "Sahiwal Adda", time: "04:55 PM" }
+          ]
+        }
+      ],
+      to_university: [
+        {
+          id: "reg-in-1",
+          busName: "Bus 1",
+          city: "Sahiwal",
+          routeTitle: "Morning Arrival — City Line",
+          stops: [
+            { id: "ri1-1", name: "Jeewan City", time: "07:30 AM" },
+            { id: "ri1-2", name: "College Chowk", time: "07:42 AM" },
+            { id: "ri1-3", name: "Faridia Park", time: "07:52 AM" },
+            { id: "ri1-4", name: "Farid Town Point", time: "08:05 AM" },
+            { id: "ri1-5", name: "GT Road", time: "08:15 AM" },
+            { id: "ri1-6", name: "University Gate 1", time: "08:25 AM" }
+          ]
+        },
+        {
+          id: "reg-in-2",
+          busName: "Bus 2",
+          city: "Sahiwal",
+          routeTitle: "Morning Arrival — Bypass Line",
+          stops: [
+            { id: "ri2-1", name: "Pakka Anna", time: "07:20 AM" },
+            { id: "ri2-2", name: "Sahiwal Adda", time: "07:35 AM" },
+            { id: "ri2-3", name: "Railway Station", time: "07:50 AM" },
+            { id: "ri2-4", name: "Civil Hospital", time: "08:02 AM" },
+            { id: "ri2-5", name: "Stadium Road", time: "08:15 AM" },
+            { id: "ri2-6", name: "University Gate 1", time: "08:25 AM" }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    key: "exams",
+    label: "During Exams",
+    subtitle: "During Exams schedule",
+    directions: {
+      from_university: [
+        {
+          id: "ex-out-1",
+          busName: "Bus 1",
+          city: "Sahiwal",
+          routeTitle: "Paper Dispersal — Shift 1",
+          stops: [
+            { id: "eo1-1", name: "University Gate 1", time: "12:15 PM" },
+            { id: "eo1-2", name: "Farid Town Point", time: "12:30 PM" },
+            { id: "eo1-3", name: "Jeewan City", time: "12:45 PM" },
+            { id: "eo1-4", name: "College Chowk", time: "12:55 PM" }
+          ]
+        },
+        {
+          id: "ex-out-2",
+          busName: "Bus 2",
+          city: "Sahiwal",
+          routeTitle: "Paper Dispersal — Shift 2",
+          stops: [
+            { id: "eo2-1", name: "University Gate 1", time: "03:45 PM" },
+            { id: "eo2-2", name: "Girls Hostel Gate", time: "03:55 PM" },
+            { id: "eo2-3", name: "Civil Hospital", time: "04:10 PM" },
+            { id: "eo2-4", name: "Sahiwal Adda", time: "04:25 PM" }
+          ]
+        }
+      ],
+      to_university: [
+        {
+          id: "ex-in-1",
+          busName: "Bus 1",
+          city: "Sahiwal",
+          routeTitle: "Morning Exam Arrival",
+          stops: [
+            { id: "ei1-1", name: "Jeewan City", time: "08:00 AM" },
+            { id: "ei1-2", name: "Farid Town Point", time: "08:15 AM" },
+            { id: "ei1-3", name: "College Chowk", time: "08:25 AM" },
+            { id: "ei1-4", name: "University Gate 1", time: "08:40 AM" }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    key: "ramzan",
+    label: "During Ramzan",
+    subtitle: "During Ramzan schedule",
+    directions: {
+      from_university: [
+        {
+          id: "rm-out-1",
+          busName: "Bus 1",
+          city: "Sahiwal",
+          routeTitle: "Early Ramzan Return",
+          stops: [
+            { id: "rmo-1", name: "University Gate 1", time: "01:00 PM" },
+            { id: "rmo-2", name: "Farid Town Point", time: "01:15 PM" },
+            { id: "rmo-3", name: "Jeewan City", time: "01:30 PM" },
+            { id: "rmo-4", name: "Sahiwal Adda", time: "01:45 PM" }
+          ]
+        }
+      ],
+      to_university: [
+        {
+          id: "rm-in-1",
+          busName: "Bus 1",
+          city: "Sahiwal",
+          routeTitle: "Morning Ramzan Pickup",
+          stops: [
+            { id: "rmi-1", name: "Jeewan City", time: "07:45 AM" },
+            { id: "rmi-2", name: "Faridia Park", time: "08:00 AM" },
+            { id: "rmi-3", name: "Farid Town Point", time: "08:12 AM" },
+            { id: "rmi-4", name: "University Gate 1", time: "08:25 AM" }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    key: "sports",
+    label: "During Sports Week",
+    subtitle: "During Sports Week schedule",
+    directions: {
+      from_university: [
+        {
+          id: "sp-out-1",
+          busName: "Bus 1",
+          city: "Sahiwal",
+          routeTitle: "Post-Match Departure",
+          stops: [
+            { id: "spo-1", name: "Sports Complex Gate", time: "04:30 PM" },
+            { id: "spo-2", name: "University Gate 1", time: "04:40 PM" },
+            { id: "spo-3", name: "Farid Town Point", time: "04:55 PM" },
+            { id: "spo-4", name: "Stadium Road", time: "05:10 PM" }
+          ]
+        }
+      ],
+      to_university: [
+        {
+          id: "sp-in-1",
+          busName: "Bus 1",
+          city: "Sahiwal",
+          routeTitle: "Morning Sports Ground Drop",
+          stops: [
+            { id: "spi-1", name: "Jeewan City", time: "07:00 AM" },
+            { id: "spi-2", name: "College Chowk", time: "07:12 AM" },
+            { id: "spi-3", name: "Sports Complex Gate", time: "07:25 AM" },
+            { id: "spi-4", name: "University Gate 1", time: "07:30 AM" }
+          ]
+        }
+      ]
+    }
+  }
+];
+
 export const TRANSIT_ROUTES: TransitRoute[] = [
   // ================= 1. CITY ROUTE NETWORKS =================
   {

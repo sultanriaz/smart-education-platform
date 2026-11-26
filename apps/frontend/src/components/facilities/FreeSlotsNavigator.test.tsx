@@ -77,7 +77,39 @@ describe("FreeSlotsNavigator", () => {
     const slot2Button = screen.getByRole("button", { name: "2" });
     fireEvent.click(slot2Button);
 
-    // Free count changes dynamically
-    expect(screen.getByText(/rooms free/)).toBeInTheDocument();
+    expect(screen.getByText(/rooms? free/)).toBeInTheDocument();
+  });
+
+  it("filters free rooms by search text, block pills, room type, seats, and features", () => {
+    render(<FreeSlotsNavigator />);
+
+    // Search by room name / code
+    const searchInput = screen.getByPlaceholderText("Search rooms...");
+    fireEvent.change(searchInput, { target: { value: "Software Lab 1" } });
+    expect(screen.getByText("1 room free")).toBeInTheDocument();
+    expect(screen.getByText("Engineering Labs")).toBeInTheDocument();
+    expect(screen.queryByText("A- Block")).not.toBeInTheDocument();
+
+    // Clear search button restores all 34 rooms
+    fireEvent.click(screen.getByRole("button", { name: "Clear room search" }));
+    expect(screen.getByText("34 rooms free")).toBeInTheDocument();
+
+    // Quick block filter pill
+    fireEvent.click(screen.getByRole("button", { name: "A Block" }));
+    expect(screen.getByText("8 rooms free")).toBeInTheDocument();
+    expect(screen.getByText("A- Block")).toBeInTheDocument();
+    expect(screen.queryByText("B- Block")).not.toBeInTheDocument();
+
+    // Expand more search options and filter to Labs only
+    fireEvent.click(screen.getByRole("button", { name: /Options/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Labs" }));
+    expect(screen.getByText("1 room free")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /A Lab-9\s+30/ })).toBeInTheDocument();
+
+    // Apply impossible seat filter -> friendly empty state + reset
+    fireEvent.click(screen.getByRole("button", { name: "65+ seats" }));
+    expect(screen.getByText("No free rooms match your search")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Clear Search & Filters" }));
+    expect(screen.getByText("34 rooms free")).toBeInTheDocument();
   });
 });

@@ -2,8 +2,8 @@ export interface TimetableSlot {
   id: string;
   slotNumber: number;
   timeRange: string;
-  startTime: string; // "10:15"
-  endTime: string;   // "11:45"
+  startTime: string; // 24h "HH:MM"
+  endTime: string;   // 24h "HH:MM"
   courseCode: string;
   courseTitle: string;
   instructorName: string;
@@ -37,234 +37,87 @@ export const STANDARD_PERIODS = [
   { slot: 5, label: "Slot 5", time: "03:45 PM – 05:15 PM", start: "15:45", end: "17:15" }
 ];
 
-export const STUDENT_SCHEDULE: TimetableSlot[] = [
-  {
-    id: "slot-mon-1",
-    slotNumber: 1,
-    timeRange: "08:30 AM – 10:00 AM",
-    startTime: "08:30",
-    endTime: "10:00",
-    courseCode: "CSC-322",
-    courseTitle: "Operating Systems",
-    instructorName: "Dr. Muhammad Asim",
-    instructorOffice: "C Block, 2nd Floor, Room C-203",
-    section: "BCS-7A",
-    room: "Room C-101",
-    block: "C Block",
-    floor: "1st Floor",
-    capacity: 65,
-    enrolledStudents: 58,
-    day: "Monday",
-    colorScheme: {
-      bg: "bg-primary-soft",
-      border: "border-primary/35",
-      text: "text-primary-ink",
-      badge: "bg-primary/15 text-primary-ink"
-    }
+const COLOR_SCHEMES = {
+  os: {
+    bg: "bg-primary-soft/60",
+    border: "border-primary/25",
+    text: "text-primary-ink",
+    badge: "bg-primary/15 text-primary-ink"
   },
-  {
-    id: "slot-mon-2",
-    slotNumber: 2,
-    timeRange: "10:15 AM – 11:45 AM",
-    startTime: "10:15",
-    endTime: "11:45",
-    courseCode: "CSC-354",
-    courseTitle: "Compiler Construction",
-    instructorName: "Dr. Munir Ahmad",
-    instructorOffice: "A Block, 3rd Floor, Room A-301",
-    section: "BCS-7C",
-    room: "Room C-204",
-    block: "C Block",
-    floor: "2nd Floor",
-    capacity: 60,
-    enrolledStudents: 54,
-    day: "Monday",
-    colorScheme: {
-      bg: "bg-secondary-soft",
-      border: "border-secondary/35",
-      text: "text-secondary-ink",
-      badge: "bg-secondary/15 text-secondary-ink"
-    }
+  compiler: {
+    bg: "bg-secondary-soft/60",
+    border: "border-secondary/30",
+    text: "text-secondary-ink",
+    badge: "bg-secondary/15 text-secondary-ink"
   },
-  {
-    id: "slot-tue-2",
-    slotNumber: 2,
-    timeRange: "10:15 AM – 11:45 AM",
-    startTime: "10:15",
-    endTime: "11:45",
-    courseCode: "CSC-371",
-    courseTitle: "Software Engineering",
-    instructorName: "Dr. Majid Hussain",
-    instructorOffice: "A Block, 3rd Floor, Room A-302",
-    section: "BCS-7C",
-    room: "Room C-102",
-    block: "C Block",
-    floor: "1st Floor",
-    capacity: 65,
-    enrolledStudents: 52,
-    day: "Tuesday",
-    colorScheme: {
-      bg: "bg-success-soft",
-      border: "border-success/35",
-      text: "text-success-ink",
-      badge: "bg-success/15 text-success-ink"
-    }
+  se: {
+    bg: "bg-success-soft/60",
+    border: "border-success/25",
+    text: "text-success-ink",
+    badge: "bg-success/15 text-success-ink"
   },
-  {
-    id: "slot-tue-4",
-    slotNumber: 4,
-    timeRange: "02:00 PM – 03:30 PM",
-    startTime: "14:00",
-    endTime: "15:30",
-    courseCode: "CSC-462",
-    courseTitle: "Artificial Intelligence Lab",
-    instructorName: "Engr. Bilal Khan",
-    instructorOffice: "C Block, Ground Floor, Room C-02",
-    section: "BCS-7C",
-    room: "Software Lab 1",
-    block: "C Block",
-    floor: "Ground Floor",
-    capacity: 50,
-    enrolledStudents: 48,
-    day: "Tuesday",
-    colorScheme: {
-      bg: "bg-warning-soft",
-      border: "border-warning/35",
-      text: "text-warning-ink",
-      badge: "bg-warning/15 text-warning-ink"
-    },
-    swapAlert: {
-      type: "ROOM_SWAP",
-      message: "Room swap: Moved from C-02 Robotics Lab to Software Lab 1 due to GPU setup.",
-      previousRoom: "C-02 Robotics Lab",
-      newRoom: "Software Lab 1"
-    }
+  ai: {
+    bg: "bg-warning-soft/70",
+    border: "border-warning/30",
+    text: "text-warning-ink",
+    badge: "bg-warning/15 text-warning-ink"
   },
-  {
-    id: "slot-wed-2",
-    slotNumber: 2,
-    timeRange: "10:15 AM – 11:45 AM",
-    startTime: "10:15",
-    endTime: "11:45",
-    courseCode: "CSC-354",
-    courseTitle: "Compiler Construction",
-    instructorName: "Dr. Munir Ahmad",
-    instructorOffice: "A Block, 3rd Floor, Room A-301",
-    section: "BCS-7C",
-    room: "Room C-204",
-    block: "C Block",
-    floor: "2nd Floor",
-    capacity: 60,
-    enrolledStudents: 54,
-    day: "Wednesday",
-    colorScheme: {
-      bg: "bg-secondary-soft",
-      border: "border-secondary/35",
-      text: "text-secondary-ink",
-      badge: "bg-secondary/15 text-secondary-ink"
-    }
+  db: {
+    bg: "bg-subtle/75",
+    border: "border-line",
+    text: "text-ink",
+    badge: "bg-panel text-muted border border-line"
   },
-  {
-    id: "slot-wed-3",
-    slotNumber: 3,
-    timeRange: "12:00 PM – 01:30 PM",
-    startTime: "12:00",
-    endTime: "13:30",
-    courseCode: "CSC-331",
-    courseTitle: "Database Systems",
-    instructorName: "Engr. Tariq Mehmood",
-    instructorOffice: "A Block, 1st Floor, Room A-103",
-    section: "BCS-7B",
-    room: "Room A-201",
-    block: "A Block",
-    floor: "2nd Floor",
-    capacity: 65,
-    enrolledStudents: 62,
-    day: "Wednesday",
-    colorScheme: {
-      bg: "bg-subtle/75",
-      border: "border-line",
-      text: "text-ink",
-      badge: "bg-panel text-muted"
-    }
-  },
-  {
-    id: "slot-thu-1",
-    slotNumber: 1,
-    timeRange: "08:30 AM – 10:00 AM",
-    startTime: "08:30",
-    endTime: "10:00",
-    courseCode: "CSC-322",
-    courseTitle: "Operating Systems",
-    instructorName: "Dr. Muhammad Asim",
-    instructorOffice: "C Block, 2nd Floor, Room C-203",
-    section: "BCS-7A",
-    room: "Room C-101",
-    block: "C Block",
-    floor: "1st Floor",
-    capacity: 65,
-    enrolledStudents: 58,
-    day: "Thursday",
-    colorScheme: {
-      bg: "bg-primary-soft",
-      border: "border-primary/35",
-      text: "text-primary-ink",
-      badge: "bg-primary/15 text-primary-ink"
-    }
-  },
-  {
-    id: "slot-thu-3",
-    slotNumber: 3,
-    timeRange: "12:00 PM – 01:30 PM",
-    startTime: "12:00",
-    endTime: "13:30",
-    courseCode: "CSC-331",
-    courseTitle: "Database Systems Lab",
-    instructorName: "Engr. Tariq Mehmood",
-    instructorOffice: "A Block, 1st Floor, Room A-103",
-    section: "BCS-7B",
-    room: "Computer Lab 1",
-    block: "A Block",
-    floor: "1st Floor",
-    capacity: 50,
-    enrolledStudents: 45,
-    day: "Thursday",
-    colorScheme: {
-      bg: "bg-subtle/75",
-      border: "border-line",
-      text: "text-ink",
-      badge: "bg-panel text-muted"
-    }
-  },
-  {
-    id: "slot-fri-4",
-    slotNumber: 4,
-    timeRange: "02:00 PM – 03:30 PM",
-    startTime: "14:00",
-    endTime: "15:30",
-    courseCode: "CSC-371",
-    courseTitle: "Software Engineering",
-    instructorName: "Dr. Majid Hussain",
-    instructorOffice: "A Block, 3rd Floor, Room A-302",
-    section: "BCS-7C",
-    room: "Room C-102",
-    block: "C Block",
-    floor: "1st Floor",
-    capacity: 65,
-    enrolledStudents: 52,
-    day: "Friday",
-    colorScheme: {
-      bg: "bg-success-soft",
-      border: "border-success/35",
-      text: "text-success-ink",
-      badge: "bg-success/15 text-success-ink"
-    }
+  grad: {
+    bg: "bg-accent-soft/65",
+    border: "border-accent/35",
+    text: "text-accent-ink",
+    badge: "bg-accent/20 text-accent-ink"
   }
-];
+} as const;
 
-export const TEACHER_SCHEDULE: TimetableSlot[] = [
+const MASTER_SLOTS: TimetableSlot[] = [
+  // ==================== MONDAY ====================
   {
-    id: "t-slot-mon-2",
+    id: "slot-mon-1-bcs7c",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-322",
+    courseTitle: "Operating Systems",
+    instructorName: "Dr. Muhammad Asim",
+    instructorOffice: "C Block, 2nd Floor, Room C-203",
+    section: "BCS-7C",
+    room: "Room C-101",
+    block: "C Block",
+    floor: "1st Floor",
+    capacity: 65,
+    enrolledStudents: 58,
+    day: "Monday",
+    colorScheme: COLOR_SCHEMES.os
+  },
+  {
+    id: "slot-mon-1-bcs7b",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-371",
+    courseTitle: "Software Engineering",
+    instructorName: "Dr. Majid Hussain",
+    instructorOffice: "A Block, 3rd Floor, Room A-302",
+    section: "BCS-7B",
+    room: "Room A-102",
+    block: "A Block",
+    floor: "1st Floor",
+    capacity: 60,
+    enrolledStudents: 55,
+    day: "Monday",
+    colorScheme: COLOR_SCHEMES.se
+  },
+  {
+    id: "slot-mon-2-bcs7c",
     slotNumber: 2,
     timeRange: "10:15 AM – 11:45 AM",
     startTime: "10:15",
@@ -280,15 +133,29 @@ export const TEACHER_SCHEDULE: TimetableSlot[] = [
     capacity: 60,
     enrolledStudents: 54,
     day: "Monday",
-    colorScheme: {
-      bg: "bg-secondary-soft",
-      border: "border-secondary/35",
-      text: "text-secondary-ink",
-      badge: "bg-secondary/15 text-secondary-ink"
-    }
+    colorScheme: COLOR_SCHEMES.compiler
   },
   {
-    id: "t-slot-mon-4",
+    id: "slot-mon-3-bcs7a",
+    slotNumber: 3,
+    timeRange: "12:00 PM – 01:30 PM",
+    startTime: "12:00",
+    endTime: "13:30",
+    courseCode: "CSC-322",
+    courseTitle: "Operating Systems",
+    instructorName: "Dr. Muhammad Asim",
+    instructorOffice: "C Block, 2nd Floor, Room C-203",
+    section: "BCS-7A",
+    room: "Room C-103",
+    block: "C Block",
+    floor: "1st Floor",
+    capacity: 65,
+    enrolledStudents: 56,
+    day: "Monday",
+    colorScheme: COLOR_SCHEMES.os
+  },
+  {
+    id: "slot-mon-4-bcs7a",
     slotNumber: 4,
     timeRange: "02:00 PM – 03:30 PM",
     startTime: "14:00",
@@ -304,15 +171,115 @@ export const TEACHER_SCHEDULE: TimetableSlot[] = [
     capacity: 55,
     enrolledStudents: 48,
     day: "Monday",
-    colorScheme: {
-      bg: "bg-secondary-soft",
-      border: "border-secondary/35",
-      text: "text-secondary-ink",
-      badge: "bg-secondary/15 text-secondary-ink"
-    }
+    colorScheme: COLOR_SCHEMES.compiler
+  },
+
+  // ==================== TUESDAY ====================
+  {
+    id: "slot-tue-1-bcs7a",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-331",
+    courseTitle: "Database Systems",
+    instructorName: "Engr. Tariq Mehmood",
+    instructorOffice: "A Block, 1st Floor, Room A-103",
+    section: "BCS-7A",
+    room: "Room A-201",
+    block: "A Block",
+    floor: "2nd Floor",
+    capacity: 65,
+    enrolledStudents: 59,
+    day: "Tuesday",
+    colorScheme: COLOR_SCHEMES.db
   },
   {
-    id: "t-slot-wed-2",
+    id: "slot-tue-2-bcs7c",
+    slotNumber: 2,
+    timeRange: "10:15 AM – 11:45 AM",
+    startTime: "10:15",
+    endTime: "11:45",
+    courseCode: "CSC-371",
+    courseTitle: "Software Engineering",
+    instructorName: "Dr. Majid Hussain",
+    instructorOffice: "A Block, 3rd Floor, Room A-302",
+    section: "BCS-7C",
+    room: "Room C-102",
+    block: "C Block",
+    floor: "1st Floor",
+    capacity: 65,
+    enrolledStudents: 52,
+    day: "Tuesday",
+    colorScheme: COLOR_SCHEMES.se
+  },
+  {
+    id: "slot-tue-3-bcs7b",
+    slotNumber: 3,
+    timeRange: "12:00 PM – 01:30 PM",
+    startTime: "12:00",
+    endTime: "13:30",
+    courseCode: "CSC-322",
+    courseTitle: "Operating Systems Lab",
+    instructorName: "Dr. Muhammad Asim",
+    instructorOffice: "C Block, 2nd Floor, Room C-203",
+    section: "BCS-7B",
+    room: "Computer Lab 2",
+    block: "C Block",
+    floor: "Ground Floor",
+    capacity: 50,
+    enrolledStudents: 47,
+    day: "Tuesday",
+    colorScheme: COLOR_SCHEMES.os
+  },
+  {
+    id: "slot-tue-4-bcs7c",
+    slotNumber: 4,
+    timeRange: "02:00 PM – 03:30 PM",
+    startTime: "14:00",
+    endTime: "15:30",
+    courseCode: "CSC-462",
+    courseTitle: "Artificial Intelligence Lab",
+    instructorName: "Engr. Bilal Khan",
+    instructorOffice: "C Block, Ground Floor, Room C-02",
+    section: "BCS-7C",
+    room: "Software Lab 1",
+    block: "C Block",
+    floor: "Ground Floor",
+    capacity: 50,
+    enrolledStudents: 48,
+    day: "Tuesday",
+    colorScheme: COLOR_SCHEMES.ai,
+    swapAlert: {
+      type: "ROOM_SWAP",
+      message: "Moved from Room C-02 to Software Lab 1 while new lab computers are set up.",
+      previousRoom: "Room C-02",
+      newRoom: "Software Lab 1"
+    }
+  },
+
+  // ==================== WEDNESDAY ====================
+  {
+    id: "slot-wed-1-bcs7a",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-354",
+    courseTitle: "Compiler Construction",
+    instructorName: "Dr. Munir Ahmad",
+    instructorOffice: "A Block, 3rd Floor, Room A-301",
+    section: "BCS-7A",
+    room: "Room C-201",
+    block: "C Block",
+    floor: "2nd Floor",
+    capacity: 65,
+    enrolledStudents: 56,
+    day: "Wednesday",
+    colorScheme: COLOR_SCHEMES.compiler
+  },
+  {
+    id: "slot-wed-2-bcs7c",
     slotNumber: 2,
     timeRange: "10:15 AM – 11:45 AM",
     startTime: "10:15",
@@ -328,21 +295,132 @@ export const TEACHER_SCHEDULE: TimetableSlot[] = [
     capacity: 60,
     enrolledStudents: 54,
     day: "Wednesday",
-    colorScheme: {
-      bg: "bg-secondary-soft",
-      border: "border-secondary/35",
-      text: "text-secondary-ink",
-      badge: "bg-secondary/15 text-secondary-ink"
-    }
+    colorScheme: COLOR_SCHEMES.compiler
   },
   {
-    id: "t-slot-thu-4",
+    id: "slot-wed-3-bcs7c",
+    slotNumber: 3,
+    timeRange: "12:00 PM – 01:30 PM",
+    startTime: "12:00",
+    endTime: "13:30",
+    courseCode: "CSC-331",
+    courseTitle: "Database Systems",
+    instructorName: "Engr. Tariq Mehmood",
+    instructorOffice: "A Block, 1st Floor, Room A-103",
+    section: "BCS-7C",
+    room: "Room A-201",
+    block: "A Block",
+    floor: "2nd Floor",
+    capacity: 65,
+    enrolledStudents: 62,
+    day: "Wednesday",
+    colorScheme: COLOR_SCHEMES.db
+  },
+  {
+    id: "slot-wed-4-bcs7b",
+    slotNumber: 4,
+    timeRange: "02:00 PM – 03:30 PM",
+    startTime: "14:00",
+    endTime: "15:30",
+    courseCode: "CSC-462",
+    courseTitle: "Artificial Intelligence",
+    instructorName: "Engr. Bilal Khan",
+    instructorOffice: "C Block, Ground Floor, Room C-02",
+    section: "BCS-7B",
+    room: "Room D-101",
+    block: "D Block",
+    floor: "1st Floor",
+    capacity: 60,
+    enrolledStudents: 53,
+    day: "Wednesday",
+    colorScheme: COLOR_SCHEMES.ai
+  },
+
+  // ==================== THURSDAY ====================
+  {
+    id: "slot-thu-1-bcs7c",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-322",
+    courseTitle: "Operating Systems",
+    instructorName: "Dr. Muhammad Asim",
+    instructorOffice: "C Block, 2nd Floor, Room C-203",
+    section: "BCS-7C",
+    room: "Room C-101",
+    block: "C Block",
+    floor: "1st Floor",
+    capacity: 65,
+    enrolledStudents: 58,
+    day: "Thursday",
+    colorScheme: COLOR_SCHEMES.os
+  },
+  {
+    id: "slot-thu-2-bcs7a",
+    slotNumber: 2,
+    timeRange: "10:15 AM – 11:45 AM",
+    startTime: "10:15",
+    endTime: "11:45",
+    courseCode: "CSC-322",
+    courseTitle: "Operating Systems Lab",
+    instructorName: "Dr. Muhammad Asim",
+    instructorOffice: "C Block, 2nd Floor, Room C-203",
+    section: "BCS-7A",
+    room: "Computer Lab 2",
+    block: "C Block",
+    floor: "Ground Floor",
+    capacity: 50,
+    enrolledStudents: 49,
+    day: "Thursday",
+    colorScheme: COLOR_SCHEMES.os
+  },
+  {
+    id: "slot-thu-3-bcs7c",
+    slotNumber: 3,
+    timeRange: "12:00 PM – 01:30 PM",
+    startTime: "12:00",
+    endTime: "13:30",
+    courseCode: "CSC-331",
+    courseTitle: "Database Systems Lab",
+    instructorName: "Engr. Tariq Mehmood",
+    instructorOffice: "A Block, 1st Floor, Room A-103",
+    section: "BCS-7C",
+    room: "Computer Lab 1",
+    block: "A Block",
+    floor: "1st Floor",
+    capacity: 50,
+    enrolledStudents: 45,
+    day: "Thursday",
+    colorScheme: COLOR_SCHEMES.db
+  },
+  {
+    id: "slot-thu-3-bcs7b",
+    slotNumber: 3,
+    timeRange: "12:00 PM – 01:30 PM",
+    startTime: "12:00",
+    endTime: "13:30",
+    courseCode: "CSC-371",
+    courseTitle: "Software Engineering",
+    instructorName: "Dr. Majid Hussain",
+    instructorOffice: "A Block, 3rd Floor, Room A-302",
+    section: "BCS-7B",
+    room: "Room A-102",
+    block: "A Block",
+    floor: "1st Floor",
+    capacity: 60,
+    enrolledStudents: 55,
+    day: "Thursday",
+    colorScheme: COLOR_SCHEMES.se
+  },
+  {
+    id: "slot-thu-4-mcs2a",
     slotNumber: 4,
     timeRange: "02:00 PM – 03:30 PM",
     startTime: "14:00",
     endTime: "15:30",
     courseCode: "CSC-354",
-    courseTitle: "Advanced Compiler Topics (PG)",
+    courseTitle: "Advanced Compiler Design",
     instructorName: "Dr. Munir Ahmad",
     instructorOffice: "A Block, 3rd Floor, Room A-301",
     section: "MCS-2A",
@@ -352,209 +430,103 @@ export const TEACHER_SCHEDULE: TimetableSlot[] = [
     capacity: 40,
     enrolledStudents: 28,
     day: "Thursday",
-    colorScheme: {
-      bg: "bg-accent-soft",
-      border: "border-accent/35",
-      text: "text-accent-ink",
-      badge: "bg-accent/20 text-accent-ink"
-    }
+    colorScheme: COLOR_SCHEMES.grad
+  },
+
+  // ==================== FRIDAY ====================
+  {
+    id: "slot-fri-1-bcs7a",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-462",
+    courseTitle: "Artificial Intelligence",
+    instructorName: "Engr. Bilal Khan",
+    instructorOffice: "C Block, Ground Floor, Room C-02",
+    section: "BCS-7A",
+    room: "Room D-101",
+    block: "D Block",
+    floor: "1st Floor",
+    capacity: 60,
+    enrolledStudents: 51,
+    day: "Friday",
+    colorScheme: COLOR_SCHEMES.ai
+  },
+  {
+    id: "slot-fri-2-bcs7b",
+    slotNumber: 2,
+    timeRange: "10:15 AM – 11:45 AM",
+    startTime: "10:15",
+    endTime: "11:45",
+    courseCode: "CSC-331",
+    courseTitle: "Database Systems Lab",
+    instructorName: "Engr. Tariq Mehmood",
+    instructorOffice: "A Block, 1st Floor, Room A-103",
+    section: "BCS-7B",
+    room: "Computer Lab 1",
+    block: "A Block",
+    floor: "1st Floor",
+    capacity: 50,
+    enrolledStudents: 46,
+    day: "Friday",
+    colorScheme: COLOR_SCHEMES.db
+  },
+  {
+    id: "slot-fri-4-bcs7c",
+    slotNumber: 4,
+    timeRange: "02:00 PM – 03:30 PM",
+    startTime: "14:00",
+    endTime: "15:30",
+    courseCode: "CSC-371",
+    courseTitle: "Software Engineering",
+    instructorName: "Dr. Majid Hussain",
+    instructorOffice: "A Block, 3rd Floor, Room A-302",
+    section: "BCS-7C",
+    room: "Room C-102",
+    block: "C Block",
+    floor: "1st Floor",
+    capacity: 65,
+    enrolledStudents: 52,
+    day: "Friday",
+    colorScheme: COLOR_SCHEMES.se
   }
 ];
 
+export const STUDENT_SCHEDULE: TimetableSlot[] = MASTER_SLOTS.filter((s) => s.section === "BCS-7C");
+
+export const TEACHER_SCHEDULE: TimetableSlot[] = MASTER_SLOTS.filter(
+  (s) => s.instructorName === "Dr. Munir Ahmad"
+);
+
 export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
-  "BCS-7C": STUDENT_SCHEDULE.map((s) => ({ ...s, section: "BCS-7C" })),
-  "BCS-7A": [
-    {
-      id: "bcs7a-mon-1",
-      slotNumber: 1,
-      timeRange: "08:30 AM – 10:00 AM",
-      startTime: "08:30",
-      endTime: "10:00",
-      courseCode: "CSC-322",
-      courseTitle: "Operating Systems",
-      instructorName: "Dr. Muhammad Asim",
-      instructorOffice: "C Block, 2nd Floor, Room C-203",
-      section: "BCS-7A",
-      room: "Room C-101",
-      block: "C Block",
-      floor: "1st Floor",
-      capacity: 65,
-      enrolledStudents: 58,
-      day: "Monday",
-      colorScheme: {
-        bg: "bg-primary-soft",
-        border: "border-primary/35",
-        text: "text-primary-ink",
-        badge: "bg-primary/15 text-primary-ink"
-      }
-    },
-    {
-      id: "bcs7a-mon-4",
-      slotNumber: 4,
-      timeRange: "02:00 PM – 03:30 PM",
-      startTime: "14:00",
-      endTime: "15:30",
-      courseCode: "CSC-354",
-      courseTitle: "Compiler Construction Lab",
-      instructorName: "Dr. Munir Ahmad",
-      instructorOffice: "A Block, 3rd Floor, Room A-301",
-      section: "BCS-7A",
-      room: "Software Lab 2",
-      block: "C Block",
-      floor: "Ground Floor",
-      capacity: 55,
-      enrolledStudents: 48,
-      day: "Monday",
-      colorScheme: {
-        bg: "bg-secondary-soft",
-        border: "border-secondary/35",
-        text: "text-secondary-ink",
-        badge: "bg-secondary/15 text-secondary-ink"
-      }
-    },
-    {
-      id: "bcs7a-wed-1",
-      slotNumber: 1,
-      timeRange: "08:30 AM – 10:00 AM",
-      startTime: "08:30",
-      endTime: "10:00",
-      courseCode: "CSC-331",
-      courseTitle: "Database Systems",
-      instructorName: "Engr. Tariq Mehmood",
-      instructorOffice: "A Block, 1st Floor, Room A-103",
-      section: "BCS-7A",
-      room: "Room C-201",
-      block: "C Block",
-      floor: "2nd Floor",
-      capacity: 65,
-      enrolledStudents: 60,
-      day: "Wednesday",
-      colorScheme: {
-        bg: "bg-subtle/75",
-        border: "border-line",
-        text: "text-ink",
-        badge: "bg-panel text-muted"
-      }
-    },
-    {
-      id: "bcs7a-thu-1",
-      slotNumber: 1,
-      timeRange: "08:30 AM – 10:00 AM",
-      startTime: "08:30",
-      endTime: "10:00",
-      courseCode: "CSC-322",
-      courseTitle: "Operating Systems",
-      instructorName: "Dr. Muhammad Asim",
-      instructorOffice: "C Block, 2nd Floor, Room C-203",
-      section: "BCS-7A",
-      room: "Room C-101",
-      block: "C Block",
-      floor: "1st Floor",
-      capacity: 65,
-      enrolledStudents: 58,
-      day: "Thursday",
-      colorScheme: {
-        bg: "bg-primary-soft",
-        border: "border-primary/35",
-        text: "text-primary-ink",
-        badge: "bg-primary/15 text-primary-ink"
-      }
-    }
-  ],
-  "BCS-7B": [
-    {
-      id: "bcs7b-tue-1",
-      slotNumber: 1,
-      timeRange: "08:30 AM – 10:00 AM",
-      startTime: "08:30",
-      endTime: "10:00",
-      courseCode: "CSC-371",
-      courseTitle: "Software Engineering",
-      instructorName: "Dr. Majid Hussain",
-      instructorOffice: "A Block, 3rd Floor, Room A-302",
-      section: "BCS-7B",
-      room: "Room A-102",
-      block: "A Block",
-      floor: "1st Floor",
-      capacity: 60,
-      enrolledStudents: 56,
-      day: "Tuesday",
-      colorScheme: {
-        bg: "bg-success-soft",
-        border: "border-success/35",
-        text: "text-success-ink",
-        badge: "bg-success/15 text-success-ink"
-      }
-    },
-    {
-      id: "bcs7b-wed-3",
-      slotNumber: 3,
-      timeRange: "12:00 PM – 01:30 PM",
-      startTime: "12:00",
-      endTime: "13:30",
-      courseCode: "CSC-331",
-      courseTitle: "Database Systems",
-      instructorName: "Engr. Tariq Mehmood",
-      instructorOffice: "A Block, 1st Floor, Room A-103",
-      section: "BCS-7B",
-      room: "Room A-201",
-      block: "A Block",
-      floor: "2nd Floor",
-      capacity: 65,
-      enrolledStudents: 62,
-      day: "Wednesday",
-      colorScheme: {
-        bg: "bg-subtle/75",
-        border: "border-line",
-        text: "text-ink",
-        badge: "bg-panel text-muted"
-      }
-    },
-    {
-      id: "bcs7b-thu-3",
-      slotNumber: 3,
-      timeRange: "12:00 PM – 01:30 PM",
-      startTime: "12:00",
-      endTime: "13:30",
-      courseCode: "CSC-331",
-      courseTitle: "Database Systems Lab",
-      instructorName: "Engr. Tariq Mehmood",
-      instructorOffice: "A Block, 1st Floor, Room A-103",
-      section: "BCS-7B",
-      room: "Computer Lab 1",
-      block: "A Block",
-      floor: "1st Floor",
-      capacity: 50,
-      enrolledStudents: 45,
-      day: "Thursday",
-      colorScheme: {
-        bg: "bg-subtle/75",
-        border: "border-line",
-        text: "text-ink",
-        badge: "bg-panel text-muted"
-      }
-    }
-  ]
+  "BCS-7C": MASTER_SLOTS.filter((s) => s.section === "BCS-7C"),
+  "BCS-7A": MASTER_SLOTS.filter((s) => s.section === "BCS-7A"),
+  "BCS-7B": MASTER_SLOTS.filter((s) => s.section === "BCS-7B")
 };
 
 export const TEACHER_TIMETABLES_BY_NAME: Record<string, TimetableSlot[]> = {
-  "Sir Munir (Dr. Munir Ahmad)": TEACHER_SCHEDULE,
-  "Dr. Muhammad Asim": [
-    STUDENT_SCHEDULE[0]!,
-    STUDENT_SCHEDULE[6]!
-  ],
-  "Dr. Majid Hussain": [
-    STUDENT_SCHEDULE[2]!,
-    STUDENT_SCHEDULE[8]!
-  ],
-  "Engr. Tariq Mehmood": [
-    STUDENT_SCHEDULE[5]!,
-    STUDENT_SCHEDULE[7]!
-  ]
+  "Sir Munir (Dr. Munir Ahmad)": MASTER_SLOTS.filter((s) => s.instructorName === "Dr. Munir Ahmad"),
+  "Dr. Muhammad Asim": MASTER_SLOTS.filter((s) => s.instructorName === "Dr. Muhammad Asim"),
+  "Dr. Majid Hussain": MASTER_SLOTS.filter((s) => s.instructorName === "Dr. Majid Hussain"),
+  "Engr. Tariq Mehmood": MASTER_SLOTS.filter((s) => s.instructorName === "Engr. Tariq Mehmood"),
+  "Engr. Bilal Khan": MASTER_SLOTS.filter((s) => s.instructorName === "Engr. Bilal Khan")
 };
 
-/** Generate an iCalendar (.ics) string for exporting to Google, Apple, or Outlook calendar */
-export function generateICS(slots: TimetableSlot[], calendarName = "Academic Timetable"): string {
+const COURSE_CODE_TO_ROUTE_SLUG: Record<string, string> = {
+  "CSC-354": "compiler",
+  "CSC-322": "os",
+  "CSC-331": "db",
+  "CSC-371": "se"
+};
+
+/** Resolve a timetable course code to its student course page slug, if available. */
+export function getStudentCourseSlug(courseCode: string): string | null {
+  return COURSE_CODE_TO_ROUTE_SLUG[courseCode.toUpperCase()] ?? null;
+}
+
+/** Generate an iCalendar (.ics) string for exporting to Google, Apple, or Outlook calendar. */
+export function generateICS(slots: TimetableSlot[], calendarName = "Class Timetable"): string {
   const dayCodeMap: Record<string, string> = {
     Monday: "MO",
     Tuesday: "TU",
@@ -566,7 +538,7 @@ export function generateICS(slots: TimetableSlot[], calendarName = "Academic Tim
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//COMSATS SmartEdu Platform//Timetable Engine//EN",
+    "PRODID:-//COMSATS SmartEdu Platform//Timetable//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${calendarName}`,
@@ -583,7 +555,7 @@ export function generateICS(slots: TimetableSlot[], calendarName = "Academic Tim
       "BEGIN:VEVENT",
       `UID:${uid}`,
       `SUMMARY:${slot.courseCode}: ${slot.courseTitle} (${slot.section})`,
-      `DESCRIPTION:Instructor: ${slot.instructorName}\\nOffice: ${slot.instructorOffice}\\nSection: ${slot.section}\\nClassroom: ${slot.room} (${slot.block}, ${slot.floor})\\nCapacity: ${slot.capacity} (Enrolled: ${slot.enrolledStudents})`,
+      `DESCRIPTION:Teacher: ${slot.instructorName}\\nOffice: ${slot.instructorOffice}\\nClass: ${slot.section}\\nRoom: ${slot.room} (${slot.block}, ${slot.floor})\\nSeats: ${slot.enrolledStudents} of ${slot.capacity}`,
       `LOCATION:${slot.room}, ${slot.block}, ${slot.floor}, COMSATS University Sahiwal`,
       `DTSTART;TZID=Asia/Karachi:20261116T${startHourMin}`,
       `DTEND;TZID=Asia/Karachi:20261116T${endHourMin}`,

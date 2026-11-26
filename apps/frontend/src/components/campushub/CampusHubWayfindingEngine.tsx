@@ -1,49 +1,27 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
-  Search,
   MapPin,
   Users,
   Building,
   BookOpen,
-  Sparkles,
-  Clock,
   Compass,
-  Phone,
-  Mail,
-  Calendar,
-  CheckCircle2,
-  AlertTriangle,
-  Layers,
-  Ticket,
-  Monitor,
-  Tv,
-  Wind,
-  Wifi,
-  X,
-  ChevronRight,
-  ArrowRight,
-  ExternalLink,
-  ShieldCheck,
-  Mic,
-  Activity,
-  UserCheck,
-  Briefcase,
   BarChart3,
-  Cpu
+  DoorClosed,
+  FlaskConical,
+  ChevronLeft,
+  ChevronRight,
+  User
 } from "lucide-react";
 
 import {
-  FACULTY_DIRECTORY,
-  ADMINISTRATIVE_OFFICES,
-  CLASSROOMS_LABS,
-  LIBRARY_INTELLIGENCE,
+  CAMPUS_LIBRARY_INFO,
   FLOOR_BLUEPRINTS,
-  CAMPUS_STATISTICS,
-  type FacultyProfile,
-  type AdministrativeOffice,
-  type ClassroomLab,
-  type LibraryBook
+  CAMPUS_STATISTICS
 } from "../../features/campushub/campus-hub-data";
+import { BlockClassroomsBrowser } from "./BlockClassroomsBrowser";
+import { LabsDirectoryBrowser } from "./LabsDirectoryBrowser";
+import { FacultyDirectoryBrowser } from "./FacultyDirectoryBrowser";
+import { OfficesDirectoryBrowser } from "./OfficesDirectoryBrowser";
 
 export type HubTab =
   | "labs"
@@ -55,159 +33,32 @@ export type HubTab =
   | "floorplans";
 
 interface Props {
-  initialTab?: HubTab;
+  initialTab?: HubTab | null;
+  activeSection?: HubTab | null;
+  onSelectSection?: (section: HubTab | null) => void;
+  onBack?: () => void;
 }
 
-export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
-  const [activeTab, setActiveTab] = useState<HubTab>(initialTab);
+export function CampusHubWayfindingEngine({
+  initialTab = null,
+  activeSection,
+  onSelectSection,
+  onBack
+}: Props) {
+  const [internalTab, setInternalTab] = useState<HubTab | null>(initialTab);
+  const currentSection = activeSection !== undefined ? activeSection : internalTab;
 
-  // Search & Filter states
-  const [facultyQuery, setFacultyQuery] = useState("");
-  const [facultyDeptFilter, setFacultyDeptFilter] = useState("All");
-
-  const [officeQuery, setOfficeQuery] = useState("");
-
-  const [classroomBlockFilter, setClassroomBlockFilter] = useState("All");
-  const [classroomQuery, setClassroomQuery] = useState("");
-
-  const [libraryQuery, setLibraryQuery] = useState("");
-  const [libraryCategoryFilter, setLibraryCategoryFilter] = useState("All");
+  const setActiveTab = (next: HubTab | null) => {
+    if (onSelectSection) {
+      onSelectSection(next);
+    } else {
+      setInternalTab(next);
+    }
+  };
 
   // Floor plan wayfinding states
   const [selectedBlueprintKey, setSelectedBlueprintKey] = useState<string>("Block C - 2nd Floor");
   const [highlightedRoomCode, setHighlightedRoomCode] = useState<string | null>("Room C-204");
-
-  // Modal states
-  const [meetingModalFaculty, setMeetingModalFaculty] = useState<FacultyProfile | null>(null);
-  const [meetingPurpose, setMeetingPurpose] = useState("");
-  const [meetingDate, setMeetingDate] = useState("Wednesday");
-  const [meetingTime, setMeetingTime] = useState("11:30 AM");
-  const [meetingSubmitted, setMeetingSubmitted] = useState(false);
-
-  // Virtual Queue Ticket states
-  const [virtualTicketOffice, setVirtualTicketOffice] = useState<AdministrativeOffice | null>(null);
-  const [myTicketNumber, setMyTicketNumber] = useState<number | null>(null);
-
-  // Book Reservation Modal states
-  const [reservedBook, setReservedBook] = useState<LibraryBook | null>(null);
-  const [bookReservedSuccess, setBookReservedSuccess] = useState(false);
-
-  // Filtered Faculty
-  const filteredFaculty = useMemo(() => {
-    return FACULTY_DIRECTORY.filter((f) => {
-      if (facultyDeptFilter !== "All" && f.department !== facultyDeptFilter) return false;
-      if (facultyQuery.trim()) {
-        const q = facultyQuery.toLowerCase();
-        const matchName = f.name.toLowerCase().includes(q);
-        const matchRole = f.designation.toLowerCase().includes(q);
-        const matchDept = f.department.toLowerCase().includes(q);
-        const matchOffice = f.officeRoom.toLowerCase().includes(q);
-        return matchName || matchRole || matchDept || matchOffice;
-      }
-      return true;
-    });
-  }, [facultyQuery, facultyDeptFilter]);
-
-  // Filtered Offices (Administrative Offices)
-  const filteredOffices = useMemo(() => {
-    return ADMINISTRATIVE_OFFICES.filter((off) => {
-      if (officeQuery.trim()) {
-        const q = officeQuery.toLowerCase();
-        const matchName = off.name.toLowerCase().includes(q);
-        const matchOfficer = off.headOfficer.toLowerCase().includes(q);
-        const matchOffice = off.officeRoom.toLowerCase().includes(q);
-        const matchBlockFloor = `${off.block} ${off.floor}`.toLowerCase().includes(q);
-        const matchServices = off.servicesOffered.some((s) => s.toLowerCase().includes(q));
-        return matchName || matchOfficer || matchOffice || matchBlockFloor || matchServices;
-      }
-      return true;
-    });
-  }, [officeQuery]);
-
-  // Filtered Teacher Offices for Office Directory (search by teacher name or office/block/floor)
-  const filteredTeacherOffices = useMemo(() => {
-    return FACULTY_DIRECTORY.filter((f) => {
-      if (officeQuery.trim()) {
-        const q = officeQuery.toLowerCase();
-        return (
-          f.name.toLowerCase().includes(q) ||
-          f.designation.toLowerCase().includes(q) ||
-          f.department.toLowerCase().includes(q) ||
-          f.officeRoom.toLowerCase().includes(q) ||
-          `${f.block} ${f.floor}`.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [officeQuery]);
-
-  // Separate Labs vs Classrooms
-  const labDirectoryItems = useMemo(() => {
-    return CLASSROOMS_LABS.filter(
-      (cr) => cr.type === "Computer Lab" || cr.type === "Hardware/Engineering Lab"
-    );
-  }, []);
-
-  const classroomItems = useMemo(() => {
-    return CLASSROOMS_LABS.filter(
-      (cr) => cr.type !== "Computer Lab" && cr.type !== "Hardware/Engineering Lab"
-    );
-  }, []);
-
-  // Filtered Classrooms (supports search by block, floor, room code, or name)
-  const filteredClassrooms = useMemo(() => {
-    return classroomItems.filter((cr) => {
-      if (classroomBlockFilter !== "All" && cr.block !== classroomBlockFilter) return false;
-      if (classroomQuery.trim()) {
-        const q = classroomQuery.toLowerCase();
-        const matchCode = cr.roomCode.toLowerCase().includes(q);
-        const matchName = cr.name.toLowerCase().includes(q);
-        const matchType = cr.type.toLowerCase().includes(q);
-        const matchBlockFloor = `${cr.block} ${cr.floor}`.toLowerCase().includes(q);
-        return matchCode || matchName || matchType || matchBlockFloor;
-      }
-      return true;
-    });
-  }, [classroomItems, classroomBlockFilter, classroomQuery]);
-
-  // Group all classrooms block-wise and floor-by-floor with identical structure per block
-  const classroomsByBlock = useMemo(() => {
-    const blocks = ["Block A", "Block B", "Block C", "Block D"] as const;
-    const floorOrder = ["Ground Floor", "1st Floor", "2nd Floor", "3rd Floor"] as const;
-
-    return blocks
-      .filter((blk) => classroomBlockFilter === "All" || blk === classroomBlockFilter)
-      .map((blk) => {
-        const blkRooms = filteredClassrooms.filter((r) => r.block === blk);
-        const floors = floorOrder
-          .map((flr) => ({
-            floor: flr,
-            rooms: blkRooms.filter((r) => r.floor === flr)
-          }))
-          .filter((f) => f.rooms.length > 0);
-        return {
-          block: blk,
-          totalRooms: blkRooms.length,
-          floors
-        };
-      })
-      .filter((b) => b.totalRooms > 0);
-  }, [filteredClassrooms, classroomBlockFilter]);
-
-  // Filtered Library Catalog
-  const filteredBooks = useMemo(() => {
-    return LIBRARY_INTELLIGENCE.catalog.filter((b) => {
-      if (libraryCategoryFilter !== "All" && b.category !== libraryCategoryFilter) return false;
-      if (libraryQuery.trim()) {
-        const q = libraryQuery.toLowerCase();
-        const matchTitle = b.title.toLowerCase().includes(q);
-        const matchAuthor = b.authors.toLowerCase().includes(q);
-        const matchIsbn = b.isbn.toLowerCase().includes(q);
-        return matchTitle || matchAuthor || matchIsbn;
-      }
-      return true;
-    });
-  }, [libraryCategoryFilter, libraryQuery]);
 
   // Helper to jump to floor plan and highlight a room
   const locateOnFloorBlueprint = (blueprintKey: string, roomCode: string) => {
@@ -218,650 +69,195 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
 
   const activeBlueprint = FLOOR_BLUEPRINTS[selectedBlueprintKey] || FLOOR_BLUEPRINTS["Block C - 2nd Floor"]!;
 
+  const SECTION_META: Record<HubTab, { title: string; subtitle: string }> = {
+    classrooms: { title: "Class Rooms", subtitle: "Select a block to view classrooms floor by floor" },
+    labs: { title: "Labs Directory", subtitle: "All campus laboratories" },
+    faculty: { title: "Faculty & Teachers", subtitle: "Teachers, HODs, Director & Batch Advisors" },
+    offices: { title: "Offices Directory", subtitle: "Find teacher and campus office locations" },
+    library: { title: "Library System", subtitle: "Live seats, study rooms & books" },
+    statistics: { title: "Statistics", subtitle: "Campus numbers & department totals" },
+    floorplans: { title: "Floor Blueprints", subtitle: "Interactive building floor map" }
+  };
+
+  if (currentSection === null) {
+    const HUB_CARDS: Array<{
+      id: HubTab;
+      label: string;
+      icon: typeof DoorClosed;
+      iconStyle: string;
+    }> = [
+      {
+        id: "classrooms",
+        label: "Class Rooms",
+        icon: DoorClosed,
+        iconStyle: "bg-warning-soft text-warning-ink"
+      },
+      {
+        id: "labs",
+        label: "Labs Directory",
+        icon: FlaskConical,
+        iconStyle: "bg-secondary-soft text-secondary-ink"
+      },
+      {
+        id: "faculty",
+        label: "Faculty & Teachers",
+        icon: Users,
+        iconStyle: "bg-primary-soft text-primary-ink"
+      },
+      {
+        id: "offices",
+        label: "Offices Directory",
+        icon: Building,
+        iconStyle: "bg-secondary-soft text-secondary-ink"
+      },
+      {
+        id: "library",
+        label: "Library System",
+        icon: BookOpen,
+        iconStyle: "bg-danger-soft text-danger-ink"
+      },
+      {
+        id: "statistics",
+        label: "Statistics",
+        icon: BarChart3,
+        iconStyle: "bg-success-soft text-success-ink"
+      }
+    ];
+
+    return (
+      <div className="mx-auto max-w-2xl rounded-3xl border border-line bg-background overflow-hidden shadow-sm">
+        {/* Hero Welcome Banner matching Campus Portal screenshot */}
+        <div className="relative overflow-hidden bg-hero-bg px-5 pt-6 pb-8 text-hero-fg rounded-b-[2rem] shadow-md">
+          <div className="pointer-events-none absolute -top-12 -right-12 h-52 w-52 rounded-full bg-hero-fg/10 blur-xl" />
+          <div className="pointer-events-none absolute top-4 right-10 h-28 w-28 rounded-full bg-hero-accent/20 blur-md" />
+
+          <div className="relative z-10 flex items-center justify-between gap-3 mb-5">
+            {onBack ? (
+              <button
+                type="button"
+                onClick={onBack}
+                aria-label="Back to Main Dashboard"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-hero-fg/15 backdrop-blur-md text-hero-fg hover:bg-hero-fg/25 transition cursor-pointer"
+              >
+                <ChevronLeft size={22} strokeWidth={2.5} />
+              </button>
+            ) : (
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-hero-fg/15 backdrop-blur-md text-hero-fg"
+                aria-hidden="true"
+              >
+                <User size={18} />
+              </span>
+            )}
+          </div>
+
+          <div className="relative z-10 space-y-1.5">
+            <p className="text-xs font-medium text-hero-muted">Welcome back,</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-hero-fg leading-tight">
+              Campus Portal
+            </h2>
+            <span className="inline-flex rounded-full bg-hero-fg/15 border border-hero-fg/20 px-3.5 py-1 text-xs font-semibold text-hero-fg mt-1">
+              University Directory
+            </span>
+          </div>
+        </div>
+
+        {/* Quick Access Header */}
+        <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+          <h3 className="text-base font-bold text-ink">Quick Access</h3>
+          <span className="text-xs font-medium text-muted">6 modules</span>
+        </div>
+
+        {/* Minimal 6-Card Grid matching screenshot */}
+        <div className="px-4 pb-6 grid grid-cols-2 gap-3.5 sm:gap-4">
+          {HUB_CARDS.map((card) => {
+            const Icon = card.icon;
+            return (
+              <button
+                key={card.id}
+                type="button"
+                onClick={() => setActiveTab(card.id)}
+                className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-2xs hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[132px] group cursor-pointer"
+              >
+                <span
+                  className={`flex h-11 w-11 items-center justify-center rounded-2xl ${card.iconStyle} transition group-hover:scale-105`}
+                >
+                  <Icon size={21} />
+                </span>
+
+                <div className="mt-4 flex items-end justify-between gap-2 w-full">
+                  <span className="font-bold text-sm text-ink leading-snug">
+                    {card.label}
+                  </span>
+                  <ChevronRight
+                    size={16}
+                    className="shrink-0 text-muted group-hover:text-ink group-hover:translate-x-0.5 transition mb-0.5"
+                    aria-hidden="true"
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* ================= 6 CAMPUS HUB DIRECTORY CARDS ================= */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-        {/* Card 1: Lab Directory */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("labs")}
-          className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
-            activeTab === "labs"
-              ? "border-secondary bg-panel ring-2 ring-secondary/30"
-              : "border-line bg-panel hover:border-secondary/50"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                activeTab === "labs"
-                  ? "bg-secondary text-secondary-fg"
-                  : "bg-secondary-soft text-secondary-ink group-hover:scale-105"
-              }`}
+      {/* Shared Back Bar for sub-pages without their own top hero back button */}
+      {currentSection !== "classrooms" &&
+        currentSection !== "labs" &&
+        currentSection !== "faculty" &&
+        currentSection !== "offices" &&
+        currentSection !== "library" && (
+        <div className="rounded-2xl border border-line bg-panel px-4 py-3 shadow-2xs flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => setActiveTab(null)}
+              aria-label="Back to Campus Portal"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-subtle text-ink hover:bg-primary hover:text-on-primary transition cursor-pointer"
             >
-              <Cpu size={20} />
+              <ChevronLeft size={20} strokeWidth={2.5} />
+            </button>
+            <div className="min-w-0">
+              <h3 className="font-bold text-base text-ink leading-tight">
+                {SECTION_META[currentSection].title}
+              </h3>
+              <p className="text-xs text-muted truncate">
+                {SECTION_META[currentSection].subtitle}
+              </p>
             </div>
-            <span className="text-2xs font-extrabold text-muted">
-              {labDirectoryItems.length} Labs
-            </span>
-          </div>
-          <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-secondary-ink transition">
-              Lab Directory
-            </h4>
-            <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              CS, AI, Cisco &amp; CAD Labs
-            </p>
-          </div>
-        </button>
-
-        {/* Card 2: Classrooms */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("classrooms")}
-          className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
-            activeTab === "classrooms"
-              ? "border-success bg-panel ring-2 ring-success/30"
-              : "border-line bg-panel hover:border-success/50"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                activeTab === "classrooms"
-                  ? "bg-success text-success-fg"
-                  : "bg-success-soft text-success-ink group-hover:scale-105"
-              }`}
-            >
-              <Building size={20} />
-            </div>
-            <span className="text-2xs font-extrabold text-muted">
-              {classroomItems.length} Rooms
-            </span>
-          </div>
-          <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-success-ink transition">
-              Classrooms
-            </h4>
-            <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              Block &amp; Floor Directory
-            </p>
-          </div>
-        </button>
-
-        {/* Card 3: Faculty & Teachers */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("faculty")}
-          className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
-            activeTab === "faculty"
-              ? "border-primary bg-panel ring-2 ring-primary/30"
-              : "border-line bg-panel hover:border-primary/50"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                activeTab === "faculty"
-                  ? "bg-primary text-on-primary"
-                  : "bg-primary-soft text-primary-ink group-hover:scale-105"
-              }`}
-            >
-              <Users size={20} />
-            </div>
-            <span className="text-2xs font-extrabold text-muted">
-              {FACULTY_DIRECTORY.length} Staff
-            </span>
-          </div>
-          <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-brand-600 transition">
-              Faculty &amp; Teachers
-            </h4>
-            <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              Director, HODs &amp; Advisors
-            </p>
-          </div>
-        </button>
-
-        {/* Card 4: Office Directory */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("offices")}
-          className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
-            activeTab === "offices"
-              ? "border-secondary bg-panel ring-2 ring-secondary/30"
-              : "border-line bg-panel hover:border-secondary/50"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                activeTab === "offices"
-                  ? "bg-secondary text-secondary-fg"
-                  : "bg-secondary-soft text-secondary-ink group-hover:scale-105"
-              }`}
-            >
-              <Briefcase size={20} />
-            </div>
-            <span className="text-2xs font-extrabold text-muted">
-              Block &amp; Floor
-            </span>
-          </div>
-          <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-secondary-ink transition">
-              Office Directory
-            </h4>
-            <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              Teacher &amp; Admin Offices
-            </p>
-          </div>
-        </button>
-
-        {/* Card 5: Library */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("library")}
-          className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
-            activeTab === "library"
-              ? "border-accent bg-panel ring-2 ring-accent/30"
-              : "border-line bg-panel hover:border-accent/50"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                activeTab === "library"
-                  ? "bg-accent text-accent-fg"
-                  : "bg-accent-soft text-accent-ink group-hover:scale-105"
-              }`}
-            >
-              <BookOpen size={20} />
-            </div>
-            <span className="text-2xs font-extrabold text-success-ink">
-              {LIBRARY_INTELLIGENCE.availableSilentSeats} Free
-            </span>
-          </div>
-          <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-accent-ink transition">
-              Library
-            </h4>
-            <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              Seats &amp; Digital Catalog
-            </p>
-          </div>
-        </button>
-
-        {/* Card 6: Statistics */}
-        <button
-          type="button"
-          onClick={() => setActiveTab("statistics")}
-          className={`flex flex-col justify-between rounded-2xl border p-4 text-left transition shadow-2xs group ${
-            activeTab === "statistics"
-              ? "border-primary bg-panel ring-2 ring-primary/30"
-              : "border-line bg-panel hover:border-primary/50"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div
-              className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                activeTab === "statistics"
-                  ? "bg-primary text-on-primary"
-                  : "bg-primary-soft text-primary-ink group-hover:scale-105"
-              }`}
-            >
-              <BarChart3 size={20} />
-            </div>
-            <span className="text-2xs font-extrabold text-primary-ink">
-              Campus Data
-            </span>
-          </div>
-          <div className="mt-3">
-            <h4 className="font-extrabold text-sm text-ink group-hover:text-primary-ink transition">
-              Statistics
-            </h4>
-            <p className="text-[11px] text-muted line-clamp-1 mt-0.5">
-              Enrollment &amp; Facilities
-            </p>
-          </div>
-        </button>
-      </div>
-
-      {/* Quick Wayfinding Blueprints Bar */}
-      <div className="flex items-center justify-end">
-        <button
-          type="button"
-          onClick={() => setActiveTab("floorplans")}
-          className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition ${
-            activeTab === "floorplans"
-              ? "border-primary bg-primary text-on-primary"
-              : "border-line bg-panel text-primary-ink hover:border-primary"
-          }`}
-        >
-          <Compass size={14} />
-          <span>Interactive Floor Blueprints</span>
-        </button>
-      </div>
-
-      {/* ================= TAB 1: FACULTY & LEADERSHIP DIRECTORY ================= */}
-      {activeTab === "faculty" && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          {/* Search & Department Filters */}
-          <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs flex flex-wrap items-center gap-4">
-            <div className="flex-1 min-w-[260px] relative">
-              <input
-                type="text"
-                placeholder="Search faculty by name, designation, department, or office (e.g. Dr. Munir, HOD, C-301)..."
-                value={facultyQuery}
-                onChange={(e) => setFacultyQuery(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-              />
-              <Search size={14} className="absolute left-3 top-3 text-muted" />
-              {facultyQuery && (
-                <button onClick={() => setFacultyQuery("")} className="absolute right-3 top-3 text-muted hover:text-ink">
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold text-muted">Department:</label>
-              <select
-                value={facultyDeptFilter}
-                onChange={(e) => setFacultyDeptFilter(e.target.value)}
-                className="rounded-xl border border-line bg-surface px-3 py-2 text-xs font-semibold text-ink focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-              >
-                <option value="All">All Departments</option>
-                <option value="Computer Science">Computer Science</option>
-                <option value="Electrical Engineering">Electrical Engineering</option>
-                <option value="Management Sciences">Management Sciences</option>
-                <option value="Physics & Engineering">Physics & Engineering</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Faculty Profiles Grid */}
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {filteredFaculty.map((f) => (
-              <div
-                key={f.id}
-                className="flex flex-col justify-between rounded-3xl border border-line bg-panel p-5 shadow-2xs hover:border-brand-500/60 transition group space-y-4"
-              >
-                <div className="space-y-3.5">
-                  {/* Top Bar: Avatar & Availability */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-on-primary font-extrabold text-sm shadow-xs">
-                          {f.avatarInitials}
-                        </div>
-                        <span
-                          className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-panel ${
-                            f.isAvailableToday ? "bg-success" : "bg-muted"
-                          }`}
-                          title={f.isAvailableToday ? "In Office Today" : "Not In Office Today"}
-                        />
-                      </div>
-                      <div>
-                        <h4 className="font-extrabold text-base text-ink group-hover:text-brand-600 transition leading-snug">
-                          {f.name}
-                        </h4>
-                        <span className="inline-block rounded-md bg-brand-500/10 px-2 py-0.5 text-2xs font-bold text-brand-600 mt-0.5">
-                          {f.designation}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Office & Spatial Location Link */}
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 space-y-1.5 text-xs">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5 text-muted">
-                        <MapPin size={13} className="text-brand-500 shrink-0" />
-                        <span className="font-semibold text-ink">{f.officeRoom}</span>
-                      </div>
-                      <button
-                        onClick={() =>
-                          locateOnFloorBlueprint(
-                            `${f.block} - ${f.floor}`,
-                            f.officeRoom.includes("C-301")
-                              ? "Room C-301"
-                              : f.officeRoom.includes("C-205")
-                              ? "Room C-205"
-                              : f.officeRoom.includes("A-101")
-                              ? "Room A-101"
-                              : "Room C-204"
-                          )
-                        }
-                        className="text-2xs font-bold text-brand-600 hover:underline shrink-0"
-                      >
-                        Show on Blueprint →
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between text-2xs text-muted pt-1 border-t border-line/40">
-                      <span>{f.department}</span>
-                      <span className="font-mono">{f.phoneExtension}</span>
-                    </div>
-                  </div>
-
-                  {/* Consultation Hours & Email */}
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-center gap-1.5 text-muted">
-                      <Clock size={12} className="text-success-ink shrink-0" />
-                      <span className="text-2xs">
-                        Consultation: <strong className="text-ink">{f.consultationHours}</strong>
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 text-muted">
-                      <Mail size={12} className="text-brand-500 shrink-0" />
-                      <a href={`mailto:${f.email}`} className="text-2xs font-mono text-brand-600 hover:underline truncate">
-                        {f.email}
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Research Focus */}
-                  <p className="text-2xs text-muted leading-relaxed line-clamp-2">
-                    <strong className="text-ink">Focus:</strong> {f.researchFocus}
-                  </p>
-                </div>
-
-                {/* Bottom Action Footer */}
-                <div className="pt-3 border-t border-line/60">
-                  <button
-                    onClick={() => {
-                      setMeetingModalFaculty(f);
-                      setMeetingSubmitted(false);
-                      setMeetingPurpose("");
-                    }}
-                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-xs font-bold text-on-primary hover:bg-primary-hover transition shadow-xs"
-                  >
-                    <Calendar size={13} />
-                    <span>Request Meeting / Consultation</span>
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       )}
 
-      {/* ================= TAB 2: OFFICE DIRECTORY (TEACHER + ADMIN OFFICES) ================= */}
-      {activeTab === "offices" && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          {/* Search Bar */}
-          <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by teacher name or office name (e.g. Sir Munir, Registrar, Accounts, Block A, 3rd Floor)..."
-                value={officeQuery}
-                onChange={(e) => setOfficeQuery(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-secondary"
-              />
-              <Search size={14} className="absolute left-3 top-3 text-muted" />
-              {officeQuery && (
-                <button onClick={() => setOfficeQuery("")} className="absolute right-3 top-3 text-muted hover:text-ink">
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-          </div>
+      {/* ================= TAB 1: FACULTY & TEACHERS (QUICK ACCESS -> OFFICE LIST) ================= */}
+      {currentSection === "faculty" && (
+        <div className="animate-in fade-in duration-200">
+          <FacultyDirectoryBrowser
+            onBack={() => setActiveTab(null)}
+            onShowOnBlueprint={locateOnFloorBlueprint}
+          />
+        </div>
+      )}
 
-          {/* Faculty & Teacher Offices (Block & Floor Locator) */}
-          {filteredTeacherOffices.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted">
-                Faculty &amp; Teacher Offices ({filteredTeacherOffices.length})
-              </h3>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTeacherOffices.map((f) => (
-                  <div
-                    key={`off-${f.id}`}
-                    className="rounded-2xl border border-line bg-panel p-4 shadow-2xs space-y-2.5 hover:border-secondary/60 transition"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="font-extrabold text-sm text-ink">{f.name}</h4>
-                        <p className="text-2xs font-semibold text-secondary-ink">{f.designation}</p>
-                        <p className="text-2xs text-muted">{f.department}</p>
-                      </div>
-                      <span className="rounded-lg bg-secondary-soft px-2 py-0.5 text-2xs font-bold text-secondary-ink shrink-0">
-                        {f.phoneExtension}
-                      </span>
-                    </div>
-
-                    <div className="rounded-xl border border-line/60 bg-surface/60 p-3 text-xs space-y-1">
-                      <p className="font-bold text-ink flex items-center gap-1.5">
-                        <MapPin size={13} className="text-secondary-ink shrink-0" />
-                        <span>
-                          {f.block}, {f.floor}
-                        </span>
-                      </p>
-                      <p className="text-2xs text-muted pl-5">{f.officeRoom}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Administrative Offices List */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted">
-              Administrative Offices &amp; Services ({filteredOffices.length})
-            </h3>
-            <div className="grid gap-6 lg:grid-cols-2">
-              {filteredOffices.map((off) => (
-              <div
-                key={off.id}
-                className="rounded-3xl border border-line bg-panel p-6 shadow-2xs space-y-5 flex flex-col justify-between hover:border-secondary/60 transition group"
-              >
-                <div className="space-y-4">
-                  {/* Top Bar: Office Name & Status */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <span className="rounded-md bg-secondary-soft px-2 py-0.5 text-2xs font-extrabold text-secondary-ink">
-                        {off.category}
-                      </span>
-                      <h4 className="font-extrabold text-base text-ink mt-1.5 group-hover:text-secondary-ink transition">
-                        {off.name}
-                      </h4>
-                      <p className="text-xs text-muted mt-0.5">
-                        In-charge: <strong className="text-ink">{off.headOfficer}</strong> ({off.headTitle})
-                      </p>
-                    </div>
-
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-2xs font-extrabold ${
-                        off.counterStatus === "OPEN"
-                          ? "bg-success-soft text-success-ink"
-                          : off.counterStatus === "BUSY"
-                          ? "bg-warning-soft text-warning-ink"
-                          : "bg-danger-soft text-danger-ink"
-                      }`}
-                    >
-                      {off.counterStatus === "OPEN" ? "● Counter Active" : "● Busy Traffic"}
-                    </span>
-                  </div>
-
-                  {/* Live Ticket Queue Telemetry Box */}
-                  <div className="rounded-2xl border border-secondary/35 bg-secondary-soft/45 p-4 space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-secondary-ink flex items-center gap-1.5">
-                        <Ticket size={14} />
-                        <span>Live Queue Telemetry</span>
-                      </span>
-                      <span className="font-mono text-2xs font-semibold text-muted">
-                        Avg Wait: ~{off.avgWaitMinutes} mins
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-secondary/20 text-xs">
-                      <div className="rounded-xl bg-panel border border-line p-2.5 text-center">
-                        <span className="text-2xs text-muted block">Now Serving Token</span>
-                        <span className="font-mono font-extrabold text-lg text-secondary-ink">
-                          #{off.currentTicketServing}
-                        </span>
-                      </div>
-                      <div className="rounded-xl bg-panel border border-line p-2.5 text-center">
-                        <span className="text-2xs text-muted block">Students in Line</span>
-                        <span className="font-mono font-extrabold text-lg text-warning-ink">
-                          {off.queueLength} Waiting
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Location & Contact Info */}
-                  <div className="space-y-1.5 text-xs text-muted">
-                    <div className="flex items-center justify-between">
-                      <p className="flex items-center gap-1.5">
-                        <MapPin size={13} className="text-brand-500 shrink-0" />
-                        <span className="font-semibold text-ink">
-                          {off.block}, {off.floor} — {off.officeRoom}
-                        </span>
-                      </p>
-                      <button
-                        onClick={() =>
-                          locateOnFloorBlueprint(
-                            `${off.block} - ${off.floor}`,
-                            off.officeRoom.includes("A-101")
-                              ? "Room A-101"
-                              : off.officeRoom.includes("A-105")
-                              ? "Room A-105"
-                              : "Room C-204"
-                          )
-                        }
-                        className="text-2xs font-bold text-brand-600 hover:underline"
-                      >
-                        Locate on Blueprint →
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between text-2xs pt-1">
-                      <span className="flex items-center gap-1">
-                        <Clock size={11} className="text-success-ink" />
-                        <span>{off.workingHours}</span>
-                      </span>
-                      <span className="font-mono">{off.phoneExtension}</span>
-                    </div>
-                  </div>
-
-                  {/* Services Offered Pills */}
-                  <div className="space-y-1.5">
-                    <span className="text-2xs font-bold uppercase tracking-wider text-muted">
-                      Services Handled:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {off.servicesOffered.map((s, i) => (
-                        <span key={i} className="rounded-lg bg-surface border border-line/60 px-2.5 py-1 text-2xs text-ink font-medium">
-                          ✓ {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Action Footer */}
-                <div className="pt-3 border-t border-line/60">
-                  <button
-                    onClick={() => {
-                      setVirtualTicketOffice(off);
-                      setMyTicketNumber(off.currentTicketServing + off.queueLength + 1);
-                    }}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-secondary py-2.5 text-xs font-bold text-secondary-fg hover:opacity-90 transition shadow-xs"
-                  >
-                    <Ticket size={14} />
-                    <span>Generate Virtual Queue Token</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-            </div>
-          </div>
+      {/* ================= TAB 2: OFFICES DIRECTORY ================= */}
+      {currentSection === "offices" && (
+        <div className="animate-in fade-in duration-200">
+          <OfficesDirectoryBrowser
+            onBack={() => setActiveTab(null)}
+            onShowOnBlueprint={locateOnFloorBlueprint}
+          />
         </div>
       )}
 
       {/* ================= TAB: LAB DIRECTORY ================= */}
-      {activeTab === "labs" && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h3 className="text-base font-extrabold text-ink">Campus Lab Directory</h3>
-              <p className="text-xs text-muted">
-                Specialized computer, AI/GPU, networking, and CAD engineering laboratories across blocks.
-              </p>
-            </div>
-            <span className="rounded-full bg-secondary-soft px-3 py-1 text-xs font-bold text-secondary-ink">
-              {labDirectoryItems.length} Active Laboratories
-            </span>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {labDirectoryItems.map((lab) => (
-              <div
-                key={lab.id}
-                className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-secondary/60 transition"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="font-extrabold text-base text-ink">{lab.roomCode}</h4>
-                      <p className="text-xs text-muted mt-0.5">{lab.name}</p>
-                    </div>
-                    <span className="rounded-full bg-secondary-soft px-2.5 py-1 text-2xs font-bold text-secondary-ink shrink-0">
-                      {lab.type}
-                    </span>
-                  </div>
-
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted">Location</span>
-                      <span className="font-bold text-ink">{lab.block}, {lab.floor}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted">Capacity / Workstations</span>
-                      <span className="font-bold text-ink">{lab.capacity} Seats ({lab.equipment.workstationsCount} PCs)</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted">Lab In-Charge</span>
-                      <span className="font-semibold text-ink">{lab.inCharge}</span>
-                    </div>
-                  </div>
-
-                  {lab.equipment.specialGear && (
-                    <p className="text-2xs text-warning-ink font-medium">
-                      ⚡ {lab.equipment.specialGear}
-                    </p>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    locateOnFloorBlueprint(
-                      lab.block === "Engineering Labs"
-                        ? "Engineering Labs - Ground Floor"
-                        : `${lab.block} - ${lab.floor}`,
-                      lab.roomCode
-                    )
-                  }
-                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface py-2 text-xs font-bold text-secondary-ink hover:border-secondary transition"
-                >
-                  <Compass size={13} />
-                  <span>View on Floor Blueprint</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {currentSection === "labs" && <LabsDirectoryBrowser onBack={() => setActiveTab(null)} />}
 
       {/* ================= TAB: CAMPUS STATISTICS ================= */}
-      {activeTab === "statistics" && (
+      {currentSection === "statistics" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           <div>
             <h3 className="text-base font-extrabold text-ink">Campus Statistics &amp; Overview</h3>
@@ -908,375 +304,75 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
         </div>
       )}
 
-      {/* ================= TAB 3: CLASSROOMS (SEARCH + BLOCK-WISE FLOOR CARDS) ================= */}
-      {activeTab === "classrooms" && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          {/* Block Selector Chips & Search Bar */}
-          <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs space-y-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search classrooms by block, floor, room code, or name (e.g. Block A, 2nd Floor, C-204)..."
-                value={classroomQuery}
-                onChange={(e) => setClassroomQuery(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-primary"
-              />
-              <Search size={14} className="absolute left-3 top-2.5 text-muted" />
-              {classroomQuery && (
-                <button onClick={() => setClassroomQuery("")} className="absolute right-3 top-2.5 text-muted hover:text-ink">
-                  <X size={12} />
-                </button>
-              )}
-            </div>
+      {/* ================= TAB 3: CLASSROOMS (BLOCK A/B/C -> FLOOR-WISE CLASSROOMS) ================= */}
+      {currentSection === "classrooms" && <BlockClassroomsBrowser onBack={() => setActiveTab(null)} />}
 
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-line/60">
-              <span className="text-2xs font-bold uppercase tracking-wider text-muted mr-1">
-                Filter by Block:
-              </span>
-              {["All", "Block A", "Block B", "Block C", "Block D"].map((blk) => (
-                <button
-                  key={blk}
-                  onClick={() => setClassroomBlockFilter(blk)}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition border ${
-                    classroomBlockFilter === blk
-                      ? "border-primary bg-primary text-on-primary font-bold shadow-xs"
-                      : "border-line bg-surface text-muted hover:text-ink"
-                  }`}
-                >
-                  {blk}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* ================= TAB 4: LIBRARY (LOCATION & BLOCK NAME ONLY) ================= */}
+      {currentSection === "library" && (
+        <div className="mx-auto max-w-2xl rounded-3xl border border-line bg-background overflow-hidden shadow-sm animate-in fade-in duration-200">
+          <div className="relative overflow-hidden bg-hero-bg px-5 pt-6 pb-8 text-hero-fg rounded-b-[2rem] shadow-md">
+            <div className="pointer-events-none absolute -top-10 -right-10 h-44 w-44 rounded-full bg-hero-fg/10 blur-xl" />
+            <div className="pointer-events-none absolute top-4 right-12 h-24 w-24 rounded-full bg-hero-accent/20 blur-md" />
 
-          {/* Block-Wise Classrooms Directory (One Card per Block, Grouped by Floor) */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted">
-              All Classrooms Block-Wise (Floor-by-Floor Structure)
-            </h3>
-            <div className="grid gap-5 md:grid-cols-2">
-              {classroomsByBlock.map((blkGroup) => (
-                <div
-                  key={blkGroup.block}
-                  className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4"
-                >
-                  <div className="flex items-center justify-between border-b border-line pb-3">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-ink">
-                        <Building size={18} />
-                      </span>
-                      <div>
-                        <h4 className="font-extrabold text-base text-ink">{blkGroup.block}</h4>
-                        <p className="text-2xs text-muted">
-                          {blkGroup.floors.length} {blkGroup.floors.length === 1 ? "Floor" : "Floors"} · {blkGroup.totalRooms} Classrooms
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {blkGroup.floors.map((flr) => (
-                      <div key={flr.floor} className="space-y-1.5">
-                        <p className="text-xs font-bold text-primary-ink">
-                          {flr.floor}
-                        </p>
-                        <div className="space-y-1.5">
-                          {flr.rooms.map((rm) => (
-                            <div
-                              key={rm.id}
-                              className="flex items-center justify-between gap-2 rounded-xl border border-line/60 bg-surface/60 px-3 py-2 text-xs"
-                            >
-                              <div className="min-w-0">
-                                <span className="font-mono font-bold text-ink">{rm.roomCode}</span>
-                                <span className="text-muted ml-2 truncate">{rm.name}</span>
-                              </div>
-                              <span className="text-2xs font-semibold text-muted shrink-0">
-                                {rm.capacity} seats
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Detailed Classroom Cards (with explicit Block & Floor badges) */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted">
-              Classroom Search Results &amp; Equipment Details ({filteredClassrooms.length})
-            </h3>
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {filteredClassrooms.map((cr) => (
-                <div
-                  key={cr.id}
-                  className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-primary/60 transition group"
-                >
-                  <div className="space-y-3.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <h4 className="font-extrabold text-base text-ink group-hover:text-success-ink transition">
-                            {cr.roomCode}
-                          </h4>
-                          <span className="rounded-md bg-primary-soft px-2 py-0.5 text-2xs font-bold text-primary-ink">
-                            {cr.block} · {cr.floor}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted mt-0.5 line-clamp-1">{cr.name}</p>
-                      </div>
-
-                      <span className="rounded-full bg-surface border border-line px-2 py-0.5 text-[10px] font-bold text-muted shrink-0">
-                        {cr.type}
-                      </span>
-                    </div>
-
-                  {/* Telemetry Box */}
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-3 space-y-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted">Student Seating</span>
-                      <span className="font-bold text-ink">{cr.capacity} Desks</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted">Current Activity</span>
-                      <span className="font-bold text-success-ink line-clamp-1">{cr.currentActivity}</span>
-                    </div>
-                  </div>
-
-                  {/* Equipment Inventory */}
-                  <div className="space-y-1.5">
-                    <span className="text-2xs font-bold uppercase tracking-wider text-muted">
-                      Equipment Inventory:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5 text-2xs">
-                      {cr.equipment.workstationsCount > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-ink font-semibold">
-                          <Monitor size={10} className="text-brand-500" />
-                          <span>{cr.equipment.workstationsCount} PCs</span>
-                        </span>
-                      )}
-                      {cr.equipment.projectorsCount > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-ink font-semibold">
-                          <Tv size={10} className="text-secondary-ink" />
-                          <span>{cr.equipment.projectorsCount} Laser Projector{cr.equipment.projectorsCount > 1 ? "s" : ""}</span>
-                        </span>
-                      )}
-                      {cr.equipment.hasAC && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-secondary-ink font-semibold">
-                          <Wind size={10} />
-                          <span>AC</span>
-                        </span>
-                      )}
-                      {cr.equipment.hasWifi && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-success-ink font-semibold">
-                          <Wifi size={10} />
-                          <span>Wi-Fi</span>
-                        </span>
-                      )}
-                      {cr.equipment.hasSmartPodium && (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-accent-ink font-semibold">
-                          <Mic size={10} />
-                          <span>Smart Podium</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {cr.equipment.specialGear && (
-                      <p className="text-2xs text-warning-ink font-medium pt-1">
-                        ⚡ {cr.equipment.specialGear}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Bottom Action Footer */}
-                <div className="pt-3 border-t border-line/60">
-                  <button
-                    onClick={() =>
-                      locateOnFloorBlueprint(
-                        cr.block === "Engineering Labs"
-                          ? "Engineering Labs - Ground Floor"
-                          : `${cr.block} - ${cr.floor}`,
-                        cr.roomCode
-                      )
-                    }
-                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-line bg-surface py-2 text-xs font-bold text-brand-600 hover:border-brand-500 transition"
-                  >
-                    <Compass size={13} />
-                    <span>View on Vector Blueprint</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= TAB 4: LIBRARY INTELLIGENCE ================= */}
-      {activeTab === "library" && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          {/* Real-Time Silent Study Seat Telemetry Banner */}
-          <div className="rounded-3xl border border-accent/40 bg-gradient-to-r from-accent/15 via-accent/5 to-transparent p-6 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-6">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-success animate-pulse" />
-                  <h3 className="text-base font-extrabold text-ink">
-                    Central University Library Live Intelligence
-                  </h3>
-                  <span className="rounded-full bg-success-soft px-2.5 py-0.5 text-2xs font-extrabold text-success-ink">
-                    Live Optical Counters
-                  </span>
-                </div>
-                <p className="text-xs text-muted">
-                  Silent Study Wing Portico · Hours: <strong className="text-ink">{LIBRARY_INTELLIGENCE.openingHours}</strong> · Librarian: {LIBRARY_INTELLIGENCE.librarianOnDuty}
-                </p>
-              </div>
-
-              {/* Live Gauges */}
-              <div className="flex items-center gap-4">
-                <div className="rounded-2xl border border-line bg-panel p-3.5 text-center min-w-[130px] shadow-xs">
-                  <span className="text-2xs text-muted block uppercase font-bold tracking-wider">
-                    Silent Desks
-                  </span>
-                  <span className="font-mono font-extrabold text-xl text-success-ink">
-                    {LIBRARY_INTELLIGENCE.availableSilentSeats} / {LIBRARY_INTELLIGENCE.totalSilentSeats}
-                  </span>
-                  <span className="text-[10px] text-muted block mt-0.5">Seats Free Right Now</span>
-                </div>
-
-                <div className="rounded-2xl border border-line bg-panel p-3.5 text-center min-w-[130px] shadow-xs">
-                  <span className="text-2xs text-muted block uppercase font-bold tracking-wider">
-                    Study Pods
-                  </span>
-                  <span className="font-mono font-extrabold text-xl text-brand-600">
-                    {LIBRARY_INTELLIGENCE.collaborativePodsAvailable} / {LIBRARY_INTELLIGENCE.collaborativePodsTotal}
-                  </span>
-                  <span className="text-[10px] text-muted block mt-0.5">Rooms Available</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Digital Catalog Search */}
-          <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs space-y-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search digital book catalog by title, author, or ISBN (e.g. Compilers Dragon Book, Operating Systems, CLRS, Deep Learning)..."
-                value={libraryQuery}
-                onChange={(e) => setLibraryQuery(e.target.value)}
-                className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 pl-9 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-accent"
-              />
-              <Search size={14} className="absolute left-3 top-3 text-muted" />
-              {libraryQuery && (
-                <button onClick={() => setLibraryQuery("")} className="absolute right-3 top-3 text-muted hover:text-ink">
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-line/60">
-              <span className="text-2xs font-bold uppercase tracking-wider text-muted mr-1">
-                Category:
-              </span>
-              {["All", "Computer Science", "Mathematics", "Electrical Eng", "Management Sciences"].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setLibraryCategoryFilter(cat)}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition border ${
-                    libraryCategoryFilter === cat
-                      ? "border-accent bg-accent text-accent-fg font-bold shadow-xs"
-                      : "border-line bg-surface text-muted hover:text-ink"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Book Catalog Grid */}
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {filteredBooks.map((book) => (
-              <div
-                key={book.id}
-                className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4 flex flex-col justify-between hover:border-accent/60 transition group"
+            <div className="relative z-10 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveTab(null)}
+                aria-label="Back to Campus Portal"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-hero-fg/15 backdrop-blur-md text-hero-fg hover:bg-hero-fg/25 transition cursor-pointer"
               >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="rounded-md bg-accent-soft px-2 py-0.5 text-2xs font-bold text-accent-ink">
-                      {book.category}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-2xs font-bold ${
-                        book.isAvailable
-                          ? "bg-success-soft text-success-ink"
-                          : "bg-danger-soft text-danger-ink"
-                      }`}
-                    >
-                      {book.isAvailable ? `${book.availableCopies} Available` : "All Checked Out"}
-                    </span>
-                  </div>
+                <ChevronLeft size={20} strokeWidth={2.5} />
+              </button>
 
-                  <div>
-                    <h4 className="font-extrabold text-sm text-ink group-hover:text-accent-ink transition leading-snug">
-                      {book.title}
-                    </h4>
-                    <p className="text-xs text-muted mt-0.5">{book.authors}</p>
-                    <p className="text-2xs text-muted italic mt-0.5">{book.edition}</p>
-                  </div>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-hero-fg/15 backdrop-blur-md text-hero-fg shadow-xs">
+                <BookOpen size={21} />
+              </span>
 
-                  {/* Shelf Location Box */}
-                  <div className="rounded-xl border border-line/60 bg-surface/50 p-2.5 space-y-1 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted flex items-center gap-1">
-                        <MapPin size={11} className="text-accent-ink" />
-                        <span>Shelf Location:</span>
-                      </span>
-                      <span className="font-mono font-bold text-ink">{book.shelfLocation}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-2xs text-muted">
-                      <span>ISBN: {book.isbn}</span>
-                      <span>Total Copies: {book.totalCopies}</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="min-w-0">
+                <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-hero-fg leading-tight">
+                  Library System
+                </h3>
+                <p className="text-xs text-hero-muted mt-0.5">Campus library</p>
+              </div>
+            </div>
+          </div>
 
-                {/* Bottom Action Footer */}
-                <div className="pt-3 border-t border-line/60 flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setReservedBook(book);
-                      setBookReservedSuccess(false);
-                    }}
-                    disabled={!book.isAvailable}
-                    className="flex-1 rounded-xl bg-accent py-2 text-xs font-bold text-accent-fg hover:opacity-90 transition disabled:opacity-50 shadow-xs"
-                  >
-                    Reserve Copy
-                  </button>
-                  {book.digitalPdfAvailable && (
-                    <button
-                      onClick={() => alert(`Opening digital IEEE / Springer academic e-book link for "${book.title}"...`)}
-                      className="rounded-xl border border-line bg-surface p-2 text-muted hover:text-ink hover:border-brand-500 transition"
-                      title="Open Digital PDF / IEEE e-book"
-                    >
-                      <ExternalLink size={14} />
-                    </button>
-                  )}
+          <div className="p-5">
+            <div className="rounded-3xl border border-line bg-panel p-5 shadow-2xs space-y-4">
+              <div className="flex items-center gap-3.5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-danger-soft text-danger-ink">
+                  <Building size={20} />
+                </span>
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted block">
+                    Block Name
+                  </span>
+                  <p className="font-bold text-base text-ink mt-0.5">
+                    {CAMPUS_LIBRARY_INFO.blockName}
+                  </p>
                 </div>
               </div>
-            ))}
+
+              <div className="border-t border-line/60 pt-4 flex items-center gap-3.5">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary-ink">
+                  <MapPin size={20} />
+                </span>
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted block">
+                    Library Location
+                  </span>
+                  <p className="font-semibold text-sm sm:text-base text-ink mt-0.5">
+                    {CAMPUS_LIBRARY_INFO.location}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* ================= TAB 5: INTERACTIVE FLOOR PLANS & SPATIAL BLUEPRINTS ================= */}
-      {activeTab === "floorplans" && (
+      {currentSection === "floorplans" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Blueprint Selector Bar */}
           <div className="rounded-2xl border border-line bg-panel p-5 shadow-2xs flex flex-wrap items-center justify-between gap-4">
@@ -1452,221 +548,6 @@ export function CampusHubWayfindingEngine({ initialTab = "faculty" }: Props) {
         </div>
       )}
 
-      {/* ================= MEETING REQUEST MODAL ================= */}
-      {meetingModalFaculty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="rounded-full bg-brand-500/10 px-2.5 py-0.5 text-2xs font-extrabold text-brand-600 uppercase">
-                  Faculty Consultation Request
-                </span>
-                <h3 className="font-extrabold text-base text-ink mt-1">
-                  Meet with {meetingModalFaculty.name}
-                </h3>
-                <p className="text-xs text-muted">
-                  {meetingModalFaculty.designation} · {meetingModalFaculty.officeRoom}
-                </p>
-              </div>
-              <button onClick={() => setMeetingModalFaculty(null)} className="rounded-xl p-1.5 text-muted hover:text-ink">
-                <X size={16} />
-              </button>
-            </div>
-
-            {meetingSubmitted ? (
-              <div className="rounded-2xl border border-success/40 bg-success-soft p-5 text-center space-y-2">
-                <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-success-ink">
-                  <CheckCircle2 size={18} />
-                  <span>Consultation Request Dispatched!</span>
-                </div>
-                <p className="text-2xs text-success-ink">
-                  Confirmation sent to {meetingModalFaculty.email}. An invite will appear on your Student Timetable once accepted.
-                </p>
-                <button
-                  onClick={() => setMeetingModalFaculty(null)}
-                  className="rounded-xl bg-success px-4 py-2 text-xs font-bold text-success-fg hover:opacity-90 mt-2"
-                >
-                  Done
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-bold text-ink mb-1">Consultation Window</label>
-                  <div className="rounded-xl border border-line bg-surface p-2.5 font-semibold text-ink flex items-center justify-between text-2xs">
-                    <span>{meetingModalFaculty.consultationHours}</span>
-                    <span className="text-brand-600 font-bold">Standard Slots</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold text-ink mb-1">Preferred Day</label>
-                    <select
-                      value={meetingDate}
-                      onChange={(e) => setMeetingDate(e.target.value)}
-                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-semibold text-ink"
-                    >
-                      <option value="Monday">Monday</option>
-                      <option value="Tuesday">Tuesday</option>
-                      <option value="Wednesday">Wednesday</option>
-                      <option value="Thursday">Thursday</option>
-                      <option value="Friday">Friday</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold text-ink mb-1">Preferred Time</label>
-                    <select
-                      value={meetingTime}
-                      onChange={(e) => setMeetingTime(e.target.value)}
-                      className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-semibold text-ink"
-                    >
-                      <option value="11:30 AM">11:30 AM</option>
-                      <option value="12:00 PM">12:00 PM</option>
-                      <option value="01:30 PM">01:30 PM</option>
-                      <option value="02:30 PM">02:30 PM</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-ink mb-1">Discussion Topic / Purpose</label>
-                  <textarea
-                    rows={3}
-                    placeholder="Describe discussion topic (e.g. FYP Proposal Guidance, Midterm Exam Rechecking, Course Advising)..."
-                    value={meetingPurpose}
-                    onChange={(e) => setMeetingPurpose(e.target.value)}
-                    className="w-full rounded-xl border border-line bg-surface p-2.5 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-line/60">
-                  <button
-                    onClick={() => setMeetingModalFaculty(null)}
-                    className="rounded-xl border border-line bg-surface px-4 py-2 text-xs font-bold text-muted hover:text-ink"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => setMeetingSubmitted(true)}
-                    disabled={!meetingPurpose.trim()}
-                    className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-on-primary hover:bg-primary-hover disabled:opacity-50"
-                  >
-                    Submit Request
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ================= VIRTUAL QUEUE TICKET MODAL ================= */}
-      {virtualTicketOffice && myTicketNumber && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm rounded-3xl border border-line bg-panel p-6 shadow-2xl text-center space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between text-left">
-              <div>
-                <h4 className="font-extrabold text-sm text-ink">{virtualTicketOffice.name}</h4>
-                <p className="text-2xs text-muted">{virtualTicketOffice.officeRoom}</p>
-              </div>
-              <button onClick={() => setVirtualTicketOffice(null)} className="rounded-xl p-1 text-muted hover:text-ink">
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="rounded-2xl border-2 border-dashed border-secondary/40 bg-surface/80 p-6 space-y-3">
-              <span className="text-2xs font-extrabold text-muted uppercase tracking-wider">
-                Your Priority Ticket
-              </span>
-              <div className="font-mono font-black text-4xl text-secondary-ink">
-                #{myTicketNumber}
-              </div>
-              <p className="text-2xs text-muted">
-                Currently Serving: <strong className="text-ink">#{virtualTicketOffice.currentTicketServing}</strong>
-              </p>
-              <div className="rounded-xl bg-panel border border-line p-2 text-2xs text-secondary-ink font-semibold">
-                Est. Waiting Time: ~{virtualTicketOffice.avgWaitMinutes + 4} minutes
-              </div>
-            </div>
-
-            <p className="text-2xs text-muted">
-              We'll notify your student portal when token #{myTicketNumber} is called at the counter.
-            </p>
-
-            <button
-              onClick={() => setVirtualTicketOffice(null)}
-              className="w-full rounded-xl bg-secondary py-2.5 text-xs font-bold text-secondary-fg hover:opacity-90 transition"
-            >
-              Keep Ticket in Wallet
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ================= BOOK RESERVATION MODAL ================= */}
-      {reservedBook && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-2xs font-extrabold text-accent-ink uppercase">
-                  Library Circulation Desk
-                </span>
-                <h3 className="font-extrabold text-base text-ink mt-1">Reserve Book Copy</h3>
-              </div>
-              <button onClick={() => setReservedBook(null)} className="rounded-xl p-1 text-muted hover:text-ink">
-                <X size={16} />
-              </button>
-            </div>
-
-            {bookReservedSuccess ? (
-              <div className="rounded-2xl border border-success/40 bg-success-soft p-5 text-center space-y-2">
-                <CheckCircle2 size={22} className="mx-auto text-success-ink" />
-                <h4 className="font-bold text-sm text-ink">Copy Held at Circulation Desk!</h4>
-                <p className="text-2xs text-muted">
-                  A physical copy of "{reservedBook.title}" will be held under your Reg No at {reservedBook.shelfLocation} for 24 hours.
-                </p>
-                <button
-                  onClick={() => setReservedBook(null)}
-                  className="rounded-xl bg-success px-5 py-2 text-xs font-bold text-success-fg hover:opacity-90 mt-2"
-                >
-                  Close
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4 text-xs">
-                <div className="rounded-2xl border border-line bg-surface p-3.5 space-y-1">
-                  <h4 className="font-bold text-ink">{reservedBook.title}</h4>
-                  <p className="text-2xs text-muted">{reservedBook.authors} · {reservedBook.edition}</p>
-                  <p className="text-2xs font-mono text-accent-ink pt-1">Location: {reservedBook.shelfLocation}</p>
-                </div>
-
-                <div className="rounded-xl border border-line/60 bg-panel p-3 text-2xs text-muted space-y-1">
-                  <p className="font-bold text-ink">Circulation Policy:</p>
-                  <p>• Standard borrowing period: 14 days with 1-click renewal online.</p>
-                  <p>• Overdue fine: PKR 10/day after grace period.</p>
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-line/60">
-                  <button
-                    onClick={() => setReservedBook(null)}
-                    className="rounded-xl border border-line bg-surface px-4 py-2 text-xs font-bold text-muted hover:text-ink"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => setBookReservedSuccess(true)}
-                    className="rounded-xl bg-accent px-5 py-2 text-xs font-bold text-accent-fg hover:opacity-90"
-                  >
-                    Confirm 24h Desk Hold
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
   );
 }

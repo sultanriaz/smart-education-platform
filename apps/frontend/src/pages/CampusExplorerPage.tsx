@@ -1,34 +1,52 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   GraduationCap,
   Bus,
   Calendar,
   Clock,
-  Compass,
-  Sparkles,
   Trophy,
   Users,
   Building,
   ArrowRight,
-  Lock,
   ChevronRight
 } from "lucide-react";
 import { useAuth } from "../features/auth/useAuth";
 import { primaryRole } from "../features/auth/permissions";
 import { FreeSlotsNavigator } from "../components/facilities/FreeSlotsNavigator";
 import { SmartTransitFleetTelemetry } from "../components/transit/SmartTransitFleetTelemetry";
-import { CampusHubWayfindingEngine } from "../components/campushub/CampusHubWayfindingEngine";
+import { CampusHubWayfindingEngine, type HubTab } from "../components/campushub/CampusHubWayfindingEngine";
 import { MarqueeEventsPortal } from "../components/events/MarqueeEventsPortal";
 import { TimetableHub } from "../components/timetable/TimetableHub";
 
 type ExplorerTab = "overview" | "hub" | "free_slots" | "timetable" | "transport" | "sports";
 const VALID_TABS: ExplorerTab[] = ["overview", "hub", "free_slots", "timetable", "transport", "sports"];
+const VALID_HUB_SECTIONS: HubTab[] = [
+  "classrooms",
+  "labs",
+  "faculty",
+  "offices",
+  "library",
+  "statistics",
+  "floorplans"
+];
+
+const EXPLORER_TABS: Array<{ id: ExplorerTab; label: string; icon: typeof Building }> = [
+  { id: "overview", label: "Main Dashboard", icon: Building },
+  { id: "free_slots", label: "Free Slots", icon: Clock },
+  { id: "timetable", label: "Timetable", icon: Calendar },
+  { id: "hub", label: "Campus Hub", icon: Users },
+  { id: "transport", label: "Transport Service", icon: Bus },
+  { id: "sports", label: "Sports Week", icon: Trophy }
+];
 
 export function CampusExplorerPage() {
   const { user, state } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab") as ExplorerTab | null;
+  const sectionParam = searchParams.get("section") as HubTab | null;
+  const activeHubSection =
+    sectionParam && VALID_HUB_SECTIONS.includes(sectionParam) ? sectionParam : null;
   const [activeTab, setActiveTab] = useState<ExplorerTab>(() => {
     if (tabParam && VALID_TABS.includes(tabParam)) {
       return tabParam;
@@ -36,15 +54,37 @@ export function CampusExplorerPage() {
     return "overview";
   });
 
+  const subNavRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (tabParam && VALID_TABS.includes(tabParam)) {
       setActiveTab(tabParam);
+    } else if (!tabParam) {
+      setActiveTab("overview");
     }
   }, [tabParam]);
 
-  const selectTab = (tab: ExplorerTab) => {
+  useEffect(() => {
+    if (activeTab === "overview") return;
+    const container = subNavRef.current;
+    const activeBtn = container?.querySelector<HTMLButtonElement>("[data-active='true']");
+    if (container && activeBtn) {
+      container.scrollLeft = Math.max(
+        0,
+        activeBtn.offsetLeft - container.clientWidth / 2 + activeBtn.clientWidth / 2
+      );
+    }
+  }, [activeTab]);
+
+  const selectTab = (tab: ExplorerTab, section?: HubTab) => {
     setActiveTab(tab);
-    setSearchParams(tab === "overview" ? {} : { tab });
+    if (tab === "overview") {
+      setSearchParams({});
+    } else if (tab === "hub" && section) {
+      setSearchParams({ tab, section });
+    } else {
+      setSearchParams({ tab });
+    }
   };
 
   const role = user ? primaryRole(user.roles) : null;
@@ -55,352 +95,288 @@ export function CampusExplorerPage() {
 
   return (
     <div className="min-h-screen bg-background text-ink transition">
-      {/* Top Universal Header */}
-      <header className="sticky top-0 z-40 border-b border-line bg-panel/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-on-primary shadow-xs">
-              <GraduationCap size={22} />
+      {/* Top Header */}
+      <header className="sticky top-0 z-40 border-b border-line bg-panel/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+          <button
+            type="button"
+            onClick={() => selectTab("overview")}
+            className="flex items-center gap-2.5 text-left min-w-0 cursor-pointer"
+          >
+            <span className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-xs">
+              <GraduationCap size={20} />
             </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold tracking-tight text-base sm:text-lg">COMSATS SmartEdu</span>
-                <span className="rounded-full bg-secondary-soft px-2 py-0.5 text-[11px] font-semibold text-secondary-ink">
-                  Open Campus
-                </span>
-              </div>
-              <p className="hidden text-xs text-muted sm:block">Sahiwal Campus · Academic &amp; Facilities Portal</p>
+            <div className="min-w-0">
+              <span className="font-bold tracking-tight text-sm sm:text-lg whitespace-nowrap block">
+                COMSATS SmartEdu
+              </span>
+              <p className="hidden text-xs text-muted sm:block">Sahiwal Campus</p>
             </div>
-          </div>
+          </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             {state === "authenticated" && user ? (
               <Link
                 to={role ? `/app/${role}` : "/app"}
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition whitespace-nowrap"
               >
-                <span>Workspace ({role})</span>
+                <span>My Dashboard</span>
                 <ArrowRight size={14} />
               </Link>
             ) : (
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition whitespace-nowrap"
               >
-                <span>Universal Sign In</span>
+                <span>Sign In</span>
                 <ArrowRight size={14} />
               </Link>
             )}
           </div>
         </div>
+
+        {/* Compact single-row tab bar when viewing a sub-module directly */}
+        {activeTab !== "overview" && (
+          <nav aria-label="Campus sections" className="border-t border-line/70 bg-subtle/40">
+            <div
+              ref={subNavRef}
+              className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 py-2 sm:px-6"
+            >
+              {EXPLORER_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    data-active={isActive ? "true" : "false"}
+                    onClick={() => selectTab(tab.id)}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap cursor-pointer ${
+                      isActive
+                        ? "bg-primary text-on-primary shadow-2xs"
+                        : "bg-panel text-muted hover:text-ink border border-line"
+                    }`}
+                  >
+                    <Icon size={14} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        )}
       </header>
 
-      {/* Hero Welcome Banner */}
-      <div className="border-b border-line bg-subtle/40">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary-soft px-3 py-1 text-xs font-semibold text-primary-ink mb-3">
-              <Compass size={14} />
-              <span>Universal Adaptive Campus Gateway</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-ink">
-              One Connected Campus.<br />
-              <span className="text-primary-ink">Every resource at your fingertips.</span>
-            </h1>
-            <p className="mt-3 text-sm sm:text-base text-muted leading-relaxed">
-              Explore public transit shuttle schedules, free study rooms across blocks, university directory, sports week fixtures, and curriculum portals without credentials.
-            </p>
-          </div>
-
-          {/* Quick Tab Switcher */}
-          <div className="mt-8 flex flex-wrap gap-2 border-b border-line pb-px">
-            {[
-              { id: "overview", label: "Main Dashboard", icon: Building },
-              { id: "free_slots", label: "Free Slots", icon: Clock },
-              { id: "timetable", label: "Timetable", icon: Calendar },
-              { id: "hub", label: "Campus Hub", icon: Users },
-              { id: "transport", label: "Transport Service", icon: Bus },
-              { id: "sports", label: "Sports Week", icon: Trophy }
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => selectTab(tab.id as ExplorerTab)}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition ${
-                    isActive
-                      ? "bg-primary text-on-primary shadow-xs"
-                      : "bg-panel text-muted hover:text-ink hover:bg-subtle/60 border border-line"
-                  }`}
-                >
-                  <Icon size={16} />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
       {/* Main Content Area */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        {/* ================= SECTION 1: MAIN DASHBOARD MODULES ================= */}
+      <main className="mx-auto max-w-7xl px-4 py-5 sm:py-6 sm:px-6">
+        {/* ================= SECTION 1: MAIN DASHBOARD (MATCHING WELCOME SCREENSHOT) ================= */}
         {activeTab === "overview" && (
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-xl font-bold text-ink">Main Dashboard</h2>
-              <p className="text-xs text-muted mt-1">Select any module card below to open its screen.</p>
+          <div className="mx-auto max-w-2xl rounded-3xl border border-line bg-background overflow-hidden shadow-sm">
+            {/* Curved Welcome Banner */}
+            <div className="relative overflow-hidden bg-hero-bg px-5 pt-6 pb-8 text-hero-fg rounded-b-[2rem] shadow-md space-y-5">
+              <div className="pointer-events-none absolute -top-12 -right-12 h-52 w-52 rounded-full bg-hero-fg/10 blur-xl" />
+              <div className="pointer-events-none absolute top-4 right-10 h-28 w-28 rounded-full bg-hero-accent/20 blur-md" />
+
+              <div className="relative z-10 flex items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-hero-fg leading-tight">
+                    Welcome!
+                  </h1>
+                  <p className="mt-1 text-xs sm:text-sm text-hero-muted">
+                    COMSATS University Islamabad
+                  </p>
+                </div>
+
+                <span
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-fg shadow-sm border border-hero-fg/20"
+                  aria-hidden="true"
+                >
+                  <GraduationCap size={26} />
+                </span>
+              </div>
+
+              {/* Featured Student Portal Card */}
+              <Link
+                to={state === "authenticated" && role === "student" ? "/app/student" : "/login/student"}
+                className="relative z-10 flex items-center justify-between gap-3 rounded-2xl bg-panel p-4 shadow-sm hover:shadow-md transition group"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary-ink group-hover:scale-105 transition">
+                    <GraduationCap size={22} />
+                  </span>
+                  <div className="min-w-0">
+                    <span className="block font-bold text-sm sm:text-base text-ink leading-snug">
+                      Student Portal
+                    </span>
+                    <span className="block text-xs text-muted mt-0.5 truncate">
+                      Access your academic profile
+                    </span>
+                  </div>
+                </div>
+
+                <span
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-subtle text-muted group-hover:text-ink group-hover:translate-x-0.5 transition"
+                  aria-hidden="true"
+                >
+                  <ChevronRight size={16} />
+                </span>
+              </Link>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Quick Access Header */}
+            <div className="px-5 pt-5 pb-3 flex items-center gap-2">
+              <span className="h-4 w-1 rounded-full bg-primary" />
+              <span className="text-xs font-extrabold uppercase tracking-wider text-muted">
+                QUICK ACCESS
+              </span>
+            </div>
+
+            {/* Minimal Module Grid matching screenshot */}
+            <div className="px-4 pb-6 grid grid-cols-2 gap-3.5 sm:gap-4">
               {/* 1. Student Portal */}
               <Link
                 to={state === "authenticated" && role === "student" ? "/app/student" : "/login/student"}
-                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-primary transition flex flex-col justify-between group"
+                className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-2xs hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[126px] group"
               >
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary-ink mb-4 group-hover:scale-105 transition">
-                    <GraduationCap size={24} />
-                  </div>
-                  <h3 className="font-bold text-base text-ink">Student Portal</h3>
-                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Sign in with Department &amp; Reg No to view subjects, attendance bars, assignments, quizzes, marks &amp; resources.
-                  </p>
-                </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-primary-ink">Student Login</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-ink">
-                    <span>Open</span>
-                    <ArrowRight size={13} />
-                  </span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary-soft text-secondary-ink group-hover:scale-105 transition">
+                  <GraduationCap size={20} />
+                </span>
+                <div className="mt-4">
+                  <span className="block font-bold text-sm text-ink leading-snug">Student Portal</span>
+                  <span className="block text-xs text-muted mt-0.5">Grades &amp; results</span>
                 </div>
               </Link>
 
-              {/* 2. Free Slots */}
-              <button
-                type="button"
-                onClick={() => selectTab("free_slots")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-accent transition flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-ink mb-4 group-hover:scale-105 transition">
-                    <Clock size={24} />
-                  </div>
-                  <h3 className="font-bold text-base text-ink">Free Slots</h3>
-                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Free slots for the week filtered by day and lecture slot, grouped block-wise with student capacity.
-                  </p>
-                </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-accent-ink">Block-Wise Rooms</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-accent-ink">
-                    <span>View Slots</span>
-                    <ChevronRight size={14} />
-                  </span>
-                </div>
-              </button>
-
-              {/* 3. Timetable */}
+              {/* 2. Time Table */}
               <button
                 type="button"
                 onClick={() => selectTab("timetable")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-secondary transition flex flex-col justify-between group"
+                className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-2xs hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[126px] group cursor-pointer"
               >
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-soft text-secondary-ink mb-4 group-hover:scale-105 transition">
-                    <Calendar size={24} />
-                  </div>
-                  <h3 className="font-bold text-base text-ink">Timetable</h3>
-                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Student &amp; Teacher weekly timetables with lecture counts per day, slots, subjects, classrooms &amp; sections.
-                  </p>
-                </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-secondary-ink">Student &amp; Teacher</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-secondary-ink">
-                    <span>Inspect</span>
-                    <ChevronRight size={14} />
-                  </span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-soft text-primary-ink group-hover:scale-105 transition">
+                  <Calendar size={20} />
+                </span>
+                <div className="mt-4">
+                  <span className="block font-bold text-sm text-ink leading-snug">Time Table</span>
+                  <span className="block text-xs text-muted mt-0.5">Weekly schedule</span>
                 </div>
               </button>
 
-              {/* 4. Campus Hub */}
+              {/* 3. Teachers */}
+              <button
+                type="button"
+                onClick={() => selectTab("hub", "faculty")}
+                className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-2xs hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[126px] group cursor-pointer"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-warning-soft text-warning-ink group-hover:scale-105 transition">
+                  <Users size={20} />
+                </span>
+                <div className="mt-4">
+                  <span className="block font-bold text-sm text-ink leading-snug">Teachers</span>
+                  <span className="block text-xs text-muted mt-0.5">Faculty directory</span>
+                </div>
+              </button>
+
+              {/* 4. Free Slots */}
+              <button
+                type="button"
+                onClick={() => selectTab("free_slots")}
+                className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-2xs hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[126px] group cursor-pointer"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-danger-soft text-danger-ink group-hover:scale-105 transition">
+                  <Clock size={20} />
+                </span>
+                <div className="mt-4">
+                  <span className="block font-bold text-sm text-ink leading-snug">Free Slots</span>
+                  <span className="block text-xs text-muted mt-0.5">Available rooms</span>
+                </div>
+              </button>
+
+              {/* 5. Campus Hub */}
               <button
                 type="button"
                 onClick={() => selectTab("hub")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-primary transition flex flex-col justify-between group"
+                className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-2xs hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[126px] group cursor-pointer"
               >
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-soft text-primary-ink mb-4 group-hover:scale-105 transition">
-                    <Building size={24} />
-                  </div>
-                  <h3 className="font-bold text-base text-ink">Campus Hub</h3>
-                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Lab Directory, Classrooms, Faculty &amp; Teachers, Office Directory, Library, and Campus Statistics.
-                  </p>
-                </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-primary-ink">6 Directories</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-ink">
-                    <span>Explore</span>
-                    <ChevronRight size={14} />
-                  </span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-soft text-accent-ink group-hover:scale-105 transition">
+                  <Building size={20} />
+                </span>
+                <div className="mt-4">
+                  <span className="block font-bold text-sm text-ink leading-snug">Campus Hub</span>
+                  <span className="block text-xs text-muted mt-0.5">Explore campus</span>
                 </div>
               </button>
 
-              {/* 5. Transport Service */}
+              {/* 6. Transport Service */}
               <button
                 type="button"
                 onClick={() => selectTab("transport")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-secondary transition flex flex-col justify-between group"
+                className="rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-2xs hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[126px] group cursor-pointer"
               >
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-soft text-secondary-ink mb-4 group-hover:scale-105 transition">
-                    <Bus size={24} />
-                  </div>
-                  <h3 className="font-bold text-base text-ink">Transport Service</h3>
-                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Planned Routes and Shuttle Schedule with bus numbers, locations, and complete stop arrival times.
-                  </p>
-                </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-secondary-ink">Routes &amp; Shuttles</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-secondary-ink">
-                    <span>View Bus Info</span>
-                    <ChevronRight size={14} />
-                  </span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary-soft text-secondary-ink group-hover:scale-105 transition">
+                  <Bus size={20} />
+                </span>
+                <div className="mt-4">
+                  <span className="block font-bold text-sm text-ink leading-snug">Transport Service</span>
+                  <span className="block text-xs text-muted mt-0.5">Schedule</span>
                 </div>
               </button>
 
-              {/* 6. Faculty */}
-              <Link
-                to={state === "authenticated" && role === "teacher" ? "/app/teacher" : "/login/faculty"}
-                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-primary transition flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-subtle text-ink border border-line mb-4 group-hover:scale-105 transition">
-                    <Lock size={24} />
-                  </div>
-                  <h3 className="font-bold text-base text-ink">Faculty</h3>
-                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Dedicated teacher-only login for faculty schedules, attendance marking, grading, and room reservations.
-                  </p>
-                </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-primary-ink">Teachers Only</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-ink">
-                    <span>Faculty Sign In</span>
-                    <ArrowRight size={13} />
+              {/* 7. Sports Week (centered bottom card) */}
+              <div className="col-span-2 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => selectTab("sports")}
+                  className="w-full max-w-[calc(50%-0.5rem)] rounded-3xl border border-line bg-panel p-4 sm:p-5 text-left shadow-2xs hover:shadow-md hover:border-primary/40 transition flex flex-col justify-between min-h-[126px] group cursor-pointer"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-warning-soft text-warning-ink group-hover:scale-105 transition">
+                    <Trophy size={20} />
                   </span>
-                </div>
-              </Link>
-
-              {/* 7. Sports Week */}
-              <button
-                type="button"
-                onClick={() => selectTab("sports")}
-                className="text-left cursor-pointer rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-accent transition flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent-ink mb-4 group-hover:scale-105 transition">
-                    <Trophy size={24} />
+                  <div className="mt-4">
+                    <span className="block font-bold text-sm text-ink leading-snug">Sports Week</span>
+                    <span className="block text-xs text-muted mt-0.5">Schedule</span>
                   </div>
-                  <h3 className="font-bold text-base text-ink">Sports Week</h3>
-                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    Day-by-day game schedules with ground locations, match timings, scoreboards, and top day selector.
-                  </p>
-                </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between w-full">
-                  <span className="text-xs font-semibold text-accent-ink">Day-by-Day</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-accent-ink">
-                    <span>Fixtures</span>
-                    <ChevronRight size={14} />
-                  </span>
-                </div>
-              </button>
-
-              {/* 8. Self Assessment */}
-              <Link
-                to="/app/student/learning"
-                className="rounded-2xl border border-line bg-panel p-5 shadow-2xs hover:border-secondary transition flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-soft text-secondary-ink mb-4 group-hover:scale-105 transition">
-                    <Sparkles size={24} />
-                  </div>
-                  <h3 className="font-bold text-base text-ink">Self Assessment</h3>
-                  <p className="mt-1.5 text-xs text-muted leading-relaxed">
-                    AI practice test generator from uploaded study notes, KaTeX numerical proofs, and topic mastery radar.
-                  </p>
-                </div>
-                <div className="mt-5 pt-3 border-t border-line/60 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-secondary-ink">Adaptive AI</span>
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-secondary-ink">
-                    <span>Practice Now</span>
-                    <ArrowRight size={13} />
-                  </span>
-                </div>
-              </Link>
+                </button>
+              </div>
             </div>
           </div>
         )}
 
         {/* ================= SECTION: TIMETABLE ================= */}
         {activeTab === "timetable" && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
               <h2 className="text-xl font-bold text-ink">Timetable</h2>
               <p className="text-xs text-muted mt-1">
-                Choose Student or Teacher to inspect the full weekly schedule with lecture counts, slots, classrooms, and sections.
+                Pick Student or Teacher to see weekly classes, lecture times, classrooms, and open seats.
               </p>
             </div>
 
-            <TimetableHub />
+            <TimetableHub
+              signedInRole={role === "student" || role === "teacher" ? role : null}
+            />
           </div>
         )}
 
         {/* ================= SECTION 2: CAMPUS HUB & DIRECTORY ================= */}
         {activeTab === "hub" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-ink">Campus Hub, Directory &amp; Spatial Wayfinding</h2>
-              <p className="text-xs text-muted mt-1">
-                Faculty directory, administrative queue tickets, equipped classrooms &amp; labs, library seat telemetry, and interactive vector floor blueprints.
-              </p>
-            </div>
-
-            <CampusHubWayfindingEngine initialTab="faculty" />
-          </div>
+          <CampusHubWayfindingEngine
+            activeSection={activeHubSection}
+            onSelectSection={(sec) =>
+              setSearchParams(sec ? { tab: "hub", section: sec } : { tab: "hub" })
+            }
+            onBack={() => selectTab("overview")}
+          />
         )}
-
 
         {/* ================= SECTION 4: TRANSPORT SERVICE ================= */}
         {activeTab === "transport" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-ink">Smart Transit &amp; Fleet Telemetry</h2>
-              <p className="text-xs text-muted mt-1">
-                Real-time city route networks (Farid Town Point, Mall Road, Canal Line), intra-day campus shuttles, driver telemetry, and live disruption notices.
-              </p>
-            </div>
-
-            <SmartTransitFleetTelemetry initialCategory="CITY_ROUTE" />
-          </div>
+          <SmartTransitFleetTelemetry onBack={() => selectTab("overview")} />
         )}
 
-        {/* ================= SECTION 5: CAMPUS LIFE & MARQUEE GALA ================= */}
+        {/* ================= SECTION 5: SPORTS WEEK ================= */}
         {activeTab === "sports" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-ink">Campus Life, Marquee Events &amp; Sports Olympiad</h2>
-              <p className="text-xs text-muted mt-1">
-                Live athletic fixtures, knockout elimination brackets, department trophy standings, plus Fall Hackathon and Winter Career Fair modes.
-              </p>
-            </div>
-
-            <MarqueeEventsPortal initialMode="SPORTS_GALA" />
-          </div>
+          <MarqueeEventsPortal onBack={() => selectTab("overview")} />
         )}
       </main>
 
@@ -412,11 +388,11 @@ export function CampusExplorerPage() {
           </p>
           <div className="mt-2 flex items-center justify-center gap-4 text-xs font-semibold text-primary-ink">
             <Link to="/login" className="hover:underline">
-              Universal Sign In
+              Sign In
             </Link>
             <span>·</span>
             <Link to="/register" className="hover:underline">
-              Student Registration
+              Create Student Account
             </Link>
           </div>
         </div>

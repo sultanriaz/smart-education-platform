@@ -79,6 +79,53 @@ export interface CareerFairCompany {
 
 // ================= DATASETS =================
 
+export type SportsDayKey = "mon" | "tue" | "wed" | "thu" | "fri";
+
+export interface SimpleSportsEvent {
+  id: string;
+  day: SportsDayKey;
+  title: string;
+  time: string;
+  location: string;
+  accent: "primary" | "success" | "danger" | "secondary";
+}
+
+export const SPORTS_WEEK_EVENTS: SimpleSportsEvent[] = [
+  // MONDAY (11 events matching screenshot)
+  { id: "sp-mon-1", day: "mon", title: "Cricket Match", time: "7:30 AM", location: "Sports Ground - Main Pitch", accent: "primary" },
+  { id: "sp-mon-2", day: "mon", title: "Table Tennis", time: "9:00 AM", location: "Sports Hall - 1st Floor", accent: "success" },
+  { id: "sp-mon-3", day: "mon", title: "Badminton", time: "10:30 AM", location: "Sports Hall - Court 1", accent: "danger" },
+  { id: "sp-mon-4", day: "mon", title: "Futsal Opening Match", time: "11:00 AM", location: "Futsal Turf - Court A", accent: "secondary" },
+  { id: "sp-mon-5", day: "mon", title: "Volleyball", time: "12:00 PM", location: "Outer Court - North Side", accent: "primary" },
+  { id: "sp-mon-6", day: "mon", title: "Chess Qualifier", time: "12:30 PM", location: "Central Library Annex", accent: "success" },
+  { id: "sp-mon-7", day: "mon", title: "Basketball Heats", time: "01:30 PM", location: "East Basketball Hardcourt", accent: "danger" },
+  { id: "sp-mon-8", day: "mon", title: "100m Sprint Heats", time: "02:15 PM", location: "Main Oval Track", accent: "secondary" },
+  { id: "sp-mon-9", day: "mon", title: "Tug of War", time: "03:00 PM", location: "Sports Ground - West Lawn", accent: "primary" },
+  { id: "sp-mon-10", day: "mon", title: "Ludo & Carrom Board", time: "03:45 PM", location: "Student Activity Center", accent: "success" },
+  { id: "sp-mon-11", day: "mon", title: "Cricket Match (Group B)", time: "04:15 PM", location: "Sports Ground - Main Pitch", accent: "danger" },
+
+  // TUESDAY
+  { id: "sp-tue-1", day: "tue", title: "Badminton Quarter Final", time: "09:00 AM", location: "Sports Hall - Court 2", accent: "danger" },
+  { id: "sp-tue-2", day: "tue", title: "Futsal Match", time: "10:30 AM", location: "Futsal Turf - Court A", accent: "primary" },
+  { id: "sp-tue-3", day: "tue", title: "Table Tennis Doubles", time: "12:00 PM", location: "Sports Hall - 1st Floor", accent: "success" },
+  { id: "sp-tue-4", day: "tue", title: "Relay Race (4x100m)", time: "02:30 PM", location: "Main Oval Track", accent: "secondary" },
+
+  // WEDNESDAY
+  { id: "sp-wed-1", day: "wed", title: "Cricket Semi Final", time: "10:00 AM", location: "Sports Ground - Main Pitch", accent: "primary" },
+  { id: "sp-wed-2", day: "wed", title: "Futsal Semi Final", time: "11:30 AM", location: "Futsal Turf - Court A", accent: "success" },
+  { id: "sp-wed-3", day: "wed", title: "Long Jump & Shot Put", time: "02:00 PM", location: "Field Events Pit", accent: "danger" },
+
+  // THURSDAY
+  { id: "sp-thu-1", day: "thu", title: "Chess Final", time: "10:30 AM", location: "Central Library Annex", accent: "secondary" },
+  { id: "sp-thu-2", day: "thu", title: "Basketball Grand Final", time: "02:00 PM", location: "East Basketball Hardcourt", accent: "primary" },
+  { id: "sp-thu-3", day: "thu", title: "Table Tennis Final", time: "03:30 PM", location: "Sports Hall - 1st Floor", accent: "success" },
+
+  // FRIDAY
+  { id: "sp-fri-1", day: "fri", title: "Futsal Grand Final", time: "10:00 AM", location: "Futsal Turf - Court A", accent: "success" },
+  { id: "sp-fri-2", day: "fri", title: "Cricket Grand Final", time: "02:30 PM", location: "Sports Ground - Main Pitch", accent: "primary" },
+  { id: "sp-fri-3", day: "fri", title: "Closing Ceremony & Medals", time: "05:00 PM", location: "Main Oval Ground", accent: "danger" }
+];
+
 export const SPORTS_FIXTURES: TournamentMatch[] = [
   {
     id: "match-cricket-final",

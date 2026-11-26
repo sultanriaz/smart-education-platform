@@ -13,6 +13,8 @@ export interface FacultyProfile {
   name: string;
   designation: FacultyDesignation;
   department: string;
+  advisoryBatch?: string;
+  advisorySeason?: "Spring" | "Fall";
   officeRoom: string;
   block: "Block A" | "Block B" | "Block C" | "Block D" | "Engineering Labs";
   floor: "Ground Floor" | "1st Floor" | "2nd Floor" | "3rd Floor";
@@ -29,11 +31,12 @@ export interface AdministrativeOffice {
   name: string;
   category: "Academic Records" | "Finance & Accounts" | "Student Support" | "Health & Safety" | "Administration";
   officeRoom: string;
-  block: "Block A" | "Block B" | "Block C" | "Block D";
+  block: "Block A" | "Block B" | "Block C" | "Block D" | "Admin Block";
   floor: "Ground Floor" | "1st Floor" | "2nd Floor" | "3rd Floor";
   headOfficer: string;
   headTitle: string;
   email: string;
+  phone?: string;
   phoneExtension: string;
   workingHours: string;
   currentTicketServing: number;
@@ -107,6 +110,8 @@ export interface FloorBlueprintLayout {
 
 // ================= DATASETS =================
 
+export const CAMPUS_TOTAL_TEACHERS = 72;
+
 export const FACULTY_DIRECTORY: FacultyProfile[] = [
   {
     id: "fac-1",
@@ -158,6 +163,8 @@ export const FACULTY_DIRECTORY: FacultyProfile[] = [
     name: "Dr. Javed Iqbal",
     designation: "Batch Advisor",
     department: "Computer Science",
+    advisoryBatch: "Fa22-BCS",
+    advisorySeason: "Fall",
     officeRoom: "Room C-205",
     block: "Block C",
     floor: "2nd Floor",
@@ -227,66 +234,404 @@ export const FACULTY_DIRECTORY: FacultyProfile[] = [
     researchFocus: "Automata Theory, Formal Methods & Programming Fundamentals",
     isAvailableToday: true,
     avatarInitials: "HQ"
+  },
+  {
+    id: "fac-9",
+    name: "Dr. Majid Hussain",
+    designation: "Head of Department (HOD)",
+    department: "Software Engineering",
+    officeRoom: "Room A-302 (SE Faculty Wing)",
+    block: "Block A",
+    floor: "3rd Floor",
+    email: "majid.hussain@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 204",
+    consultationHours: "Tue / Thu: 11:00 AM – 01:00 PM",
+    researchFocus: "Software Architecture, Quality Engineering & Agile Systems",
+    isAvailableToday: true,
+    avatarInitials: "MH"
+  },
+  {
+    id: "fac-10",
+    name: "Dr. Sadia Mahmood",
+    designation: "Head of Department (HOD)",
+    department: "Management Sciences",
+    officeRoom: "Room D-102 (MS Secretariat)",
+    block: "Block D",
+    floor: "1st Floor",
+    email: "sadia.mahmood@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 405",
+    consultationHours: "Mon / Wed: 12:00 PM – 02:00 PM",
+    researchFocus: "Organizational Leadership, Corporate Finance & Policy",
+    isAvailableToday: true,
+    avatarInitials: "SM"
+  },
+  {
+    id: "fac-11",
+    name: "Engr. Tariq Mehmood",
+    designation: "Assistant Professor",
+    department: "Computer Science",
+    officeRoom: "Room A-103",
+    block: "Block A",
+    floor: "1st Floor",
+    email: "tariq.mehmood@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 219",
+    consultationHours: "Tue / Thu: 01:30 PM – 03:00 PM",
+    researchFocus: "Database Systems, Distributed Warehousing & Cloud Indexing",
+    isAvailableToday: true,
+    avatarInitials: "TM"
+  },
+  {
+    id: "fac-12",
+    name: "Engr. Bilal Khan",
+    designation: "Lecturer",
+    department: "Computer Science",
+    officeRoom: "Room C-02",
+    block: "Block C",
+    floor: "Ground Floor",
+    email: "bilal.khan@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 241",
+    consultationHours: "Wed / Fri: 02:00 PM – 03:30 PM",
+    researchFocus: "Applied Artificial Intelligence, Computer Vision & Machine Learning",
+    isAvailableToday: true,
+    avatarInitials: "BK"
+  },
+  {
+    id: "fac-13",
+    name: "Ms. Amna Tariq",
+    designation: "Batch Advisor",
+    department: "Software Engineering",
+    advisoryBatch: "SP24-BSE",
+    advisorySeason: "Spring",
+    officeRoom: "Room A-206",
+    block: "Block A",
+    floor: "2nd Floor",
+    email: "amna.tariq@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 248",
+    consultationHours: "Mon – Thu: 11:00 AM – 01:00 PM",
+    researchFocus: "Student Academic Advising (BSE-5) & Software Verification",
+    isAvailableToday: true,
+    avatarInitials: "AT"
+  },
+  {
+    id: "fac-14",
+    name: "Engr. Saad Mahmood",
+    designation: "Batch Advisor",
+    department: "Food Science",
+    advisoryBatch: "Fa23-FSN",
+    advisorySeason: "Fall",
+    officeRoom: "Room B-204",
+    block: "Block B",
+    floor: "2nd Floor",
+    email: "saad.mahmood@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 318",
+    consultationHours: "Tue – Fri: 10:30 AM – 12:30 PM",
+    researchFocus: "Student Academic Advising (Fa23-FSN) & Quality Assurance",
+    isAvailableToday: true,
+    avatarInitials: "SM"
+  },
+  {
+    id: "fac-15",
+    name: "Mr. Usman Khalid",
+    designation: "Batch Advisor",
+    department: "Management Sciences",
+    advisoryBatch: "SP25-BBA",
+    advisorySeason: "Spring",
+    officeRoom: "Room D-203",
+    block: "Block D",
+    floor: "2nd Floor",
+    email: "usman.khalid@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 418",
+    consultationHours: "Mon / Wed / Fri: 01:00 PM – 03:00 PM",
+    researchFocus: "Student Academic Advising (BBA-6) & Business Analytics",
+    isAvailableToday: false,
+    avatarInitials: "UK"
+  },
+  {
+    id: "fac-30",
+    name: "Mr. Arslan Sarwar",
+    designation: "Batch Advisor",
+    department: "Computer Science",
+    advisoryBatch: "SP23-BCS",
+    advisorySeason: "Spring",
+    officeRoom: "Room C-104",
+    block: "Block C",
+    floor: "1st Floor",
+    email: "arslan.sarwar@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 212",
+    consultationHours: "Mon – Thu: 10:00 AM – 12:00 PM",
+    researchFocus: "Batch Academic Advising (SP23-BCS) & Core Programming",
+    isAvailableToday: true,
+    avatarInitials: "AS"
+  },
+  {
+    id: "fac-31",
+    name: "Dr. Ahmed Sarwar",
+    designation: "Batch Advisor",
+    department: "Computer Science",
+    advisoryBatch: "Fa24-BCS",
+    advisorySeason: "Fall",
+    officeRoom: "Room C-202",
+    block: "Block C",
+    floor: "2nd Floor",
+    email: "ahmed.sarwar@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 214",
+    consultationHours: "Tue / Thu: 11:30 AM – 01:30 PM",
+    researchFocus: "Batch Academic Advising (Fa24-BCS) & Machine Learning",
+    isAvailableToday: true,
+    avatarInitials: "AS"
+  },
+  {
+    id: "fac-16",
+    name: "Dr. Ahmed Bilal",
+    designation: "Head of Department (HOD)",
+    department: "Food Science",
+    officeRoom: "Room D-201 (Biosciences Wing)",
+    block: "Block D",
+    floor: "2nd Floor",
+    email: "hod-fs@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 501",
+    consultationHours: "Tue / Thu: 11:00 AM – 01:00 PM",
+    researchFocus: "Food Preservation, Nutritional Biochemistry & Safety",
+    isAvailableToday: true,
+    avatarInitials: "AB"
+  },
+  {
+    id: "fac-17",
+    name: "Dr. Ali Raza",
+    designation: "Head of Department (HOD)",
+    department: "Chemistry",
+    officeRoom: "Room B-102 (Sciences Secretariat)",
+    block: "Block B",
+    floor: "1st Floor",
+    email: "hod-chem@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 512",
+    consultationHours: "Mon / Wed: 10:00 AM – 12:00 PM",
+    researchFocus: "Analytical Chemistry, Catalysis & Polymer Synthesis",
+    isAvailableToday: true,
+    avatarInitials: "AR"
+  },
+  {
+    id: "fac-18",
+    name: "Dr. Akbar Siddiqui",
+    designation: "Head of Department (HOD)",
+    department: "Civil Engineering",
+    officeRoom: "Room B-201 (Civil Engg Wing)",
+    block: "Block B",
+    floor: "2nd Floor",
+    email: "hod-civil@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 524",
+    consultationHours: "Wed / Fri: 11:30 AM – 01:30 PM",
+    researchFocus: "Structural Concrete Design & Geotechnical Infrastructure",
+    isAvailableToday: true,
+    avatarInitials: "AS"
+  },
+  {
+    id: "fac-19",
+    name: "Dr. Kamran Haider",
+    designation: "Head of Department (HOD)",
+    department: "Mathematics",
+    officeRoom: "Room A-204 (Math Faculty Office)",
+    block: "Block A",
+    floor: "2nd Floor",
+    email: "hod-math@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 535",
+    consultationHours: "Tue / Thu: 01:30 PM – 03:00 PM",
+    researchFocus: "Computational Fluid Dynamics & Applied Differential Equations",
+    isAvailableToday: true,
+    avatarInitials: "KH"
+  },
+  {
+    id: "fac-20",
+    name: "Ms. Saima Noor",
+    designation: "Lecturer",
+    department: "Food Science",
+    officeRoom: "Room D-108",
+    block: "Block D",
+    floor: "1st Floor",
+    email: "saima.noor@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 506",
+    consultationHours: "Mon / Thu: 12:00 PM – 02:00 PM",
+    researchFocus: "Dairy Processing & Clinical Nutrition Lab Courses",
+    isAvailableToday: true,
+    avatarInitials: "SN"
+  },
+  {
+    id: "fac-21",
+    name: "Mr. Bilal Shabir Qaisar",
+    designation: "Lecturer",
+    department: "Computer Science",
+    officeRoom: "Room C-109",
+    block: "Block C",
+    floor: "1st Floor",
+    email: "bilal.shabir@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 252",
+    consultationHours: "Mon / Wed: 10:00 AM – 12:00 PM",
+    researchFocus: "Object-Oriented Software Design & Web Engineering",
+    isAvailableToday: true,
+    avatarInitials: "BS"
+  },
+  {
+    id: "fac-26",
+    name: "Ms. Ayesha Tariq",
+    designation: "Lecturer",
+    department: "Software Engineering",
+    officeRoom: "Room A-107",
+    block: "Block A",
+    floor: "1st Floor",
+    email: "ayesha.tariq@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 254",
+    consultationHours: "Tue / Thu: 11:00 AM – 01:00 PM",
+    researchFocus: "Requirements Engineering & Human-Computer Interaction",
+    isAvailableToday: true,
+    avatarInitials: "AT"
+  },
+  {
+    id: "fac-27",
+    name: "Mr. Hassan Raza",
+    designation: "Lecturer",
+    department: "Electrical Engineering",
+    officeRoom: "Room B-106",
+    block: "Block B",
+    floor: "1st Floor",
+    email: "hassan.raza@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 319",
+    consultationHours: "Mon / Wed: 01:30 PM – 03:00 PM",
+    researchFocus: "Circuit Analysis, Power Systems & Control Lab",
+    isAvailableToday: true,
+    avatarInitials: "HR"
+  },
+  {
+    id: "fac-28",
+    name: "Ms. Sana Malik",
+    designation: "Lecturer",
+    department: "Computer Science",
+    officeRoom: "Room C-110",
+    block: "Block C",
+    floor: "1st Floor",
+    email: "sana.malik@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 258",
+    consultationHours: "Wed / Fri: 10:30 AM – 12:30 PM",
+    researchFocus: "Data Structures, Algorithms & Competitive Programming",
+    isAvailableToday: true,
+    avatarInitials: "SM"
+  },
+  {
+    id: "fac-29",
+    name: "Mr. Ali Shahzad",
+    designation: "Lecturer",
+    department: "Mechanical Engineering",
+    officeRoom: "Room B-108",
+    block: "Block B",
+    floor: "1st Floor",
+    email: "ali.shahzad@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 545",
+    consultationHours: "Tue / Thu: 09:30 AM – 11:30 AM",
+    researchFocus: "Thermodynamics, CAD Modeling & Manufacturing Systems",
+    isAvailableToday: true,
+    avatarInitials: "AS"
+  },
+  {
+    id: "fac-22",
+    name: "Dr. Farah Naz",
+    designation: "Associate Professor",
+    department: "Chemistry",
+    officeRoom: "Room B-206",
+    block: "Block B",
+    floor: "2nd Floor",
+    email: "farah.naz@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 518",
+    consultationHours: "Mon / Wed: 01:00 PM – 02:30 PM",
+    researchFocus: "Organic Reaction Mechanisms & Pharmaceutical Chemistry",
+    isAvailableToday: true,
+    avatarInitials: "FN"
+  },
+  {
+    id: "fac-23",
+    name: "Dr. Salman Qureshi",
+    designation: "Tenured Professor",
+    department: "Civil Engineering",
+    officeRoom: "Room B-208",
+    block: "Block B",
+    floor: "2nd Floor",
+    email: "salman.qureshi@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 529",
+    consultationHours: "Tue / Thu: 10:00 AM – 12:00 PM",
+    researchFocus: "Transportation Geometrics & Urban Water Hydrology",
+    isAvailableToday: true,
+    avatarInitials: "SQ"
+  },
+  {
+    id: "fac-24",
+    name: "Dr. Zainab Bibi",
+    designation: "Associate Professor",
+    department: "Food Science",
+    officeRoom: "Room D-205",
+    block: "Block D",
+    floor: "2nd Floor",
+    email: "zainab.bibi@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 509",
+    consultationHours: "Wed / Fri: 09:30 AM – 11:30 AM",
+    researchFocus: "Post-Harvest Food Biotechnology & Functional Foods",
+    isAvailableToday: false,
+    avatarInitials: "ZB"
+  },
+  {
+    id: "fac-25",
+    name: "Dr. Nasir Mehmood",
+    designation: "Tenured Professor",
+    department: "Mathematics",
+    officeRoom: "Room A-209",
+    block: "Block A",
+    floor: "2nd Floor",
+    email: "nasir.mehmood@cuisahiwal.edu.pk",
+    phoneExtension: "Ext. 541",
+    consultationHours: "Mon / Thu: 11:00 AM – 01:00 PM",
+    researchFocus: "Numerical Analysis, Linear Algebra & Cryptography",
+    isAvailableToday: true,
+    avatarInitials: "NM"
   }
 ];
 
+export const CAMPUS_LIBRARY_INFO = {
+  blockName: "D Block",
+  location: "Ground Floor, Central Academic Concourse (Next to Auditorium)"
+} as const;
+
 export const ADMINISTRATIVE_OFFICES: AdministrativeOffice[] = [
   {
-    id: "adm-1",
-    name: "Office of the Registrar & Academic Records",
-    category: "Academic Records",
-    officeRoom: "Room A-101 (Main Administrative Wing)",
+    id: "adm-6",
+    name: "Admission Office",
+    category: "Administration",
+    officeRoom: "Room A-102 (Admissions Wing)",
     block: "Block A",
     floor: "1st Floor",
-    headOfficer: "Mr. Muhammad Nawaz",
-    headTitle: "Deputy Registrar",
-    email: "registrar@cuisahiwal.edu.pk",
-    phoneExtension: "Ext. 110",
+    headOfficer: "Mr. Kamran Javed",
+    headTitle: "Admissions Officer",
+    email: "admissions@cuisahiwal.edu.pk",
+    phone: "+92 300 1234567",
+    phoneExtension: "Ext. 105",
     workingHours: "08:30 AM – 04:30 PM (Mon – Fri)",
-    currentTicketServing: 42,
-    queueLength: 4,
-    avgWaitMinutes: 8,
+    currentTicketServing: 18,
+    queueLength: 3,
+    avgWaitMinutes: 6,
     counterStatus: "OPEN",
     servicesOffered: [
-      "Degree & Transcript Verification",
-      "Enrollment & Bonafide Certificates",
-      "Course Drop / Semester Freeze Requests",
-      "Migration & NOC Processing"
-    ]
-  },
-  {
-    id: "adm-2",
-    name: "Accounts & Student Fee Counter",
-    category: "Finance & Accounts",
-    officeRoom: "Room A-105 (Finance Arcade)",
-    block: "Block A",
-    floor: "1st Floor",
-    headOfficer: "Mr. Khurram Shahzad",
-    headTitle: "Treasurer & Accounts Officer",
-    email: "accounts@cuisahiwal.edu.pk",
-    phoneExtension: "Ext. 115",
-    workingHours: "09:00 AM – 03:30 PM (Mon – Fri)",
-    currentTicketServing: 88,
-    queueLength: 9,
-    avgWaitMinutes: 14,
-    counterStatus: "BUSY",
-    servicesOffered: [
-      "Semester Fee Challan Inquiries",
-      "Installment & Scholarship Disbursals",
-      "Hostel & Transport Dues Reconciliation",
-      "Refund & Caution Money Vouchers"
+      "Undergraduate & Graduate Admissions",
+      "Merit List & Document Verification",
+      "Entry Test & Program Transfers"
     ]
   },
   {
     id: "adm-3",
-    name: "Examination Branch & Transcripts Desk",
+    name: "Exam Office",
     category: "Academic Records",
-    officeRoom: "Room D-201 (Examinations Complex)",
-    block: "Block D",
-    floor: "2nd Floor",
+    officeRoom: "Room B-02 (Examinations Wing)",
+    block: "Block B",
+    floor: "Ground Floor",
     headOfficer: "Dr. Farooq Tariq",
     headTitle: "Controller of Examinations",
     email: "exams@cuisahiwal.edu.pk",
+    phone: "+92 311 9876543",
     phoneExtension: "Ext. 410",
     workingHours: "08:30 AM – 04:30 PM (Mon – Fri)",
     currentTicketServing: 19,
@@ -301,8 +646,56 @@ export const ADMINISTRATIVE_OFFICES: AdministrativeOffice[] = [
     ]
   },
   {
+    id: "adm-2",
+    name: "Accounts Office",
+    category: "Finance & Accounts",
+    officeRoom: "Room AD-201 (Finance Arcade)",
+    block: "Admin Block",
+    floor: "2nd Floor",
+    headOfficer: "Mr. Khurram Shahzad",
+    headTitle: "Treasurer & Accounts Officer",
+    email: "accounts@cuisahiwal.edu.pk",
+    phone: "+92 322 7654321",
+    phoneExtension: "Ext. 115",
+    workingHours: "09:00 AM – 03:30 PM (Mon – Fri)",
+    currentTicketServing: 88,
+    queueLength: 9,
+    avgWaitMinutes: 14,
+    counterStatus: "BUSY",
+    servicesOffered: [
+      "Semester Fee Challan Inquiries",
+      "Installment & Scholarship Disbursals",
+      "Hostel & Transport Dues Reconciliation",
+      "Refund & Caution Money Vouchers"
+    ]
+  },
+  {
+    id: "adm-1",
+    name: "Registrar Office",
+    category: "Academic Records",
+    officeRoom: "Room C-101 (Academic Records)",
+    block: "Block C",
+    floor: "1st Floor",
+    headOfficer: "Mr. Muhammad Nawaz",
+    headTitle: "Deputy Registrar",
+    email: "registrar@cuisahiwal.edu.pk",
+    phone: "+92 333 4567890",
+    phoneExtension: "Ext. 110",
+    workingHours: "08:30 AM – 04:30 PM (Mon – Fri)",
+    currentTicketServing: 42,
+    queueLength: 4,
+    avgWaitMinutes: 8,
+    counterStatus: "OPEN",
+    servicesOffered: [
+      "Degree & Transcript Verification",
+      "Enrollment & Bonafide Certificates",
+      "Course Drop / Semester Freeze Requests",
+      "Migration & NOC Processing"
+    ]
+  },
+  {
     id: "adm-4",
-    name: "Career Placement & Industrial Liaison Cell",
+    name: "Career Placement Cell",
     category: "Student Support",
     officeRoom: "Room D-106",
     block: "Block D",
@@ -310,6 +703,7 @@ export const ADMINISTRATIVE_OFFICES: AdministrativeOffice[] = [
     headOfficer: "Ms. Sadia Perveen",
     headTitle: "Director Career Services",
     email: "careers@cuisahiwal.edu.pk",
+    phone: "+92 301 2345678",
     phoneExtension: "Ext. 420",
     workingHours: "09:00 AM – 04:00 PM (Mon – Fri)",
     currentTicketServing: 11,
@@ -325,7 +719,7 @@ export const ADMINISTRATIVE_OFFICES: AdministrativeOffice[] = [
   },
   {
     id: "adm-5",
-    name: "Campus Medical & Emergency First-Aid Center",
+    name: "Campus Medical Center",
     category: "Health & Safety",
     officeRoom: "Room B-Ground-01 (Medical Dispensary)",
     block: "Block B",
@@ -333,6 +727,7 @@ export const ADMINISTRATIVE_OFFICES: AdministrativeOffice[] = [
     headOfficer: "Dr. Zahida Khan",
     headTitle: "Chief Medical Officer",
     email: "medical@cuisahiwal.edu.pk",
+    phone: "+92 304 5550119",
     phoneExtension: "Ext. 119",
     workingHours: "24/7 On-Call Emergency Service",
     currentTicketServing: 6,
@@ -877,3 +1272,221 @@ export const CAMPUS_STATISTICS: {
     { department: "Mechanical & Sciences", code: "BME / BS", students: 490, faculty: 26, labs: 2 }
   ]
 };
+
+export type ClassroomBlockName = "Block A" | "Block B" | "Block C";
+export type ClassroomFloorName = "Ground Floor" | "1st Floor" | "2nd Floor" | "3rd Floor";
+
+export interface BlockClassroomItem {
+  id: string;
+  roomCode: string;
+  name: string;
+  block: ClassroomBlockName;
+  floor: ClassroomFloorName;
+  capacity: number;
+  hasAC: boolean;
+  hasWifi: boolean;
+  hasProjector: boolean;
+}
+
+function makeRoom(
+  block: ClassroomBlockName,
+  floor: ClassroomFloorName,
+  roomCode: string,
+  capacity: number,
+  name?: string
+): BlockClassroomItem {
+  const idSlug = `${block.toLowerCase().replace(/\s+/g, "-")}-${roomCode.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  return {
+    id: idSlug,
+    roomCode,
+    name: name ?? `Classroom ${roomCode}`,
+    block,
+    floor,
+    capacity,
+    hasAC: true,
+    hasWifi: true,
+    hasProjector: true
+  };
+}
+
+export const BLOCK_CLASSROOMS: BlockClassroomItem[] = [
+  // Block A — 20 Classrooms (Ground: 7, 1st: 7, 2nd: 6)
+  makeRoom("Block A", "Ground Floor", "A-1", 60, "Lecture Hall A-1"),
+  makeRoom("Block A", "Ground Floor", "A-2", 45, "Smart Classroom A-2"),
+  makeRoom("Block A", "Ground Floor", "A-3", 55, "Classroom A-3"),
+  makeRoom("Block A", "Ground Floor", "A-4", 40, "Classroom A-4"),
+  makeRoom("Block A", "Ground Floor", "A-5", 50, "Classroom A-5"),
+  makeRoom("Block A", "Ground Floor", "A-6", 38, "Classroom A-6"),
+  makeRoom("Block A", "Ground Floor", "A-7", 48, "Classroom A-7"),
+
+  makeRoom("Block A", "1st Floor", "A-1.1", 70, "Lecture Hall A-1.1"),
+  makeRoom("Block A", "1st Floor", "A-1.2", 65, "Classroom A-1.2"),
+  makeRoom("Block A", "1st Floor", "A-1.3", 60, "Classroom A-1.3"),
+  makeRoom("Block A", "1st Floor", "A-1.4", 55, "Classroom A-1.4"),
+  makeRoom("Block A", "1st Floor", "A-1.5", 50, "Classroom A-1.5"),
+  makeRoom("Block A", "1st Floor", "A-1.6", 45, "Classroom A-1.6"),
+  makeRoom("Block A", "1st Floor", "A-1.7", 40, "Classroom A-1.7"),
+
+  makeRoom("Block A", "2nd Floor", "A-2.1", 65, "Lecture Hall A-2.1"),
+  makeRoom("Block A", "2nd Floor", "A-2.2", 60, "Classroom A-2.2"),
+  makeRoom("Block A", "2nd Floor", "A-2.3", 55, "Classroom A-2.3"),
+  makeRoom("Block A", "2nd Floor", "A-2.4", 50, "Classroom A-2.4"),
+  makeRoom("Block A", "2nd Floor", "A-2.5", 45, "Classroom A-2.5"),
+  makeRoom("Block A", "2nd Floor", "A-2.6", 40, "Classroom A-2.6"),
+
+  // Block B — 18 Classrooms (Ground: 6, 1st: 5, 2nd: 4, 3rd: 3)
+  makeRoom("Block B", "Ground Floor", "B-1", 70, "Engineering Hall B-1"),
+  makeRoom("Block B", "Ground Floor", "B-2", 65, "Classroom B-2"),
+  makeRoom("Block B", "Ground Floor", "B-3", 60, "Classroom B-3"),
+  makeRoom("Block B", "Ground Floor", "B-4", 55, "Classroom B-4"),
+  makeRoom("Block B", "Ground Floor", "B-5", 50, "Classroom B-5"),
+  makeRoom("Block B", "Ground Floor", "B-6", 45, "Classroom B-6"),
+
+  makeRoom("Block B", "1st Floor", "B-1.1", 65, "Smart Classroom B-1.1"),
+  makeRoom("Block B", "1st Floor", "B-1.2", 60, "Classroom B-1.2"),
+  makeRoom("Block B", "1st Floor", "B-1.3", 55, "Classroom B-1.3"),
+  makeRoom("Block B", "1st Floor", "B-1.4", 50, "Classroom B-1.4"),
+  makeRoom("Block B", "1st Floor", "B-1.5", 45, "Classroom B-1.5"),
+
+  makeRoom("Block B", "2nd Floor", "B-2.1", 60, "Classroom B-2.1"),
+  makeRoom("Block B", "2nd Floor", "B-2.2", 55, "Classroom B-2.2"),
+  makeRoom("Block B", "2nd Floor", "B-2.3", 50, "Classroom B-2.3"),
+  makeRoom("Block B", "2nd Floor", "B-2.4", 45, "Classroom B-2.4"),
+
+  makeRoom("Block B", "3rd Floor", "B-3.1", 50, "Classroom B-3.1"),
+  makeRoom("Block B", "3rd Floor", "B-3.2", 45, "Classroom B-3.2"),
+  makeRoom("Block B", "3rd Floor", "B-3.3", 40, "Classroom B-3.3"),
+
+  // Block C — 18 Classrooms (Ground: 6, 1st: 5, 2nd: 5, 3rd: 2)
+  makeRoom("Block C", "Ground Floor", "C-1", 65, "CS Lecture Hall C-1"),
+  makeRoom("Block C", "Ground Floor", "C-2", 60, "Classroom C-2"),
+  makeRoom("Block C", "Ground Floor", "C-3", 55, "Classroom C-3"),
+  makeRoom("Block C", "Ground Floor", "C-4", 50, "Classroom C-4"),
+  makeRoom("Block C", "Ground Floor", "C-5", 45, "Classroom C-5"),
+  makeRoom("Block C", "Ground Floor", "C-6", 40, "Classroom C-6"),
+
+  makeRoom("Block C", "1st Floor", "C-101", 65, "Operating Systems Room C-101"),
+  makeRoom("Block C", "1st Floor", "C-102", 65, "Software Eng Hall C-102"),
+  makeRoom("Block C", "1st Floor", "C-103", 60, "Classroom C-103"),
+  makeRoom("Block C", "1st Floor", "C-104", 55, "Classroom C-104"),
+  makeRoom("Block C", "1st Floor", "C-105", 50, "Classroom C-105"),
+
+  makeRoom("Block C", "2nd Floor", "C-201", 65, "Senior Lecture Room C-201"),
+  makeRoom("Block C", "2nd Floor", "C-202", 60, "Classroom C-202"),
+  makeRoom("Block C", "2nd Floor", "C-203", 55, "Classroom C-203"),
+  makeRoom("Block C", "2nd Floor", "C-204", 60, "Smart Lecture Hall C-204"),
+  makeRoom("Block C", "2nd Floor", "C-205", 50, "Classroom C-205"),
+
+  makeRoom("Block C", "3rd Floor", "C-302", 45, "Classroom C-302"),
+  makeRoom("Block C", "3rd Floor", "C-303", 40, "Classroom C-303")
+];
+
+export type LabBlockLabel = "A Block" | "B Block" | "C Block";
+
+export interface CampusLabItem {
+  id: string;
+  name: string;
+  block: LabBlockLabel;
+  floor: string;
+  seats: number;
+  computersCount: number;
+  inCharge: string;
+  description: string;
+  hasWifi: boolean;
+  hasAC: boolean;
+  hasProjector: boolean;
+}
+
+export const CAMPUS_LABS_DIRECTORY: CampusLabItem[] = [
+  {
+    id: "lab-c6",
+    name: "C Lab - 6",
+    block: "C Block",
+    floor: "1st Floor",
+    seats: 50,
+    computersCount: 50,
+    inCharge: "Engr. Farhan Tariq",
+    description: "Computer lab for coding classes, software practice, and student lab exams.",
+    hasWifi: true,
+    hasAC: true,
+    hasProjector: true
+  },
+  {
+    id: "lab-c8",
+    name: "C Lab - 8",
+    block: "A Block",
+    floor: "G Floor",
+    seats: 45,
+    computersCount: 45,
+    inCharge: "Dr. Ayesha Malik",
+    description: "Ground floor computer lab with fast campus internet and dual-boot systems.",
+    hasWifi: true,
+    hasAC: true,
+    hasProjector: true
+  },
+  {
+    id: "lab-physics",
+    name: "Physics Lab",
+    block: "A Block",
+    floor: "2nd Floor",
+    seats: 40,
+    computersCount: 0,
+    inCharge: "Dr. Tariq Mehmood",
+    description: "Physics experiment benches for optics, mechanics, and basic circuits.",
+    hasWifi: true,
+    hasAC: true,
+    hasProjector: true
+  },
+  {
+    id: "lab-bio",
+    name: "Biosciences Lab",
+    block: "B Block",
+    floor: "1st Floor",
+    seats: 36,
+    computersCount: 0,
+    inCharge: "Dr. Sanaullah",
+    description: "Life sciences laboratory equipped with microscopes and clean lab benches.",
+    hasWifi: true,
+    hasAC: true,
+    hasProjector: false
+  },
+  {
+    id: "lab-chem",
+    name: "Chemistry Lab",
+    block: "A Block",
+    floor: "1st Floor",
+    seats: 38,
+    computersCount: 0,
+    inCharge: "Dr. Nadia Bibi",
+    description: "Chemistry practical hall with safety hoods, glassware, and water stations.",
+    hasWifi: true,
+    hasAC: true,
+    hasProjector: false
+  },
+  {
+    id: "lab-sw1",
+    name: "Software Lab 1",
+    block: "C Block",
+    floor: "G Floor",
+    seats: 50,
+    computersCount: 50,
+    inCharge: "Engr. Bilal Khan",
+    description: "Software and artificial intelligence lab used for senior projects.",
+    hasWifi: true,
+    hasAC: true,
+    hasProjector: true
+  },
+  {
+    id: "lab-net",
+    name: "Networks Lab",
+    block: "B Block",
+    floor: "2nd Floor",
+    seats: 45,
+    computersCount: 45,
+    inCharge: "Engr. Bilal Khalid",
+    description: "Networking lab with routers, switches, and computer security test racks.",
+    hasWifi: true,
+    hasAC: true,
+    hasProjector: true
+  }
+];

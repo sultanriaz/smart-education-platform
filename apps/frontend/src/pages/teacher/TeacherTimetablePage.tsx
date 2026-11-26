@@ -5,12 +5,12 @@ export function TeacherTimetablePage() {
   return (
     <div className="page-container space-y-6">
       <PageHeader
-        eyebrow="Faculty Teaching Timetable"
-        title="Lecture Schedule & Room Allocations"
-        description="Assigned teaching periods, room capacity, swap alerts, and 1-click digital attendance launch."
+        eyebrow="Teacher Timetable"
+        title="Teaching Schedule & Rooms"
+        description="See your weekly classes, sections, classrooms, and any room changes."
       />
 
-      <TimetableHub initialRole="teacher" />
+      <TimetableHub initialRole="teacher" signedInRole="teacher" />
     </div>
   );
 }
