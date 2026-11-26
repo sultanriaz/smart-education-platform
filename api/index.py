@@ -26,10 +26,10 @@ logging.basicConfig(level=logging.INFO)
 # ==============================================================================
 ROOT = Path(__file__).resolve().parent.parent
 
-# Add staged Vercel _libs and local libs/python packages to sys.path
-api_libs_dir = Path(__file__).resolve().parent / "_libs"
-if api_libs_dir.exists() and str(api_libs_dir) not in sys.path:
-    sys.path.insert(0, str(api_libs_dir))
+# Add bundled services/shared_libs (Vercel) and local libs/python packages to sys.path
+shared_libs_dir = ROOT / "services" / "shared_libs"
+if shared_libs_dir.exists() and str(shared_libs_dir) not in sys.path:
+    sys.path.insert(0, str(shared_libs_dir))
 
 libs_dir = ROOT / "libs" / "python"
 if libs_dir.exists():
@@ -559,9 +559,9 @@ async def health_check():
 
     payload["diagnostics"] = {
         "root": str(ROOT),
-        "api_libs_dir": str(api_libs_dir),
-        "api_libs_exists": api_libs_dir.exists(),
-        "api_libs_contents": _safe_listdir(api_libs_dir),
+        "shared_libs_dir": str(shared_libs_dir),
+        "shared_libs_exists": shared_libs_dir.exists(),
+        "shared_libs_contents": _safe_listdir(shared_libs_dir),
         "libs_python_exists": (ROOT / "libs" / "python").exists(),
         "smartedu_importable": smartedu_importable,
         "sys_path_head": sys.path[:8],
