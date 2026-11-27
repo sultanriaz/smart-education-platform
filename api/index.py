@@ -87,8 +87,13 @@ os.environ["JWT_ISSUER"] = os.environ.get("JWT_ISSUER", "http://localhost:8001")
 os.environ["JWT_KEY_ID"] = os.environ.get("JWT_KEY_ID", "identity-dev-1")
 os.environ["TRUSTED_FRONTEND_ORIGINS"] = ",".join(ALLOWED_ORIGINS)
 os.environ["CORS_ORIGINS"] = _json.dumps(ALLOWED_ORIGINS)
+import tempfile
 if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"):
     os.environ.setdefault("REFRESH_COOKIE_SECURE", "true")
+    os.environ.setdefault(
+        "LOCAL_STORAGE_PATH",
+        (Path(tempfile.gettempdir()) / "smartedu-learning-objects").as_posix(),
+    )
 os.environ["IDENTITY_SERVICE_BASE_URL"] = "http://localhost:8001"
 os.environ["JWT_JWKS_URL"] = "http://localhost:8001/.well-known/jwks.json"
 os.environ["SECURITY_TOKEN_PEPPER"] = os.environ.get("SECURITY_TOKEN_PEPPER", "smartedu-serverless-pepper-key-2026")

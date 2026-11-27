@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 
 from app.core.config import settings
@@ -12,7 +13,8 @@ def get_storage_backend():
     backend = settings.STORAGE_BACKEND.lower()
     if backend == "s3":
         return S3StorageBackend()
-    if settings.ENVIRONMENT.lower() in {"production", "prod", "staging"}:
+    is_serverless = bool(os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"))
+    if settings.ENVIRONMENT.lower() in {"production", "prod", "staging"} and not is_serverless:
         raise RuntimeError("Hosted Learning storage must use a durable S3-compatible backend")
     if backend != "local":
         raise RuntimeError("Unsupported learning storage backend")

@@ -1,15 +1,33 @@
 from __future__ import annotations
 
 import hashlib
+import logging
+import tempfile
 from pathlib import Path
 
 from app.storage.base import StoredObject
 
+logger = logging.getLogger("learning-service.storage.local")
+
 
 class LocalStorageBackend:
     def __init__(self, base_path: Path):
-        self.base_path = base_path.resolve()
-        self.base_path.mkdir(parents=True, exist_ok=True)
+        resolved = base_path.resolve()
+        try:
+            resolved.mkdir(parents=True, exist_ok=True)
+            self.base_path = resolved
+        except OSError as exc:
+            # Serverless runtimes (e.g. Vercel /var/task) mount code read-only;
+            # fall back to the writable temporary directory.
+            fallback = (Path(tempfile.gettempdir()) / "smartedu-learning-objects").resolve()
+            logger.warning(
+                "Storage path %s is not writable (%s); falling back to %s",
+                resolved,
+                exc,
+                fallback,
+            )
+            fallback.mkdir(parents=True, exist_ok=True)
+            self.base_path = fallback
 
     def _path(self, key: str) -> Path:
         path = (self.base_path / key).resolve()
