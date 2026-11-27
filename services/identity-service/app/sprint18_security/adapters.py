@@ -34,7 +34,10 @@ class AccountAdapter:
         return self.snapshot(self.users.get_by_id(user_id))
 
     def update_password(self, user_id, plaintext_password):
-        self.users.get_by_id(user_id).password_hash = hash_password(plaintext_password)
+        user = self.users.get_by_id(user_id)
+        if user is not None:
+            user.password_hash = hash_password(plaintext_password)
+            user.auth_version += 1
 
     def mark_email_verified(self, user_id):
         self.users.get_by_id(user_id).is_verified = True

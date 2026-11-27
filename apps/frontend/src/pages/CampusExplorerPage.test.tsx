@@ -48,12 +48,12 @@ describe("CampusExplorerPage overview dashboard", () => {
     expect(screen.queryByText(/Self Assessment/i)).not.toBeInTheDocument();
   });
 
-  it("opens Teachers directly into the Faculty & Teachers directory", () => {
+  it("opens Teachers directly into the Faculty & Teachers directory", async () => {
     renderExplorer("/explore");
 
     fireEvent.click(screen.getByRole("button", { name: /Teachers/i }));
 
-    expect(screen.getByRole("heading", { name: /Faculty & Teachers/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /Faculty & Teachers/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Director/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /HODs/i })).toBeInTheDocument();
   });

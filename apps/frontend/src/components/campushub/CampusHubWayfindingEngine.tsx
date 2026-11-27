@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   MapPin,
   Users,
@@ -13,15 +13,25 @@ import {
   User
 } from "lucide-react";
 
+import { SectionLoader } from "../ui/SectionLoader";
 import {
   CAMPUS_LIBRARY_INFO,
   FLOOR_BLUEPRINTS,
   CAMPUS_STATISTICS
 } from "../../features/campushub/campus-hub-data";
-import { BlockClassroomsBrowser } from "./BlockClassroomsBrowser";
-import { LabsDirectoryBrowser } from "./LabsDirectoryBrowser";
-import { FacultyDirectoryBrowser } from "./FacultyDirectoryBrowser";
-import { OfficesDirectoryBrowser } from "./OfficesDirectoryBrowser";
+
+const BlockClassroomsBrowser = lazy(() =>
+  import("./BlockClassroomsBrowser").then((m) => ({ default: m.BlockClassroomsBrowser }))
+);
+const LabsDirectoryBrowser = lazy(() =>
+  import("./LabsDirectoryBrowser").then((m) => ({ default: m.LabsDirectoryBrowser }))
+);
+const FacultyDirectoryBrowser = lazy(() =>
+  import("./FacultyDirectoryBrowser").then((m) => ({ default: m.FacultyDirectoryBrowser }))
+);
+const OfficesDirectoryBrowser = lazy(() =>
+  import("./OfficesDirectoryBrowser").then((m) => ({ default: m.OfficesDirectoryBrowser }))
+);
 
 export type HubTab =
   | "labs"
@@ -236,25 +246,33 @@ export function CampusHubWayfindingEngine({
       {/* ================= TAB 1: FACULTY & TEACHERS (QUICK ACCESS -> OFFICE LIST) ================= */}
       {currentSection === "faculty" && (
         <div className="animate-in fade-in duration-200">
-          <FacultyDirectoryBrowser
-            onBack={() => setActiveTab(null)}
-            onShowOnBlueprint={locateOnFloorBlueprint}
-          />
+          <Suspense fallback={<SectionLoader label="Loading faculty directory…" />}>
+            <FacultyDirectoryBrowser
+              onBack={() => setActiveTab(null)}
+              onShowOnBlueprint={locateOnFloorBlueprint}
+            />
+          </Suspense>
         </div>
       )}
 
       {/* ================= TAB 2: OFFICES DIRECTORY ================= */}
       {currentSection === "offices" && (
         <div className="animate-in fade-in duration-200">
-          <OfficesDirectoryBrowser
-            onBack={() => setActiveTab(null)}
-            onShowOnBlueprint={locateOnFloorBlueprint}
-          />
+          <Suspense fallback={<SectionLoader label="Loading offices directory…" />}>
+            <OfficesDirectoryBrowser
+              onBack={() => setActiveTab(null)}
+              onShowOnBlueprint={locateOnFloorBlueprint}
+            />
+          </Suspense>
         </div>
       )}
 
       {/* ================= TAB: LAB DIRECTORY ================= */}
-      {currentSection === "labs" && <LabsDirectoryBrowser onBack={() => setActiveTab(null)} />}
+      {currentSection === "labs" && (
+        <Suspense fallback={<SectionLoader label="Loading labs directory…" />}>
+          <LabsDirectoryBrowser onBack={() => setActiveTab(null)} />
+        </Suspense>
+      )}
 
       {/* ================= TAB: CAMPUS STATISTICS ================= */}
       {currentSection === "statistics" && (
@@ -305,7 +323,11 @@ export function CampusHubWayfindingEngine({
       )}
 
       {/* ================= TAB 3: CLASSROOMS (BLOCK A/B/C -> FLOOR-WISE CLASSROOMS) ================= */}
-      {currentSection === "classrooms" && <BlockClassroomsBrowser onBack={() => setActiveTab(null)} />}
+      {currentSection === "classrooms" && (
+        <Suspense fallback={<SectionLoader label="Loading classroom blocks…" />}>
+          <BlockClassroomsBrowser onBack={() => setActiveTab(null)} />
+        </Suspense>
+      )}
 
       {/* ================= TAB 4: LIBRARY (LOCATION & BLOCK NAME ONLY) ================= */}
       {currentSection === "library" && (

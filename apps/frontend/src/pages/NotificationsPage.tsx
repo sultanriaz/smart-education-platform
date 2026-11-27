@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "../components/ui/Badge";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
+import { EmptyState } from "../components/ui/EmptyState";
 import { InlineError } from "../components/ui/InlineError";
 import { PageHeader } from "../components/ui/PageHeader";
 import { SectionLoader } from "../components/ui/SectionLoader";
@@ -50,7 +51,14 @@ export function NotificationsPage() {
     return (
       <div className="page-container">
         <PageHeader title="Notifications" />
-        <InlineError message="Notifications could not be loaded." />
+        <InlineError
+          message="Notifications could not be loaded."
+          onRetry={() => {
+            void notifications.refetch();
+            void preferences.refetch();
+          }}
+          isRetrying={notifications.isFetching || preferences.isFetching}
+        />
       </div>
     );
   }
@@ -134,7 +142,10 @@ export function NotificationsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted">No notifications on this page.</p>
+            <EmptyState
+              title="No notifications"
+              description={unreadOnly ? "You have no unread notifications on this page." : "Notifications sent to your account will appear here."}
+            />
           )}
           <nav aria-label="Notification pages" className="mt-4 flex items-center gap-3">
             <Button variant="secondary" disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>Previous</Button>

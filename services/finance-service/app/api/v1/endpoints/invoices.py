@@ -24,11 +24,14 @@ def list_invoices(
     semester_number: int | None = None,
     status: str | None = None,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("finance.invoices.read", "admin", "teacher", "finance_officer", "student")),
+    principal: Principal = Depends(require_scoped_roles("finance.invoices.read", "admin", "finance_officer", "student")),
 ):
     query = select(Invoice).order_by(Invoice.created_at.desc())
-    if "student" in principal.roles and "admin" not in principal.roles:
-        # Enforce student isolation
+    is_finance_staff = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.invoices.read" in principal.permissions
+    )
+    if not is_finance_staff:
+        # Enforce strict isolation for all non-privileged callers
         query = query.where(Invoice.student_user_id == principal.user_id)
     elif student_user_id is not None:
         query = query.where(Invoice.student_user_id == student_user_id)
@@ -123,13 +126,16 @@ def create_bulk_invoices(
 def get_invoice(
     id: uuid.UUID,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("finance.invoices.read", "admin", "teacher", "finance_officer", "student")),
+    principal: Principal = Depends(require_scoped_roles("finance.invoices.read", "admin", "finance_officer", "student")),
 ):
     inv = db.get(Invoice, id)
     if not inv:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
-    if "student" in principal.roles and "admin" not in principal.roles and principal.user_id != inv.student_user_id:
+    is_finance_staff = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.invoices.read" in principal.permissions
+    )
+    if not is_finance_staff and principal.user_id != inv.student_user_id:
         raise HTTPException(status_code=403, detail="Cannot access another student's invoice")
 
     return inv

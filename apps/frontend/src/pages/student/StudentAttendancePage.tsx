@@ -33,7 +33,14 @@ export function StudentAttendancePage() {
     return (
       <div className="page-container">
         <PageHeader title="My attendance" eyebrow="Student" />
-        <InlineError message="Attendance data could not be loaded." />
+        <InlineError
+          message="Attendance data could not be loaded."
+          onRetry={() => {
+            void summary.refetch();
+            void records.refetch();
+          }}
+          isRetrying={summary.isFetching || records.isFetching}
+        />
       </div>
     );
   }

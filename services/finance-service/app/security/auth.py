@@ -9,6 +9,7 @@ import httpx
 import jwt
 from fastapi import Depends, Header, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from smartedu_security import decode_service_access_jwt
 from smartedu_security.live_permissions import live_permission
 
 from app.core.config import settings
@@ -47,26 +48,27 @@ def current_principal(
         jwks = _get_jwks()
         key_data = next(k for k in jwks["keys"] if k.get("kid") == header.get("kid"))
         key = jwt.algorithms.RSAAlgorithm.from_jwk(key_data)
-        payload = jwt.decode(
+        payload = decode_service_access_jwt(
             token,
             key,
-            algorithms=settings.JWT_ALGORITHMS,
             issuer=settings.JWT_ISSUER,
             audience=settings.JWT_AUDIENCE,
-            options={"require": ["exp", "iat", "sub", "iss", "aud", "jti"]},
+            algorithms=settings.JWT_ALGORITHMS,
         )
-        if payload.get("type") != "access":
-            raise ValueError("Wrong token type")
         roles = {str(role).lower() for role in payload.get("roles", [])}
         raw = payload.get("permissions", [])
-        if not isinstance(raw, list) or any(not isinstance(v, str) or not v for v in raw):
-            raise ValueError("Invalid permissions claim")
+        if not roles.intersection({"admin", "teacher", "student", "finance_officer"}) and not any(
+            scope.startswith("finance.") for scope in raw
+        ):
+            raise HTTPException(status_code=403, detail="No Finance role or permission")
         return Principal(
             user_id=uuid.UUID(payload["sub"]),
             roles=roles,
             token=token,
             permissions=frozenset(raw),
         )
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=401, detail="Invalid access token") from exc
 
@@ -95,7 +97,7 @@ def require_scoped_roles(scope: str, *roles: str):
             return principal
         if not wanted.isdisjoint(principal.roles):
             return principal
-        if scope in principal.permissions or live_permission(principal, scope, settings.JWT_JWKS_URL):
+        if live_permission(principal, scope, settings.JWT_JWKS_URL):
             return principal
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 

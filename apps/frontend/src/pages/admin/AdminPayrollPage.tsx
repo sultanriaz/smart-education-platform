@@ -37,7 +37,13 @@ export function AdminPayrollPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "profiles" | "periods" | "runs" | "disbursements">("overview");
 
   // Queries
-  const { data: summary, isLoading: isSummaryLoading } = useQuery({
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    isFetching: isSummaryFetching,
+    error: summaryError,
+    refetch: refetchSummary
+  } = useQuery({
     queryKey: ["admin", "payroll", "summary"],
     queryFn: () => payrollApi.getSummary()
   });
@@ -139,6 +145,22 @@ export function AdminPayrollPage() {
     return (
       <div className="page-container">
         <SectionLoader label="Loading payroll management workbench…" />
+      </div>
+    );
+  }
+
+  if (summaryError) {
+    return (
+      <div className="page-container">
+        <PageHeader
+          eyebrow="Staff Compensation & HR"
+          title="Institutional Payroll & Disbursements"
+        />
+        <InlineError
+          message="Payroll administration data could not be loaded."
+          onRetry={() => void refetchSummary()}
+          isRetrying={isSummaryFetching}
+        />
       </div>
     );
   }

@@ -66,6 +66,8 @@ class AuthService:
                     details={},
                 )
             else:
+                if user.password_hash.startswith("pbkdf2:sha256:"):
+                    user.password_hash = hash_password(password)
                 pair = self._issue_pair(user.id, [role.name for role in user.roles], user.auth_version)
                 self.audit.record(
                     action="auth.login_succeeded",
@@ -92,15 +94,32 @@ class AuthService:
             self.audit.record(action="auth.refreshed", user_id=user.id)
         return pair
 
-    def logout(self, refresh_token: str) -> None:
-        try:
-            payload = self._decode_refresh(refresh_token)
-        except AuthenticationError:
+    def logout(self, refresh_token: str | None = None, *, access_token: str | None = None) -> None:
+        user_id: uuid.UUID | None = None
+        refresh_jti: str | None = None
+        if refresh_token:
+            try:
+                payload = self._decode_refresh(refresh_token)
+                user_id = uuid.UUID(payload["sub"])
+                refresh_jti = payload["jti"]
+            except (AuthenticationError, KeyError, ValueError):
+                pass
+        if user_id is None and access_token:
+            try:
+                payload = decode_token(access_token, token_type="access")
+                user_id = uuid.UUID(payload["sub"])
+            except (jwt.PyJWTError, KeyError, ValueError):
+                pass
+        if user_id is None:
             return
         with transaction(self.db):
-            user_id = uuid.UUID(payload["sub"])
-            if self.tokens.consume(jti=payload["jti"], user_id=user_id):
-                self.audit.record(action="auth.logged_out", user_id=user_id)
+            if refresh_jti:
+                self.tokens.consume(jti=refresh_jti, user_id=user_id)
+            self.tokens.revoke_user(user_id)
+            user = self.users.get_by_id(user_id)
+            if user is not None:
+                user.auth_version += 1
+            self.audit.record(action="auth.logged_out", user_id=user_id)
 
     @staticmethod
     def _decode_refresh(token: str) -> dict:

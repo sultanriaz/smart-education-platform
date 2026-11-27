@@ -30,13 +30,13 @@ describe("CampusHubWayfindingEngine", () => {
     expect(handleBack).toHaveBeenCalledTimes(1);
   });
 
-  it("opens the next page when a card is clicked instead of showing it below, and returns on Back", () => {
+  it("opens the next page when a card is clicked instead of showing it below, and returns on Back", async () => {
     render(<CampusHubWayfindingEngine />);
 
     // Open Class Rooms
     fireEvent.click(screen.getByRole("button", { name: "Class Rooms" }));
     expect(screen.queryByText("Quick Access")).not.toBeInTheDocument();
-    expect(screen.getByText("SELECT A BLOCK TO VIEW CLASSROOMS")).toBeInTheDocument();
+    expect(await screen.findByText("SELECT A BLOCK TO VIEW CLASSROOMS")).toBeInTheDocument();
 
     // Return to Campus Portal
     fireEvent.click(screen.getByRole("button", { name: /Back to Campus Portal/i }));
@@ -45,7 +45,7 @@ describe("CampusHubWayfindingEngine", () => {
     // Open Labs Directory
     fireEvent.click(screen.getByRole("button", { name: "Labs Directory" }));
     expect(screen.queryByText("Quick Access")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Labs Directory" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Labs Directory" })).toBeInTheDocument();
 
     // Return to Campus Portal
     fireEvent.click(screen.getByLabelText("Back to Campus Portal"));
@@ -54,7 +54,7 @@ describe("CampusHubWayfindingEngine", () => {
     // Open Faculty & Teachers -> displays 4 Offices Quick Access cards
     fireEvent.click(screen.getByRole("button", { name: "Faculty & Teachers" }));
     expect(screen.queryByText("6 modules")).not.toBeInTheDocument();
-    expect(screen.getByText("4 Offices")).toBeInTheDocument();
+    expect(await screen.findByText("4 Offices")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Director" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "HODs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Teachers" })).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe("CampusHubWayfindingEngine", () => {
 
     // Open Offices Directory -> shows 2-card selector screen
     fireEvent.click(screen.getByRole("button", { name: "Offices Directory" }));
-    expect(screen.getByRole("heading", { name: "Offices Directory" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Offices Directory" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Faculty Offices" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Administrative Offices" })).toBeInTheDocument();
 

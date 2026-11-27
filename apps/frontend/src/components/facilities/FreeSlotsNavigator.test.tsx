@@ -27,18 +27,21 @@ describe("FreeSlotsNavigator", () => {
     // Default status count: 34 rooms free
     expect(screen.getByText("34 rooms free")).toBeInTheDocument();
 
-    // Block A: 7 rooms · 1 lab
+    // Block A includes moved lab (7 rooms · 2 labs on Wednesday Slot 1)
     expect(screen.getByText("A- Block")).toBeInTheDocument();
-    expect(screen.getByText("7 rooms · 1 lab")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /A-1\s+60/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /A-2\s+45/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /A-3\s+55/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /A-4\s+40/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /A Lab-9\s+30/ })).toBeInTheDocument();
 
-    // Block B: 7 rooms · 2 labs
+    // Engineering Labs removed from UI
+    expect(screen.queryByRole("button", { name: "Engg. Labs" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Engineering Labs")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Lab" })).toBeInTheDocument();
+
+    // Block B: B-1 & B-2 visible
     expect(screen.getByText("B- Block")).toBeInTheDocument();
-    expect(screen.getByText("7 rooms · 2 labs")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /B-1\s+70/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /B-2\s+65/ })).toBeInTheDocument();
 
@@ -48,19 +51,20 @@ describe("FreeSlotsNavigator", () => {
     expect(handleBack).toHaveBeenCalledTimes(1);
   });
 
-  it("opens room detail modal when clicking a room and closes it", () => {
+  it("opens room detail modal when clicking a room without Room Features and closes it", () => {
     render(<FreeSlotsNavigator />);
 
     const roomButton = screen.getByRole("button", { name: /A-1\s+60/ });
     fireEvent.click(roomButton);
 
-    // Modal dialog opens
+    // Modal dialog opens without AC / Wi-Fi / Room Features
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("Lecture Hall A-1")).toBeInTheDocument();
     expect(screen.getByText("Block A · 1st Floor")).toBeInTheDocument();
     expect(screen.getByText("60 Students")).toBeInTheDocument();
-    expect(screen.getByText("Campus Wi-Fi")).toBeInTheDocument();
-    expect(screen.getByText("Air Conditioned")).toBeInTheDocument();
+    expect(screen.queryByText("Room Features")).not.toBeInTheDocument();
+    expect(screen.queryByText("Campus Wi-Fi")).not.toBeInTheDocument();
+    expect(screen.queryByText("Air Conditioned")).not.toBeInTheDocument();
 
     // Close modal
     const closeBtn = screen.getByRole("button", { name: "Close Details" });
@@ -80,30 +84,39 @@ describe("FreeSlotsNavigator", () => {
     expect(screen.getByText(/rooms? free/)).toBeInTheDocument();
   });
 
-  it("filters free rooms by search text, block pills, room type, seats, and features", () => {
+  it("filters free rooms by search text, block pills, quick Lab filter, and seats without Room Features", () => {
     render(<FreeSlotsNavigator />);
 
-    // Search by room name / code
+    // Search by lab moved into C Block
     const searchInput = screen.getByPlaceholderText("Search rooms...");
     fireEvent.change(searchInput, { target: { value: "Software Lab 1" } });
     expect(screen.getByText("1 room free")).toBeInTheDocument();
-    expect(screen.getByText("Engineering Labs")).toBeInTheDocument();
+    expect(screen.getByText("C- Block")).toBeInTheDocument();
     expect(screen.queryByText("A- Block")).not.toBeInTheDocument();
 
     // Clear search button restores all 34 rooms
     fireEvent.click(screen.getByRole("button", { name: "Clear room search" }));
     expect(screen.getByText("34 rooms free")).toBeInTheDocument();
 
+    // Click top Lab filter button -> shows labs across Blocks A, B, C, D
+    fireEvent.click(screen.getByRole("button", { name: "Lab" }));
+    expect(screen.getByText("A- Block")).toBeInTheDocument();
+    expect(screen.getByText("B- Block")).toBeInTheDocument();
+    expect(screen.getByText("C- Block")).toBeInTheDocument();
+    expect(screen.getByText("D- Block")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Lab" }));
+
     // Quick block filter pill
     fireEvent.click(screen.getByRole("button", { name: "A Block" }));
-    expect(screen.getByText("8 rooms free")).toBeInTheDocument();
+    expect(screen.getByText("9 rooms free")).toBeInTheDocument();
     expect(screen.getByText("A- Block")).toBeInTheDocument();
     expect(screen.queryByText("B- Block")).not.toBeInTheDocument();
 
-    // Expand more search options and filter to Labs only
+    // Expand more search options: Room Features must be removed
     fireEvent.click(screen.getByRole("button", { name: /Options/i }));
+    expect(screen.queryByText("Room Features")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Labs" }));
-    expect(screen.getByText("1 room free")).toBeInTheDocument();
+    expect(screen.getByText("2 rooms free")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /A Lab-9\s+30/ })).toBeInTheDocument();
 
     // Apply impossible seat filter -> friendly empty state + reset

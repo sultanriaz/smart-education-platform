@@ -4,7 +4,7 @@ import hashlib
 from collections.abc import Callable
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from smartedu_security import (
     RedisFixedWindowLimiter,
     SecuritySettings,
@@ -60,22 +60,30 @@ def build_identity_security_router(
 
     async def throttle(
         request: Request,
+        db: Session,
         *,
         purpose: str,
         subject: str,
         limit: int,
         window_seconds: int,
     ) -> None:
-        if rate_limiter is None:
-            return
-
         client_ip = request.client.host if request.client else "unknown"
         key = f"{purpose}:{_hash_subject(client_ip)}:{_hash_subject(subject)}"
-        decision = await rate_limiter.hit(
-            key,
-            limit=limit,
-            window_seconds=window_seconds,
-        )
+        if rate_limiter is not None:
+            decision = await rate_limiter.hit(
+                key,
+                limit=limit,
+                window_seconds=window_seconds,
+            )
+        else:
+            from .throttle_store import DatabaseFixedWindowLimiter
+
+            decision = DatabaseFixedWindowLimiter().hit_sync(
+                db,
+                key,
+                limit=limit,
+                window_seconds=window_seconds,
+            )
         if not decision.allowed:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -91,18 +99,6 @@ def build_identity_security_router(
             audit=audit_sink_factory(db),
             settings=settings,
         )
-
-    SEC_CORS_HEADERS = {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
-        "Access-Control-Allow-Credentials": "true",
-    }
-
-    @router.options("/password/forgot")
-    @router.options("/password/forgot/")
-    async def forgot_password_options():
-        return Response(status_code=200, headers=SEC_CORS_HEADERS)
 
     @router.get("/password/forgot")
     @router.get("/password/forgot/")
@@ -125,6 +121,7 @@ def build_identity_security_router(
     ):
         await throttle(
             request,
+            db,
             purpose="forgot-password",
             subject=str(body.email),
             limit=5,
@@ -133,11 +130,6 @@ def build_identity_security_router(
         response.headers.update(no_store_headers())
         await run_in_threadpool(service(db).request_password_reset, str(body.email))
         return GENERIC_ACCEPTED
-
-    @router.options("/password/reset")
-    @router.options("/password/reset/")
-    async def reset_password_options():
-        return Response(status_code=200, headers=SEC_CORS_HEADERS)
 
     @router.get("/password/reset")
     @router.get("/password/reset/")
@@ -159,6 +151,7 @@ def build_identity_security_router(
     ):
         await throttle(
             request,
+            db,
             purpose="reset-password",
             subject=body.token[:32],
             limit=10,
@@ -184,11 +177,6 @@ def build_identity_security_router(
             ) from exc
         return Response(status_code=status.HTTP_204_NO_CONTENT, headers=no_store_headers())
 
-    @router.options("/email/verification/request")
-    @router.options("/email/verification/request/")
-    async def request_verification_options():
-        return Response(status_code=200, headers=SEC_CORS_HEADERS)
-
     @router.get("/email/verification/request")
     @router.get("/email/verification/request/")
     async def request_verification_get():
@@ -210,6 +198,7 @@ def build_identity_security_router(
     ):
         await throttle(
             request,
+            db,
             purpose="email-verification",
             subject=str(body.email),
             limit=5,
@@ -218,11 +207,6 @@ def build_identity_security_router(
         response.headers.update(no_store_headers())
         await run_in_threadpool(service(db).request_email_verification, str(body.email))
         return GENERIC_ACCEPTED
-
-    @router.options("/email/verification/confirm")
-    @router.options("/email/verification/confirm/")
-    async def confirm_verification_options():
-        return Response(status_code=200, headers=SEC_CORS_HEADERS)
 
     @router.get("/email/verification/confirm")
     @router.get("/email/verification/confirm/")
@@ -244,6 +228,7 @@ def build_identity_security_router(
     ):
         await throttle(
             request,
+            db,
             purpose="email-confirm",
             subject=body.token[:32],
             limit=10,

@@ -9,9 +9,10 @@ import httpx
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from smartedu_security import decode_service_access_jwt
+from smartedu_security.live_permissions import live_permission
 
 from app.core.config import settings
-from smartedu_security.live_permissions import live_permission
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -73,30 +74,17 @@ def verify_token(token: str) -> Principal:
         if not kid or alg not in settings.JWT_ALGORITHMS:
             raise HTTPException(status_code=401, detail="Unsupported token")
         key = jwks_cache.get_key(kid)
-        payload = jwt.decode(
+        payload = decode_service_access_jwt(
             token,
             key,
-            algorithms=settings.JWT_ALGORITHMS,
             issuer=settings.JWT_ISSUER,
             audience=settings.JWT_AUDIENCE,
-            options={"require": ["exp", "iat", "sub", "iss", "aud", "jti"]},
+            algorithms=settings.JWT_ALGORITHMS,
         )
-        if payload.get("type") != "access":
-            raise HTTPException(status_code=401, detail="Invalid token type")
         user_id = uuid.UUID(str(payload["sub"]))
-        raw_roles = payload.get("roles", [])
-        if not isinstance(raw_roles, list) or any(
-            not isinstance(role, str) or not role for role in raw_roles
-        ):
-            raise HTTPException(401, "Invalid roles claim")
         # Built-in roles are case-sensitive. Never promote "Admin" to "admin".
-        roles = frozenset(raw_roles)
-        raw = payload.get("permissions", [])
-        if not isinstance(raw, list) or any(not isinstance(v, str) or not v for v in raw):
-            raise HTTPException(401, "Invalid permissions claim")
-        permissions = frozenset(raw)
-        # Valid custom-role principals must carry an applicable Learning scope.
-        # The API dependency still verifies that scope against live Identity state.
+        roles = frozenset(payload.get("roles", []))
+        permissions = frozenset(payload.get("permissions", []))
         if roles.isdisjoint({"admin", "teacher", "student"}) and permissions.isdisjoint(
             {"learning.resources.manage", "learning.categories.manage"}
         ):

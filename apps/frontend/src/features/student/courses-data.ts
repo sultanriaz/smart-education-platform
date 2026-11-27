@@ -161,13 +161,13 @@ export const COURSES_CATALOG: EnrolledCourse[] = [
       bio: "Faculty member in Computer Science specializing in lexical analysis, LL/LR parsing, and runtime compiler optimization."
     },
     attendance: {
-      percentage: 50,
-      attended: 9,
+      percentage: 67,
+      attended: 12,
       total: 18,
-      absent: 9,
+      absent: 6,
       late: 0,
       excused: 0,
-      requiredConsecutive: 5
+      requiredConsecutive: 3
     },
     standing: {
       estimatedGrade: "84.5% · A-",
@@ -295,23 +295,23 @@ export const COURSES_CATALOG: EnrolledCourse[] = [
     },
     attendanceLedger: [
       { id: "c-att-1", lectureNo: 1, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Monday", slot: "Slot 1", room: "C-204", topic: "Compiler Phases", status: "PRESENT" },
-      { id: "c-att-2", lectureNo: 2, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Tuesday", slot: "Slot 1", room: "C-204", topic: "Lexical Scanning", status: "PRESENT" },
-      { id: "c-att-3", lectureNo: 3, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Wednesday", slot: "Slot 1", room: "C-204", topic: "Finite Automata", status: "PRESENT" },
-      { id: "c-att-4", lectureNo: 4, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Thursday", slot: "Slot 1", room: "C-204", topic: "Top-Down Parsing", status: "PRESENT" },
-      { id: "c-att-5", lectureNo: 5, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Friday", slot: "Slot 1", room: "C-204", topic: "FIRST & FOLLOW", status: "PRESENT" },
-      { id: "c-att-6", lectureNo: 6, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Monday", slot: "Slot 2", room: "C-204", topic: "LL(1) Table", status: "PRESENT" },
-      { id: "c-att-7", lectureNo: 7, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Tuesday", slot: "Slot 2", room: "C-204", topic: "Shift-Reduce Parsing", status: "PRESENT" },
-      { id: "c-att-8", lectureNo: 8, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Wednesday", slot: "Slot 2", room: "C-204", topic: "LR(0) Items", status: "PRESENT" },
-      { id: "c-att-9", lectureNo: 9, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Thursday", slot: "Slot 2", room: "C-204", topic: "SLR Grammar", status: "PRESENT" },
-      { id: "c-att-10", lectureNo: 10, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Friday", slot: "Lab 1", room: "Lab 2", topic: "Flex Lab 1", status: "ABSENT" },
-      { id: "c-att-11", lectureNo: 11, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Monday", slot: "Lab 2", room: "Lab 2", topic: "Flex Tokens Lab", status: "ABSENT" },
-      { id: "c-att-12", lectureNo: 12, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Tuesday", slot: "Lab 3", room: "Lab 2", topic: "Bison Parser Lab", status: "ABSENT" },
-      { id: "c-att-13", lectureNo: 13, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Wednesday", slot: "Lab 4", room: "Lab 2", topic: "AST Builder Lab", status: "ABSENT" },
-      { id: "c-att-14", lectureNo: 14, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Thursday", slot: "Lab 5", room: "Lab 2", topic: "Symbol Table Lab", status: "ABSENT" },
-      { id: "c-att-15", lectureNo: 15, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Friday", slot: "Lab 6", room: "Lab 2", topic: "Type Check Lab", status: "ABSENT" },
-      { id: "c-att-16", lectureNo: 16, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Monday", slot: "Lab 7", room: "Lab 2", topic: "TAC Code Lab", status: "ABSENT" },
-      { id: "c-att-17", lectureNo: 17, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Tuesday", slot: "Lab 8", room: "Lab 2", topic: "Optimization Lab", status: "ABSENT" },
-      { id: "c-att-18", lectureNo: 18, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Wednesday", slot: "Lab 9", room: "Lab 2", topic: "Final Project Lab", status: "ABSENT" }
+      { id: "c-att-2", lectureNo: 2, sessionType: "Class", date: "4/4/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Tuesday", slot: "Slot 1", room: "C-204", topic: "Lexical Scanning", status: "PRESENT" },
+      { id: "c-att-3", lectureNo: 3, sessionType: "Class", date: "4/5/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Wednesday", slot: "Slot 1", room: "C-204", topic: "Finite Automata", status: "ABSENT" },
+      { id: "c-att-4", lectureNo: 4, sessionType: "Class", date: "4/6/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Thursday", slot: "Slot 1", room: "C-204", topic: "Top-Down Parsing", status: "PRESENT" },
+      { id: "c-att-5", lectureNo: 5, sessionType: "Class", date: "4/7/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Friday", slot: "Slot 1", room: "C-204", topic: "FIRST & FOLLOW", status: "PRESENT" },
+      { id: "c-att-6", lectureNo: 6, sessionType: "Class", date: "4/10/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Monday", slot: "Slot 2", room: "C-204", topic: "LL(1) Table", status: "ABSENT" },
+      { id: "c-att-7", lectureNo: 7, sessionType: "Class", date: "4/11/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Tuesday", slot: "Slot 2", room: "C-204", topic: "Shift-Reduce Parsing", status: "PRESENT" },
+      { id: "c-att-8", lectureNo: 8, sessionType: "Class", date: "4/12/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Wednesday", slot: "Slot 2", room: "C-204", topic: "LR(0) Items", status: "PRESENT" },
+      { id: "c-att-9", lectureNo: 9, sessionType: "Class", date: "4/13/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Thursday", slot: "Slot 2", room: "C-204", topic: "SLR Grammar", status: "PRESENT" },
+      { id: "c-att-10", lectureNo: 10, sessionType: "Lab", date: "4/14/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Friday", slot: "Lab 1", room: "Lab 2", topic: "Flex Lab 1", status: "PRESENT" },
+      { id: "c-att-11", lectureNo: 11, sessionType: "Lab", date: "4/17/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Monday", slot: "Lab 2", room: "Lab 2", topic: "Flex Tokens Lab", status: "ABSENT" },
+      { id: "c-att-12", lectureNo: 12, sessionType: "Lab", date: "4/18/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Tuesday", slot: "Lab 3", room: "Lab 2", topic: "Bison Parser Lab", status: "PRESENT" },
+      { id: "c-att-13", lectureNo: 13, sessionType: "Lab", date: "4/19/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Wednesday", slot: "Lab 4", room: "Lab 2", topic: "AST Builder Lab", status: "ABSENT" },
+      { id: "c-att-14", lectureNo: 14, sessionType: "Lab", date: "4/20/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Thursday", slot: "Lab 5", room: "Lab 2", topic: "Symbol Table Lab", status: "PRESENT" },
+      { id: "c-att-15", lectureNo: 15, sessionType: "Lab", date: "4/21/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Friday", slot: "Lab 6", room: "Lab 2", topic: "Type Check Lab", status: "PRESENT" },
+      { id: "c-att-16", lectureNo: 16, sessionType: "Lab", date: "4/24/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Monday", slot: "Lab 7", room: "Lab 2", topic: "TAC Code Lab", status: "ABSENT" },
+      { id: "c-att-17", lectureNo: 17, sessionType: "Lab", date: "4/25/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Tuesday", slot: "Lab 8", room: "Lab 2", topic: "Optimization Lab", status: "PRESENT" },
+      { id: "c-att-18", lectureNo: 18, sessionType: "Lab", date: "4/26/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Wednesday", slot: "Lab 9", room: "Lab 2", topic: "Final Project Lab", status: "ABSENT" }
     ],
     leaveRequests: [],
     lectureHub: {
@@ -427,8 +427,9 @@ export const COURSES_CATALOG: EnrolledCourse[] = [
     },
     attendanceLedger: [
       { id: "is-1", lectureNo: 1, sessionType: "Class", date: "4/3/2026", startTime: "08:30:00 AM", endTime: "09:30:00 AM", day: "Monday", slot: "Slot 1", room: "C-101", topic: "Threat Modeling", status: "PRESENT" },
-      { id: "is-2", lectureNo: 2, sessionType: "Lab", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Wednesday", slot: "Slot 2", room: "Lab 1", topic: "OpenSSL Lab", status: "PRESENT" },
-      { id: "is-3", lectureNo: 3, sessionType: "Class", date: "4/3/2026", startTime: "08:30:00 AM", endTime: "09:30:00 AM", day: "Friday", slot: "Slot 1", room: "C-101", topic: "AES Rounds", status: "ABSENT" }
+      { id: "is-2", lectureNo: 2, sessionType: "Lab", date: "4/5/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Wednesday", slot: "Slot 2", room: "Lab 1", topic: "OpenSSL Lab", status: "PRESENT" },
+      { id: "is-3", lectureNo: 3, sessionType: "Class", date: "4/7/2026", startTime: "08:30:00 AM", endTime: "09:30:00 AM", day: "Friday", slot: "Slot 1", room: "C-101", topic: "AES Rounds", status: "ABSENT" },
+      { id: "is-4", lectureNo: 4, sessionType: "Lab", date: "4/12/2026", startTime: "10:00:00 AM", endTime: "12:00:00 PM", day: "Wednesday", slot: "Slot 2", room: "Lab 1", topic: "PKI Certificates Lab", status: "ABSENT" }
     ],
     leaveRequests: [],
     lectureHub: {
@@ -506,8 +507,10 @@ export const COURSES_CATALOG: EnrolledCourse[] = [
       mdb: [{ id: "mdb-ml-1", title: "MDB — Scikit-Learn Pipeline Questions", prompt: "Share dataset preprocessing questions here.", postsCount: 11, lastUpdated: "Today" }]
     },
     attendanceLedger: [
-      { id: "ml-1", lectureNo: 1, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:30:00 AM", day: "Tuesday", slot: "Slot 2", room: "Lab 1", topic: "Regression Models", status: "PRESENT" },
-      { id: "ml-2", lectureNo: 2, sessionType: "Lab", date: "4/3/2026", startTime: "02:00:00 PM", endTime: "03:30:00 PM", day: "Thursday", slot: "Slot 4", room: "Lab 1", topic: "NumPy Matrices Lab", status: "ABSENT" }
+      { id: "ml-1", lectureNo: 1, sessionType: "Class", date: "4/4/2026", startTime: "10:00:00 AM", endTime: "11:30:00 AM", day: "Tuesday", slot: "Slot 2", room: "Lab 1", topic: "Regression Models", status: "PRESENT" },
+      { id: "ml-2", lectureNo: 2, sessionType: "Lab", date: "4/6/2026", startTime: "02:00:00 PM", endTime: "03:30:00 PM", day: "Thursday", slot: "Slot 4", room: "Lab 1", topic: "NumPy Matrices Lab", status: "ABSENT" },
+      { id: "ml-3", lectureNo: 3, sessionType: "Class", date: "4/11/2026", startTime: "10:00:00 AM", endTime: "11:30:00 AM", day: "Tuesday", slot: "Slot 2", room: "Lab 1", topic: "Logistic Regression", status: "ABSENT" },
+      { id: "ml-4", lectureNo: 4, sessionType: "Lab", date: "4/13/2026", startTime: "02:00:00 PM", endTime: "03:30:00 PM", day: "Thursday", slot: "Slot 4", room: "Lab 1", topic: "Decision Trees Lab", status: "PRESENT" }
     ],
     leaveRequests: [],
     lectureHub: {
@@ -576,7 +579,9 @@ export const COURSES_CATALOG: EnrolledCourse[] = [
       mdb: []
     },
     attendanceLedger: [
-      { id: "hrm-1", lectureNo: 1, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Monday", slot: "Slot 2", room: "D-101", topic: "Strategic HRM", status: "PRESENT" }
+      { id: "hrm-1", lectureNo: 1, sessionType: "Class", date: "4/3/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Monday", slot: "Slot 2", room: "D-101", topic: "Strategic HRM", status: "PRESENT" },
+      { id: "hrm-2", lectureNo: 2, sessionType: "Class", date: "4/5/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Wednesday", slot: "Slot 2", room: "D-101", topic: "Job Analysis", status: "ABSENT" },
+      { id: "hrm-3", lectureNo: 3, sessionType: "Class", date: "4/10/2026", startTime: "10:00:00 AM", endTime: "11:00:00 AM", day: "Monday", slot: "Slot 2", room: "D-101", topic: "Performance Appraisal", status: "PRESENT" }
     ],
     leaveRequests: [],
     lectureHub: {
@@ -641,7 +646,9 @@ export const COURSES_CATALOG: EnrolledCourse[] = [
       mdb: []
     },
     attendanceLedger: [
-      { id: "hci-1", lectureNo: 1, sessionType: "Class", date: "4/3/2026", startTime: "12:00:00 PM", endTime: "01:00:00 PM", day: "Wednesday", slot: "Slot 3", room: "C-104", topic: "Usability Principles", status: "PRESENT" }
+      { id: "hci-1", lectureNo: 1, sessionType: "Class", date: "4/3/2026", startTime: "12:00:00 PM", endTime: "01:00:00 PM", day: "Wednesday", slot: "Slot 3", room: "C-104", topic: "Usability Principles", status: "PRESENT" },
+      { id: "hci-2", lectureNo: 2, sessionType: "Lab", date: "4/5/2026", startTime: "02:00:00 PM", endTime: "03:30:00 PM", day: "Friday", slot: "Slot 4", room: "C Lab-1", topic: "Wireframing Lab", status: "PRESENT" },
+      { id: "hci-3", lectureNo: 3, sessionType: "Lab", date: "4/12/2026", startTime: "02:00:00 PM", endTime: "03:30:00 PM", day: "Friday", slot: "Slot 4", room: "C Lab-1", topic: "Usability Audit Lab", status: "ABSENT" }
     ],
     leaveRequests: [],
     lectureHub: {
@@ -706,7 +713,9 @@ export const COURSES_CATALOG: EnrolledCourse[] = [
       mdb: []
     },
     attendanceLedger: [
-      { id: "dm-1", lectureNo: 1, sessionType: "Class", date: "4/3/2026", startTime: "08:30:00 AM", endTime: "10:00:00 AM", day: "Tuesday", slot: "Slot 1", room: "A-204", topic: "Propositional Calculus", status: "PRESENT" }
+      { id: "dm-1", lectureNo: 1, sessionType: "Class", date: "4/4/2026", startTime: "08:30:00 AM", endTime: "10:00:00 AM", day: "Tuesday", slot: "Slot 1", room: "A-204", topic: "Propositional Calculus", status: "PRESENT" },
+      { id: "dm-2", lectureNo: 2, sessionType: "Class", date: "4/6/2026", startTime: "08:30:00 AM", endTime: "10:00:00 AM", day: "Thursday", slot: "Slot 1", room: "A-204", topic: "Proof by Induction", status: "ABSENT" },
+      { id: "dm-3", lectureNo: 3, sessionType: "Class", date: "4/11/2026", startTime: "08:30:00 AM", endTime: "10:00:00 AM", day: "Tuesday", slot: "Slot 1", room: "A-204", topic: "Graph Connectivity", status: "PRESENT" }
     ],
     leaveRequests: [],
     lectureHub: {

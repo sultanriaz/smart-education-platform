@@ -8,6 +8,7 @@ import httpx
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from smartedu_security import decode_service_access_jwt
 
 from app.core.config import settings
 
@@ -86,29 +87,18 @@ def _resolve_key(token: str):
 def get_current_principal(token: str = Depends(oauth2_scheme)) -> Principal:
     key = _resolve_key(token)
     try:
-        claims = jwt.decode(
+        claims = decode_service_access_jwt(
             token,
             key,
-            algorithms=[settings.JWT_ALGORITHM],
             issuer=settings.JWT_ISSUER,
             audience=settings.JWT_AUDIENCE,
-            options={"require": ["exp", "iat", "sub", "iss", "aud", "jti"]},
+            algorithms=(settings.JWT_ALGORITHM,),
         )
     except jwt.PyJWTError as exc:
         raise HTTPException(status_code=401, detail="Invalid or expired access token") from exc
-    if claims.get("type") != "access":
-        raise HTTPException(status_code=401, detail="Invalid token type")
-    try:
-        user_id = uuid.UUID(str(claims["sub"]))
-    except (ValueError, KeyError) as exc:
-        raise HTTPException(status_code=401, detail="Invalid token subject") from exc
-    roles_raw = claims.get("roles", [])
-    if not isinstance(roles_raw, list):
-        raise HTTPException(status_code=401, detail="Invalid roles claim")
-    roles = frozenset(str(role).lower() for role in roles_raw)
+    user_id = uuid.UUID(str(claims["sub"]))
+    roles = frozenset(str(role).lower() for role in claims.get("roles", []))
     raw = claims.get("permissions", [])
-    if not isinstance(raw, list) or any(not isinstance(v, str) or not v for v in raw):
-        raise HTTPException(401, "Invalid permissions claim")
     if not roles.intersection({"student", "teacher", "admin"}) and not any(
         scope.startswith("notification.") for scope in raw
     ):

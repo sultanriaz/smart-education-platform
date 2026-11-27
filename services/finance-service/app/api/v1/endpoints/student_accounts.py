@@ -19,7 +19,7 @@ router = APIRouter(prefix="/student-accounts", tags=["Student Accounts"])
 def list_student_accounts(
     status: str | None = None,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("finance.accounts.read", "admin", "teacher", "finance_officer")),
+    principal: Principal = Depends(require_scoped_roles("finance.accounts.read", "admin", "finance_officer")),
 ):
     query = select(StudentFinancialAccount).order_by(StudentFinancialAccount.created_at.desc())
     if status is not None:
@@ -31,10 +31,12 @@ def list_student_accounts(
 def get_student_account_by_user(
     user_id: uuid.UUID,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("finance.accounts.read", "admin", "teacher", "student", "finance_officer")),
+    principal: Principal = Depends(require_scoped_roles("finance.accounts.read", "admin", "student", "finance_officer")),
 ):
-    # Enforce student isolation: student can only access their own account
-    if "student" in principal.roles and "admin" not in principal.roles and principal.user_id != user_id:
+    is_finance_staff = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.accounts.read" in principal.permissions
+    )
+    if not is_finance_staff and principal.user_id != user_id:
         raise HTTPException(status_code=403, detail="Cannot access another student's financial account")
 
     svc = InvoiceService(db)
@@ -45,13 +47,16 @@ def get_student_account_by_user(
 def get_student_account(
     id: uuid.UUID,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("finance.accounts.read", "admin", "teacher", "student", "finance_officer")),
+    principal: Principal = Depends(require_scoped_roles("finance.accounts.read", "admin", "student", "finance_officer")),
 ):
     account = db.get(StudentFinancialAccount, id)
     if not account:
         raise HTTPException(status_code=404, detail="Student financial account not found")
 
-    if "student" in principal.roles and "admin" not in principal.roles and principal.user_id != account.student_user_id:
+    is_finance_staff = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.accounts.read" in principal.permissions
+    )
+    if not is_finance_staff and principal.user_id != account.student_user_id:
         raise HTTPException(status_code=403, detail="Cannot access another student's financial account")
 
     return account

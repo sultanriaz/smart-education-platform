@@ -74,7 +74,15 @@ export function AdminNotificationsPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Admin" title="Announcements & notifications" />
-        <InlineError message="Notification administration data could not be loaded." />
+        <InlineError
+          message="Notification administration data could not be loaded."
+          onRetry={() => {
+            void templates.refetch();
+            void campaigns.refetch();
+            void sections.refetch();
+          }}
+          isRetrying={templates.isFetching || campaigns.isFetching || sections.isFetching}
+        />
       </div>
     );
   }

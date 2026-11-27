@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { BookOpen, FolderOpen, Users } from "lucide-react";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -7,6 +8,13 @@ import { Input } from "../../components/ui/Input";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { SectionLoader } from "../../components/ui/SectionLoader";
 import { useToast } from "../../components/ui/useToast";
+import { FolderGradingSheet } from "../../components/teacher/FolderGradingSheet";
+import {
+  FACULTY_CLASSES,
+  loadFolderGrades,
+  saveFolderGrades,
+  type ClassAssessmentFolder
+} from "../../features/teacher/teacher-portal-data";
 import {
   useAddQuestionToQuiz,
   useAssignmentAttempts,
@@ -76,6 +84,11 @@ export function TeacherAssessmentsPage() {
     Record<string, { score: string; feedback: string; reason: string }>
   >({});
 
+  // Class Folders & Student Marks Workspace (Classes -> Assignment 1, Assignment 2, Quizzes -> Student Marks)
+  const [selectedClassId, setSelectedClassId] = useState<string>(FACULTY_CLASSES[0]!.id);
+  const [folders, setFolders] = useState<ClassAssessmentFolder[]>(() => loadFolderGrades());
+  const [selectedFolderId, setSelectedFolderId] = useState<string>("");
+
   const courses = useMemo(() => {
     const byId = new Map<string, string>();
     for (const section of sections.data ?? []) {
@@ -92,6 +105,21 @@ export function TeacherAssessmentsPage() {
   }, [sections.data]);
 
   const selectedQuiz = quizzes.data?.find((quiz) => quiz.id === composeQuizId);
+
+  const selectedClassFolders = useMemo(
+    () => folders.filter((folder) => folder.classId === selectedClassId),
+    [folders, selectedClassId]
+  );
+
+  const activeFolder = useMemo(
+    () => selectedClassFolders.find((f) => f.id === selectedFolderId) ?? null,
+    [selectedClassFolders, selectedFolderId]
+  );
+
+  const activeClassInfo = useMemo(
+    () => FACULTY_CLASSES.find((cls) => cls.id === selectedClassId) ?? FACULTY_CLASSES[0]!,
+    [selectedClassId]
+  );
 
   if (
     sections.isLoading ||
@@ -117,7 +145,23 @@ export function TeacherAssessmentsPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Teacher" title="Assessment management" />
-        <InlineError message="The assessment workspace could not be loaded." />
+        <InlineError
+          message="The assessment workspace could not be loaded."
+          onRetry={() => {
+            void sections.refetch();
+            void banks.refetch();
+            void questions.refetch();
+            void quizzes.refetch();
+            void assignments.refetch();
+          }}
+          isRetrying={
+            sections.isFetching ||
+            banks.isFetching ||
+            questions.isFetching ||
+            quizzes.isFetching ||
+            assignments.isFetching
+          }
+        />
       </div>
     );
   }
@@ -306,15 +350,124 @@ export function TeacherAssessmentsPage() {
     }
   };
 
+  const handleSaveFolderMarks = (updated: ClassAssessmentFolder) => {
+    setFolders((prev) => {
+      const next = prev.map((f) => (f.id === updated.id ? updated : f));
+      saveFolderGrades(next);
+      return next;
+    });
+    toast.push(`Updated marks for ${updated.folderName}.`, "success");
+  };
+
   return (
-    <div className="page-container">
+    <div className="page-container space-y-6">
       <PageHeader
         eyebrow="Teacher"
-        title="Assessment management"
-        description="Build question banks and quizzes, publish assignments to your sections, review submissions, and manually grade subjective answers."
+        title="Quizzes & Grading"
+        description="Select a class, open Assignment 1, Assignment 2, or Quizzes folders, and view or update student marks."
       />
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      {/* Step 1: Select Teacher's Class */}
+      <Card title="1. Your Classes" description="Choose a class to view its assignment and quiz folders.">
+        <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {FACULTY_CLASSES.map((cls) => {
+            const isSelected = cls.id === selectedClassId;
+            return (
+              <button
+                key={cls.id}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => {
+                  setSelectedClassId(cls.id);
+                  setSelectedFolderId("");
+                }}
+                className={`rounded-2xl border p-4 text-left transition cursor-pointer ${
+                  isSelected
+                    ? "border-primary bg-primary-soft/35 shadow-xs"
+                    : "border-line bg-surface hover:border-primary/50"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs font-bold text-primary-ink">
+                    {cls.courseCode}
+                  </span>
+                  <span className="rounded-md bg-panel border border-line px-2 py-0.5 text-xs font-bold text-ink">
+                    {cls.section}
+                  </span>
+                </div>
+                <p className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-ink">
+                  <BookOpen size={14} className="shrink-0 text-primary-ink" />
+                  <span>{cls.courseTitle}</span>
+                </p>
+                <p className="mt-1 flex items-center gap-1 text-xs text-muted">
+                  <Users size={12} />
+                  <span>{cls.students.length} Students</span>
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Step 2: Select Folder (Assignment 1, Assignment 2, Quizzes) */}
+      <Card
+        title={`2. ${activeClassInfo.courseTitle} (${activeClassInfo.section}) Folders`}
+        description="Click a folder to open the complete student marks list."
+      >
+        <div className="mt-2 grid gap-3 sm:grid-cols-3">
+          {selectedClassFolders.map((folder) => {
+            const gradedCount = folder.rows.filter((r) => r.marks !== null).length;
+            const pendingCount = folder.rows.length - gradedCount;
+            const isSelected = folder.id === selectedFolderId;
+
+            return (
+              <button
+                key={folder.id}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => setSelectedFolderId(folder.id)}
+                className={`rounded-2xl border p-4 text-left transition cursor-pointer ${
+                  isSelected
+                    ? "border-primary bg-primary-soft/45 shadow-xs"
+                    : "border-line bg-surface hover:border-primary/50"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-soft text-primary-ink">
+                    <FolderOpen size={18} />
+                  </span>
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                      pendingCount === 0
+                        ? "bg-success-soft text-success-ink"
+                        : "bg-warning-soft text-warning-ink"
+                    }`}
+                  >
+                    {pendingCount === 0 ? "All Graded" : `${pendingCount} Pending`}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm font-bold text-ink">{folder.folderName}</p>
+                <p className="mt-0.5 text-xs text-muted">{folder.subtitle}</p>
+                <p className="mt-2 text-[11px] font-semibold text-primary-ink">
+                  {folder.rows.length} Students · Max {folder.maxMarks} marks
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Step 3: Student List & Marks Entry */}
+      {activeFolder && (
+        <FolderGradingSheet
+          folder={activeFolder}
+          classInfo={activeClassInfo}
+          onSaveFolder={handleSaveFolderMarks}
+          onClose={() => setSelectedFolderId("")}
+        />
+      )}
+
+      <div className="grid gap-6 xl:grid-cols-2 pt-2">
         <Card title="1. Question bank">
           <form className="space-y-4" onSubmit={(event) => void submitBank(event)}>
             <Input
@@ -654,7 +807,11 @@ export function TeacherAssessmentsPage() {
 
           {attempts.error ? (
             <div className="mt-4">
-              <InlineError message="Attempts could not be loaded." />
+              <InlineError
+                message="Attempts could not be loaded."
+                onRetry={() => void attempts.refetch()}
+                isRetrying={attempts.isFetching}
+              />
             </div>
           ) : null}
 

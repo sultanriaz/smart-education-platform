@@ -38,7 +38,14 @@ export function TeacherAnnouncementsPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Teacher" title="Announcements" />
-        <InlineError message="The announcement workspace could not be loaded." />
+        <InlineError
+          message="The announcement workspace could not be loaded."
+          onRetry={() => {
+            void sections.refetch();
+            void announcements.refetch();
+          }}
+          isRetrying={sections.isFetching || announcements.isFetching}
+        />
       </div>
     );
   }

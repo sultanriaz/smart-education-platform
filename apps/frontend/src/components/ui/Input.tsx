@@ -19,7 +19,7 @@ export const Input = forwardRef<HTMLInputElement, Props>(
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           className={cn(
-            "mt-2 block w-full rounded-xl border border-line bg-panel px-3 py-2.5 text-sm text-ink placeholder:text-muted/70 focus:border-brand-500 focus:ring-2 focus:ring-brand-100",
+            "mt-2 block min-h-11 w-full rounded-xl border border-line bg-panel px-3 py-2.5 text-base md:text-sm text-ink placeholder:text-muted/70 focus:border-brand-500 focus:ring-2 focus:ring-brand-100",
             error && "border-danger",
             className
           )}

@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { InlineError } from "../../components/ui/InlineError";
 import { Input } from "../../components/ui/Input";
 import { PageHeader } from "../../components/ui/PageHeader";
@@ -28,7 +29,6 @@ export function AdminUsersPage() {
       api.updateUser(userId, input),
     adminKeys.users
   );
-  const deactivate = useAdminMutation(api.deactivateUser, adminKeys.users);
   const createRole = useAdminMutation(api.createRole, adminKeys.roles);
 
   const [query, setQuery] = useState("");
@@ -40,6 +40,9 @@ export function AdminUsersPage() {
   const [roleName, setRoleName] = useState("");
   const [roleDescription, setRoleDescription] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+
+  const [userFormError, setUserFormError] = useState("");
+  const [roleFormError, setRoleFormError] = useState("");
 
   const filteredUsers = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -64,17 +67,32 @@ export function AdminUsersPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Admin" title="Users & RBAC" />
-        <InlineError message="Identity administration data could not be loaded." />
+        <InlineError
+          message="Identity administration data could not be loaded."
+          onRetry={() => {
+            void users.refetch();
+            void roles.refetch();
+            void permissions.refetch();
+          }}
+          isRetrying={users.isFetching || roles.isFetching || permissions.isFetching}
+        />
       </div>
     );
   }
 
   const submitUser = async (event: FormEvent) => {
     event.preventDefault();
+    setUserFormError("");
+    const cleanEmail = email.trim();
+    const cleanName = fullName.trim();
+    if (!cleanEmail.includes("@") || cleanName.length < 2 || password.length < 12) {
+      setUserFormError("Enter a valid email, full name (min 2 chars), and a 12+ character password.");
+      return;
+    }
     try {
       await createUser.mutateAsync({
-        email,
-        full_name: fullName,
+        email: cleanEmail,
+        full_name: cleanName,
         password,
         role: userRole
       });
@@ -83,12 +101,19 @@ export function AdminUsersPage() {
       setPassword("");
       toast.push("User account created.", "success");
     } catch (error) {
-      toast.push(error instanceof Error ? error.message : "Could not create user.", "error");
+      const msg = error instanceof Error ? error.message : "Could not create user.";
+      setUserFormError(msg);
+      toast.push(msg, "error");
     }
   };
 
   const submitRole = async (event: FormEvent) => {
     event.preventDefault();
+    setRoleFormError("");
+    if (roleName.trim().length < 2) {
+      setRoleFormError("Role name must be at least 2 characters.");
+      return;
+    }
     try {
       await createRole.mutateAsync({
         name: roleName.trim(),
@@ -100,7 +125,9 @@ export function AdminUsersPage() {
       setSelectedPermissions([]);
       toast.push("Role created.", "success");
     } catch (error) {
-      toast.push(error instanceof Error ? error.message : "Could not create role.", "error");
+      const msg = error instanceof Error ? error.message : "Could not create role.";
+      setRoleFormError(msg);
+      toast.push(msg, "error");
     }
   };
 
@@ -138,14 +165,32 @@ export function AdminUsersPage() {
 
       <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
         <Card title="Create user">
-          <form className="space-y-4" onSubmit={(event) => void submitUser(event)}>
-            <Input label="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-            <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Input label="Temporary password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <form className="space-y-4" onSubmit={(event) => void submitUser(event)} noValidate>
+            <Input
+              label="Full name"
+              autoComplete="name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+            <Input
+              label="Email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <Input
+              label="Temporary password"
+              type="password"
+              autoComplete="new-password"
+              minLength={12}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
             <label className="block text-sm font-medium">
               Initial role
               <select
-                className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                className="mt-2 min-h-11 w-full rounded-xl border border-line bg-panel px-3 py-2.5 text-base md:text-sm"
                 value={userRole}
                 onChange={(e) => setUserRole(e.target.value)}
               >
@@ -154,6 +199,7 @@ export function AdminUsersPage() {
                 ))}
               </select>
             </label>
+            {userFormError ? <InlineError message={userFormError} /> : null}
             <Button type="submit" disabled={createUser.isPending}>
               {createUser.isPending ? "Creating…" : "Create user"}
             </Button>
@@ -161,7 +207,7 @@ export function AdminUsersPage() {
         </Card>
 
         <Card title="Create role">
-          <form className="space-y-4" onSubmit={(event) => void submitRole(event)}>
+          <form className="space-y-4" onSubmit={(event) => void submitRole(event)} noValidate>
             <Input label="Role name" value={roleName} onChange={(e) => setRoleName(e.target.value)} />
             <Input label="Description" value={roleDescription} onChange={(e) => setRoleDescription(e.target.value)} />
             <fieldset>
@@ -190,6 +236,7 @@ export function AdminUsersPage() {
                 ))}
               </div>
             </fieldset>
+            {roleFormError ? <InlineError message={roleFormError} /> : null}
             <Button type="submit" disabled={createRole.isPending}>
               {createRole.isPending ? "Creating…" : "Create role"}
             </Button>
@@ -207,6 +254,12 @@ export function AdminUsersPage() {
           />
         </div>
 
+        {filteredUsers.length === 0 ? (
+          <EmptyState
+            title="No matching users"
+            description="No user accounts match the current search filter."
+          />
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-left text-sm">
             <thead>
@@ -260,6 +313,7 @@ export function AdminUsersPage() {
             </tbody>
           </table>
         </div>
+        )}
       </Card>
     </div>
   );

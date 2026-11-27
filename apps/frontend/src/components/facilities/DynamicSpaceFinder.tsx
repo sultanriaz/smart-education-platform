@@ -1,24 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   Search,
   Clock,
   Calendar,
-  MapPin,
   Users,
   CheckCircle2,
   AlertTriangle,
-  Wifi,
-  Tv,
-  Wind,
-  Zap,
-  Monitor,
-  Mic,
   QrCode,
   Sparkles,
   X,
-  Filter,
-  Layers,
   Lock,
   Unlock,
   ArrowRight,
@@ -64,9 +56,6 @@ export function DynamicSpaceFinder({
   const [showWeeklyOverview, setShowWeeklyOverview] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [minCapacity, setMinCapacity] = useState<number>(0);
-  const [filterAC, setFilterAC] = useState<boolean>(false);
-  const [filterProjector, setFilterProjector] = useState<boolean>(false);
-  const [filterWorkstations, setFilterWorkstations] = useState<boolean>(false);
 
   // Active reservations state (in localStorage or initial state)
   const [reservations, setReservations] = useState<StudyGroupReservation[]>(() => {
@@ -128,14 +117,9 @@ export function DynamicSpaceFinder({
     }
   };
 
-  // Filtered rooms calculation
-  const filteredRooms = useMemo(() => {
+  // Rooms matching day/slot/search/capacity BEFORE applying block tab filter (ensures consistent tab counts)
+  const roomsBeforeBlockFilter = useMemo(() => {
     return CAMPUS_ROOMS.filter((room) => {
-      // Block filter
-      if (selectedBlock !== "All Blocks" && room.block !== selectedBlock) {
-        return false;
-      }
-
       // Search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
@@ -153,11 +137,6 @@ export function DynamicSpaceFinder({
         return false;
       }
 
-      // Equipment filters
-      if (filterAC && !room.equipment.hasAC) return false;
-      if (filterProjector && !room.equipment.hasProjector) return false;
-      if (filterWorkstations && !room.equipment.hasWorkstations) return false;
-
       // Slot availability filter — default to showing only available rooms in the selected slot
       const daySchedule = getRoomDaySchedule(room, selectedDay);
       const slot = daySchedule.find((s) => s.slot === selectedSlotNumber);
@@ -169,17 +148,19 @@ export function DynamicSpaceFinder({
       return true;
     });
   }, [
-    selectedBlock,
     searchQuery,
     minCapacity,
-    filterAC,
-    filterProjector,
-    filterWorkstations,
     selectedDay,
     selectedSlotNumber,
     isRightNowActive,
     showOccupied
   ]);
+
+  // Filtered rooms calculation
+  const filteredRooms = useMemo(() => {
+    if (selectedBlock === "All Blocks") return roomsBeforeBlockFilter;
+    return roomsBeforeBlockFilter.filter((room) => room.block === selectedBlock);
+  }, [roomsBeforeBlockFilter, selectedBlock]);
 
   // Group rooms by block for structured view
   const roomsByBlock = useMemo(() => {
@@ -440,76 +421,37 @@ export function DynamicSpaceFinder({
           </div>
         </div>
 
-        {/* Equipment Filter Pills */}
+        {/* View & Availability Controls */}
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-line/60">
-          <span className="text-2xs font-bold uppercase tracking-wider text-muted mr-1">
-            Amenities:
-          </span>
-
           <button
-            onClick={() => setFilterAC((prev) => !prev)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
-              filterAC
-                ? "border-secondary/50 bg-secondary-soft text-secondary-ink font-bold"
-                : "border-line bg-surface text-muted hover:text-ink"
-            }`}
-          >
-            <Wind size={12} />
-            <span>Air Conditioned</span>
-          </button>
-
-          <button
-            onClick={() => setFilterProjector((prev) => !prev)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
-              filterProjector
-                ? "border-primary/50 bg-primary-soft text-primary-ink font-bold"
-                : "border-line bg-surface text-muted hover:text-ink"
-            }`}
-          >
-            <Tv size={12} />
-            <span>Overhead Projector</span>
-          </button>
-
-          <button
-            onClick={() => setFilterWorkstations((prev) => !prev)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
-              filterWorkstations
-                ? "border-accent/50 bg-accent-soft text-accent-ink font-bold"
-                : "border-line bg-surface text-muted hover:text-ink"
-            }`}
-          >
-            <Monitor size={12} />
-            <span>Workstations / PCs</span>
-          </button>
-
-          <button
+            type="button"
             onClick={() => setShowOccupied((prev) => !prev)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-2xs font-semibold transition border ${
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-2xs font-semibold transition border ${
               showOccupied
                 ? "border-warning/50 bg-warning-soft text-warning-ink font-bold"
                 : "border-line bg-surface text-muted hover:text-ink"
             }`}
           >
             <Lock size={11} />
-            <span>{showOccupied ? "Showing Occupied Too" : "Available Only"}</span>
+            <span>{showOccupied ? "Total Rooms (All)" : "Available Only"}</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setShowWeeklyOverview((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1 text-2xs font-semibold text-brand-600 hover:border-brand-500 transition"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3 py-1.5 text-2xs font-semibold text-brand-600 hover:border-brand-500 transition"
           >
             <Calendar size={11} />
             <span>{showWeeklyOverview ? "Hide Full Week Grid" : "Show Full Week Grid"}</span>
           </button>
 
-          {(filterAC || filterProjector || filterWorkstations || searchQuery || minCapacity > 0) && (
+          {(searchQuery || minCapacity > 0 || showOccupied) && (
             <button
+              type="button"
               onClick={() => {
-                setFilterAC(false);
-                setFilterProjector(false);
-                setFilterWorkstations(false);
                 setSearchQuery("");
                 setMinCapacity(0);
+                setShowOccupied(false);
               }}
               className="ml-auto inline-flex items-center gap-1 text-2xs font-semibold text-muted hover:text-danger-ink transition"
             >
@@ -584,8 +526,8 @@ export function DynamicSpaceFinder({
         {CAMPUS_BLOCKS.map((block) => {
           const count =
             block === "All Blocks"
-              ? filteredRooms.length
-              : filteredRooms.filter((r) => r.block === block).length;
+              ? roomsBeforeBlockFilter.length
+              : roomsBeforeBlockFilter.filter((r) => r.block === block).length;
 
           const isSelected = selectedBlock === block;
 
@@ -637,10 +579,8 @@ export function DynamicSpaceFinder({
             No rooms match your active filter criteria for {selectedDay} ({currentSlotDef.label}). Try selecting another lecture slot or clearing equipment filters.
           </p>
           <button
+            type="button"
             onClick={() => {
-              setFilterAC(false);
-              setFilterProjector(false);
-              setFilterWorkstations(false);
               setMinCapacity(0);
               setSearchQuery("");
               setSelectedBlock("All Blocks");
@@ -738,115 +678,50 @@ export function DynamicSpaceFinder({
                           )}
                         </div>
 
-                        {/* Room Telemetry: Capacity & Next Class */}
-                        <div className="rounded-xl border border-line/60 bg-surface/50 p-3 space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-1 text-muted">
-                              <Users size={12} className="text-brand-500" />
+                        {/* Room Telemetry: Compact Capacity & Availability */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded-lg border border-line/60 bg-surface/50 px-2.5 py-1.5">
+                            <span className="flex items-center gap-1 text-[10px] font-semibold text-muted uppercase tracking-wide">
+                              <Users size={11} className="text-brand-500" />
                               <span>Capacity</span>
                             </span>
-                            <span className="font-bold text-ink">{room.capacity} Student Desks</span>
+                            <p className="mt-0.5 text-xs font-bold text-ink">
+                              {room.capacity} seats
+                            </p>
                           </div>
 
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="flex items-center gap-1 text-muted">
-                              <Clock size={12} className="text-success-ink" />
-                              <span>Free Until</span>
+                          <div className="rounded-lg border border-line/60 bg-surface/50 px-2.5 py-1.5">
+                            <span className="flex items-center gap-1 text-[10px] font-semibold text-muted uppercase tracking-wide">
+                              <Clock size={11} className="text-success-ink" />
+                              <span>Availability</span>
                             </span>
-                            <span className="font-bold text-success-ink">
-                              {currentSlot?.freeUntil || "05:15 PM"}
-                            </span>
-                          </div>
-
-                          {!isSlotFree && currentSlot?.bookedBy && (
-                            <div className="pt-1 border-t border-line/40 text-2xs text-danger-ink flex items-center gap-1">
-                              <AlertTriangle size={11} />
-                              <span className="truncate">Booked: {currentSlot.bookedBy}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Equipment Pills */}
-                        <div className="space-y-1.5">
-                          <span className="text-2xs font-semibold text-muted uppercase tracking-wider">
-                            Room Equipment
-                          </span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {room.equipment.hasProjector && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Tv size={10} className="text-brand-500" />
-                                <span>Projector</span>
-                              </span>
-                            )}
-                            {room.equipment.hasAC && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Wind size={10} className="text-secondary-ink" />
-                                <span>AC</span>
-                              </span>
-                            )}
-                            {room.equipment.hasWifi && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Wifi size={10} className="text-success-ink" />
-                                <span>High-Density Wi-Fi</span>
-                              </span>
-                            )}
-                            {room.equipment.hasPowerSockets && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Zap size={10} className="text-warning-ink" />
-                                <span>Desk Outlets</span>
-                              </span>
-                            )}
-                            {room.equipment.hasSmartPodium && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Mic size={10} className="text-accent-ink" />
-                                <span>Smart Podium</span>
-                              </span>
-                            )}
-                            {room.equipment.hasWorkstations && (
-                              <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-line/60 px-2 py-0.5 text-2xs text-ink">
-                                <Monitor size={10} className="text-primary-ink" />
-                                <span>PCs / Labs</span>
-                              </span>
-                            )}
+                            <p
+                              className={`mt-0.5 text-xs font-bold ${
+                                activeRes
+                                  ? "text-warning-ink"
+                                  : isSlotFree
+                                  ? "text-success-ink"
+                                  : "text-danger-ink"
+                              }`}
+                            >
+                              {activeRes ? "Reserved" : isSlotFree ? "Available" : "Occupied"}
+                            </p>
                           </div>
                         </div>
 
-                        {/* Daily Mini Slot Matrix Bar (Slots 1 to 5) */}
-                        <div className="space-y-1.5 pt-1">
-                          <span className="text-2xs font-semibold text-muted uppercase tracking-wider flex items-center justify-between">
-                            <span>Today's Slots</span>
-                            <span className="text-2xs lowercase font-normal">{selectedDay}</span>
-                          </span>
-                          <div className="grid grid-cols-5 gap-1">
-                            {daySchedule.map((slot) => {
-                              const isActiveSelectedSlot = slot.slot === selectedSlotNumber;
-                              return (
-                                <button
-                                  key={slot.slot}
-                                  onClick={() => setSelectedSlotNumber(slot.slot)}
-                                  title={`Slot ${slot.slot}: ${slot.isFree ? "Free" : "Occupied"}`}
-                                  className={`rounded-md py-1 text-center text-2xs font-bold transition ${
-                                    isActiveSelectedSlot
-                                      ? "ring-2 ring-brand-500 font-extrabold"
-                                      : ""
-                                  } ${
-                                    slot.isFree
-                                      ? "bg-success-soft text-success-ink hover:opacity-90"
-                                      : "bg-surface text-muted/60 line-through"
-                                  }`}
-                                >
-                                  S{slot.slot}
-                                </button>
-                              );
-                            })}
+                        {!isSlotFree && currentSlot?.bookedBy && (
+                          <div className="text-2xs text-danger-ink flex items-center gap-1">
+                            <AlertTriangle size={11} />
+                            <span className="truncate">Booked: {currentSlot.bookedBy}</span>
                           </div>
-                        </div>
+                        )}
                       </div>
 
-                      {/* Card Action Footer */}
-                      <div className="mt-5 pt-4 border-t border-line/60">
+                      {/* Card Action Footer + Inline Reservation Drawer right where user clicked */}
+                      <div className="mt-4 pt-3 border-t border-line/60">
                         {activeRes ? (
                           <button
+                            type="button"
                             onClick={() => setActiveQrModal(activeRes)}
                             className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-warning/40 bg-warning-soft py-2.5 text-xs font-bold text-warning-ink hover:opacity-90 transition"
                           >
@@ -862,8 +737,104 @@ export function DynamicSpaceFinder({
                               <span>Sign In to Reserve</span>
                               <ArrowRight size={14} />
                             </Link>
+                          ) : reserveModalRoom?.id === room.id ? (
+                            <div className="space-y-3 rounded-2xl border border-primary/35 bg-surface p-3.5 text-xs">
+                              <div className="flex items-center justify-between gap-2">
+                                <div>
+                                  <p className="font-bold text-ink">
+                                    Reserve {room.code}
+                                  </p>
+                                  <p className="text-[11px] text-muted">
+                                    {selectedDay} · {currentSlotDef.timeRange}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setReserveModalRoom(null)}
+                                  aria-label={`Close reservation form for ${room.code}`}
+                                  className="rounded-lg p-1 text-muted hover:bg-panel hover:text-ink transition"
+                                >
+                                  <X size={15} />
+                                </button>
+                              </div>
+
+                              <div className="rounded-xl border border-warning/35 bg-warning-soft p-2.5 flex items-start gap-2 text-[11px] text-warning-ink">
+                                <ShieldCheck size={14} className="shrink-0 mt-0.5" />
+                                <span>
+                                  Max 90 minutes. Scan entrance QR within 15 mins to keep room active.
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2">
+                                <label className="block text-[11px] font-bold text-ink">
+                                  Duration
+                                  <select
+                                    value={reserveDuration}
+                                    onChange={(e) => setReserveDuration(Number(e.target.value))}
+                                    className="mt-1 w-full rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-semibold text-ink"
+                                  >
+                                    <option value={30}>30 Minutes</option>
+                                    <option value={45}>45 Minutes</option>
+                                    <option value={60}>60 Minutes</option>
+                                    <option value={90}>90 Minutes</option>
+                                  </select>
+                                </label>
+                                <label className="block text-[11px] font-bold text-ink">
+                                  Group Size
+                                  <input
+                                    type="number"
+                                    min={2}
+                                    max={60}
+                                    value={reserveGroupSize}
+                                    onChange={(e) => setReserveGroupSize(Number(e.target.value))}
+                                    className="mt-1 w-full rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-semibold text-ink"
+                                  />
+                                </label>
+                              </div>
+
+                              <label className="block text-[11px] font-bold text-ink">
+                                Purpose / Course Discussion
+                                <input
+                                  type="text"
+                                  placeholder="e.g. Compiler Construction Makeup Lecture..."
+                                  value={reservePurpose}
+                                  onChange={(e) => setReservePurpose(e.target.value)}
+                                  className="mt-1 w-full rounded-lg border border-line bg-panel px-2.5 py-2 text-xs text-ink placeholder:text-muted"
+                                />
+                              </label>
+
+                              <label className="flex items-center gap-2 text-[11px] text-muted cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={reserveAgreed}
+                                  onChange={(e) => setReserveAgreed(e.target.checked)}
+                                  className="rounded border-line text-brand-600"
+                                />
+                                <span>Agree to room policy &amp; timely check-out.</span>
+                              </label>
+
+                              <div className="flex items-center justify-end gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setReserveModalRoom(null)}
+                                  className="rounded-lg border border-line bg-panel px-3 py-1.5 text-[11px] font-bold text-muted hover:text-ink transition"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={handleConfirmReservation}
+                                  disabled={!reserveAgreed}
+                                  className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold text-on-primary hover:bg-primary-hover transition disabled:opacity-50"
+                                >
+                                  <CheckCircle2 size={13} />
+                                  <span>Confirm Booking</span>
+                                </button>
+                              </div>
+                            </div>
                           ) : (
                             <button
+                              type="button"
                               onClick={() => {
                                 setReserveModalRoom(room);
                                 setReservePurpose("");
@@ -880,6 +851,7 @@ export function DynamicSpaceFinder({
                           )
                         ) : (
                           <button
+                            type="button"
                             disabled
                             className="w-full rounded-xl bg-surface/80 py-2 text-xs font-semibold text-muted cursor-not-allowed border border-line/60"
                           >
@@ -896,133 +868,10 @@ export function DynamicSpaceFinder({
         </div>
       )}
 
-      {/* ================= STUDY GROUP RESERVATION MODAL ================= */}
-      {reserveModalRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="rounded-full bg-brand-500/10 px-2.5 py-0.5 text-2xs font-extrabold text-brand-600 uppercase tracking-wider">
-                  Campus Space Governance
-                </span>
-                <h3 className="font-extrabold text-lg text-ink mt-1">
-                  Reserve {reserveModalRoom.code}
-                </h3>
-                <p className="text-xs text-muted">
-                  {reserveModalRoom.name} · {reserveModalRoom.floor} ({reserveModalRoom.block})
-                </p>
-              </div>
-
-              <button
-                onClick={() => setReserveModalRoom(null)}
-                className="rounded-xl p-1.5 text-muted hover:bg-surface hover:text-ink transition"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Governance Policy Warning */}
-            <div className="rounded-2xl border border-warning/35 bg-warning-soft p-3.5 flex items-start gap-3 text-xs text-warning-ink">
-              <ShieldCheck size={18} className="shrink-0 text-warning-ink mt-0.5" />
-              <div>
-                <strong className="font-bold">University Reservation Policy:</strong> Max 90 minutes.
-                You must scan the room entrance QR code within 15 minutes of reservation start time, or the room will be automatically released back to the campus pool.
-              </div>
-            </div>
-
-            {/* Form Fields */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-ink mb-1.5">
-                  Slot Time Window ({selectedDay})
-                </label>
-                <div className="rounded-xl border border-line bg-surface p-2.5 text-xs font-semibold text-ink flex items-center justify-between">
-                  <span>{currentSlotDef.label}</span>
-                  <span className="text-brand-600 font-bold">{currentSlotDef.timeRange}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-ink mb-1.5">
-                    Duration (Max 90m)
-                  </label>
-                  <select
-                    value={reserveDuration}
-                    onChange={(e) => setReserveDuration(Number(e.target.value))}
-                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-semibold text-ink focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                  >
-                    <option value={30}>30 Minutes</option>
-                    <option value={45}>45 Minutes</option>
-                    <option value={60}>60 Minutes</option>
-                    <option value={90}>90 Minutes (Maximum)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-ink mb-1.5">Group Size</label>
-                  <input
-                    type="number"
-                    min={2}
-                    max={15}
-                    value={reserveGroupSize}
-                    onChange={(e) => setReserveGroupSize(Number(e.target.value))}
-                    className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-xs font-semibold text-ink focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-ink mb-1.5">
-                  Study Purpose / Course Discussion
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Compiler Construction Parser Sprint, Midterm Review..."
-                  value={reservePurpose}
-                  onChange={(e) => setReservePurpose(e.target.value)}
-                  className="w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-brand-500"
-                />
-              </div>
-
-              <label className="flex items-center gap-2.5 text-xs text-muted cursor-pointer pt-1">
-                <input
-                  type="checkbox"
-                  checked={reserveAgreed}
-                  onChange={(e) => setReserveAgreed(e.target.checked)}
-                  className="rounded-md border-line text-brand-600 focus:ring-brand-500"
-                />
-                <span>We agree to follow room decorum, turn off lights, and vacate on time.</span>
-              </label>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-line/60">
-              <button
-                type="button"
-                onClick={() => setReserveModalRoom(null)}
-                className="rounded-xl border border-line bg-surface px-4 py-2.5 text-xs font-bold text-muted hover:text-ink transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmReservation}
-                disabled={!reserveAgreed}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-on-primary hover:bg-primary-hover transition disabled:opacity-50 shadow-xs"
-              >
-                <CheckCircle2 size={15} />
-                <span>Confirm & Generate QR Pass</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ================= DIGITAL QR PASS & CHECK-IN MODAL ================= */}
-      {activeQrModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+      {activeQrModal &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/65 backdrop-blur-xs p-4">
           <div className="w-full max-w-md rounded-3xl border border-line bg-panel p-6 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-200">
             {/* Modal Close */}
             <div className="flex items-center justify-between text-left">
@@ -1140,7 +989,8 @@ export function DynamicSpaceFinder({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

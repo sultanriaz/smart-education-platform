@@ -19,7 +19,7 @@ export interface CampusRoom {
   id: string;
   code: string;
   name: string;
-  block: "Block A" | "Block B" | "Block C" | "Block D" | "Engineering Labs";
+  block: "Block A" | "Block B" | "Block C" | "Block D";
   floor: "Ground Floor" | "1st Floor" | "2nd Floor" | "3rd Floor";
   capacity: number;
   type?: "classroom" | "lab";
@@ -82,8 +82,7 @@ export const CAMPUS_BLOCKS = [
   "Block A",
   "Block B",
   "Block C",
-  "Block D",
-  "Engineering Labs"
+  "Block D"
 ] as const;
 
 export type CampusBlockFilter = (typeof CAMPUS_BLOCKS)[number];
@@ -6727,7 +6726,7 @@ export const CAMPUS_ROOMS: CampusRoom[] = [
     "id": "lab-cs1",
     "code": "Software Lab 1",
     "name": "Departmental Software Lab",
-    "block": "Engineering Labs",
+    "block": "Block C",
     "floor": "Ground Floor",
     "capacity": 50,
     "type": "lab",
@@ -6941,7 +6940,7 @@ export const CAMPUS_ROOMS: CampusRoom[] = [
     "id": "lab-ai",
     "code": "AI & Robotics Lab",
     "name": "GPU Deep Learning Lab",
-    "block": "Engineering Labs",
+    "block": "Block B",
     "floor": "Ground Floor",
     "capacity": 40,
     "type": "lab",
@@ -7155,7 +7154,7 @@ export const CAMPUS_ROOMS: CampusRoom[] = [
     "id": "lab-nw",
     "code": "Networks & Cyber Lab",
     "name": "Cisco Networking Center",
-    "block": "Engineering Labs",
+    "block": "Block A",
     "floor": "1st Floor",
     "capacity": 45,
     "type": "lab",

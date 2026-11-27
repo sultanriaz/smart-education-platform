@@ -51,10 +51,15 @@ def list_scholarship_awards(
     student_user_id: uuid.UUID | None = None,
     academic_year_id: uuid.UUID | None = None,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("finance.scholarships.read", "admin", "teacher", "finance_officer")),
+    principal: Principal = Depends(require_scoped_roles("finance.scholarships.read", "admin", "finance_officer", "student")),
 ):
     query = select(ScholarshipAward).order_by(ScholarshipAward.created_at.desc())
-    if student_user_id is not None:
+    is_finance_staff = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.scholarships.read" in principal.permissions
+    )
+    if not is_finance_staff:
+        query = query.where(ScholarshipAward.student_user_id == principal.user_id)
+    elif student_user_id is not None:
         query = query.where(ScholarshipAward.student_user_id == student_user_id)
     if academic_year_id is not None:
         query = query.where(ScholarshipAward.academic_year_id == academic_year_id)

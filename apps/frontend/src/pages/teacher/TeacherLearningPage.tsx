@@ -17,6 +17,13 @@ import {
   useUploadLearningFile
 } from "../../features/teacher/hooks";
 
+import {
+  FACULTY_CLASSES,
+  loadLocalTeacherResources,
+  saveLocalTeacherResources,
+  type LocalTeacherResource
+} from "../../features/teacher/teacher-portal-data";
+
 type ResourceType = "NOTE" | "LINK" | "VIDEO" | "FILE";
 
 export function TeacherLearningPage() {
@@ -31,14 +38,32 @@ export function TeacherLearningPage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [resourceType, setResourceType] = useState<ResourceType>("NOTE");
-  const [sectionId, setSectionId] = useState("");
+  const [resourceType, setResourceType] = useState<ResourceType>("FILE");
+  const [sectionId, setSectionId] = useState(FACULTY_CLASSES[0]!.id);
   const [tags, setTags] = useState("");
   const [selectedResourceId, setSelectedResourceId] = useState("");
   const [textContent, setTextContent] = useState("");
   const [externalUrl, setExternalUrl] = useState("");
   const [changeNote, setChangeNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [draftUploadFile, setDraftUploadFile] = useState<File | null>(null);
+  const [localResources, setLocalResources] = useState<LocalTeacherResource[]>(() =>
+    loadLocalTeacherResources()
+  );
+
+  const classOptions = useMemo(() => {
+    const apiOptions = (sections.data ?? []).map((section) => ({
+      id: section.id,
+      label: `${section.courseCode ? `${section.courseCode} · ` : ""}${section.name}${section.courseTitle ? ` · ${section.courseTitle}` : ""}`,
+      isApi: true
+    }));
+    const localOptions = FACULTY_CLASSES.map((cls) => ({
+      id: cls.id,
+      label: `${cls.courseCode} · ${cls.section} · ${cls.courseTitle}`,
+      isApi: false
+    }));
+    return apiOptions.length > 0 ? [...apiOptions, ...localOptions] : localOptions;
+  }, [sections.data]);
 
   const selectedResource = useMemo(
     () => resources.data?.find((item) => item.id === selectedResourceId),
@@ -48,7 +73,31 @@ export function TeacherLearningPage() {
   const create = async (event: FormEvent) => {
     event.preventDefault();
     if (!title.trim() || !sectionId) {
-      toast.push("Provide a title and target section.", "error");
+      toast.push("Provide a title and select a class.", "error");
+      return;
+    }
+
+    const chosenOption = classOptions.find((opt) => opt.id === sectionId);
+    if (!chosenOption?.isApi) {
+      const nextItem: LocalTeacherResource = {
+        id: `loc-res-${Date.now()}`,
+        title: title.trim(),
+        description: description.trim() || "Class lecture slides / notes.",
+        resourceType,
+        sectionLabel: chosenOption?.label ?? sectionId,
+        fileName: draftUploadFile?.name,
+        createdAt: new Date().toLocaleDateString()
+      };
+      setLocalResources((prev) => {
+        const updated = [nextItem, ...prev];
+        saveLocalTeacherResources(updated);
+        return updated;
+      });
+      setTitle("");
+      setDescription("");
+      setTags("");
+      setDraftUploadFile(null);
+      toast.push(`Resource uploaded for ${chosenOption?.label ?? "class"}.`, "success");
       return;
     }
 
@@ -154,7 +203,14 @@ export function TeacherLearningPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Teacher" title="Learning resources" />
-        <InlineError message="The learning resource workspace could not be loaded." />
+        <InlineError
+          message="The learning resource workspace could not be loaded."
+          onRetry={() => {
+            void sections.refetch();
+            void resources.refetch();
+          }}
+          isRetrying={sections.isFetching || resources.isFetching}
+        />
       </div>
     );
   }
@@ -203,22 +259,33 @@ export function TeacherLearningPage() {
               </label>
 
               <label className="block text-sm font-medium">
-                Target section
+                Select Class / Section
                 <select
-                  className="mt-2 w-full rounded-xl border border-line bg-panel px-3 py-2.5"
+                  aria-label="Select Class"
+                  className="mt-2 w-full min-h-11 rounded-xl border border-line bg-panel px-3 py-2.5"
                   value={sectionId}
                   onChange={(event) => setSectionId(event.target.value)}
                 >
-                  <option value="">Select section</option>
-                  {(sections.data ?? []).map((section) => (
-                    <option key={section.id} value={section.id}>
-                      {section.courseCode ? `${section.courseCode} · ` : ""}
-                      {section.name}
+                  <option value="">Select class</option>
+                  {classOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.label}
                     </option>
                   ))}
                 </select>
               </label>
             </div>
+
+            {resourceType === "FILE" && (
+              <label className="block text-sm font-medium">
+                Attach Lecture PDF / Document
+                <input
+                  type="file"
+                  onChange={(event) => setDraftUploadFile(event.target.files?.[0] ?? null)}
+                  className="mt-2 block w-full rounded-xl border border-line bg-panel px-3 py-2 text-xs"
+                />
+              </label>
+            )}
 
             <Input
               label="Tags"
@@ -228,7 +295,7 @@ export function TeacherLearningPage() {
             />
 
             <Button type="submit" disabled={createResource.isPending}>
-              {createResource.isPending ? "Creating…" : "Create draft"}
+              {createResource.isPending ? "Uploading…" : "Upload Resource for Class"}
             </Button>
           </form>
         </Card>
@@ -306,8 +373,33 @@ export function TeacherLearningPage() {
         </Card>
       </div>
 
+      <section className="mt-8 space-y-4">
+        <h2 className="text-xl font-bold">Uploaded Class Resources</h2>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {localResources.map((item) => (
+            <Card key={item.id}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-bold text-ink">{item.title}</h3>
+                  <p className="mt-1 text-xs font-semibold text-primary-ink">
+                    {item.sectionLabel} · {item.resourceType}
+                  </p>
+                </div>
+                <Badge>PUBLISHED</Badge>
+              </div>
+              {item.description ? (
+                <p className="mt-2 text-sm text-muted">{item.description}</p>
+              ) : null}
+              {item.fileName ? (
+                <p className="mt-2 text-xs font-mono text-muted">File: {item.fileName}</p>
+              ) : null}
+            </Card>
+          ))}
+        </div>
+      </section>
+
       <section className="mt-8">
-        <h2 className="mb-4 text-xl font-bold">My resources</h2>
+        <h2 className="mb-4 text-xl font-bold">My server resources</h2>
         {(resources.data ?? []).length ? (
           <div className="grid gap-4 lg:grid-cols-2">
             {resources.data!.map((resource) => (

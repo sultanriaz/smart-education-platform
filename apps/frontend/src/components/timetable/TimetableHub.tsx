@@ -62,7 +62,9 @@ export function TimetableHub({
   signedInRole = null
 }: TimetableHubProps) {
   const [selectedRole, setSelectedRole] = useState<"student" | "teacher">(initialRole);
-  const [selectedSection, setSelectedSection] = useState<string>("BCS-7C");
+  const [selectedSection, setSelectedSection] = useState<string>("SP23-BCS-7C");
+  const [classSearchQuery, setClassSearchQuery] = useState<string>("");
+  const [showClassSuggestions, setShowClassSuggestions] = useState<boolean>(false);
   const [selectedTeacher, setSelectedTeacher] = useState<string>("Sir Munir (Dr. Munir Ahmad)");
   const [viewStyle, setViewStyle] = useState<"list" | "table">("list");
   const [selectedDay, setSelectedDay] = useState<"All Days" | Weekday>("All Days");
@@ -77,6 +79,22 @@ export function TimetableHub({
 
   const sectionNames = Object.keys(STUDENT_TIMETABLES_BY_SECTION);
   const teacherNames = Object.keys(TEACHER_TIMETABLES_BY_NAME);
+
+  const matchingClassOptions = useMemo(() => {
+    const raw = classSearchQuery.trim().toLowerCase();
+    if (!raw) return sectionNames;
+    const normalized = raw.replace(/[\s-]+/g, "");
+    return sectionNames.filter((sec) => {
+      const secLower = sec.toLowerCase();
+      const secCompact = secLower.replace(/[\s-]+/g, "");
+      const suffix = secLower.split("-").pop() ?? "";
+      return (
+        secLower.includes(raw) ||
+        secCompact.includes(normalized) ||
+        suffix.includes(raw)
+      );
+    });
+  }, [classSearchQuery, sectionNames]);
 
   const activeSchedule: TimetableSlot[] = useMemo(() => {
     return selectedRole === "student"
@@ -233,31 +251,95 @@ export function TimetableHub({
       {/* ================= 2. UNIFIED CONTROLS BAR ================= */}
       <div className="rounded-2xl border border-line bg-panel p-3.5 sm:p-4 shadow-2xs space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          {/* Left: Section Pills or Teacher Selector + Class Count */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          {/* Left: Search Class (Student) or Teacher Selector + Class Count */}
+          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
             {selectedRole === "student" ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold text-muted">Class / Section:</span>
-                <div className="inline-flex flex-wrap gap-1.5" role="group" aria-label="Select class or section">
-                  {sectionNames.map((sec) => {
-                    const active = selectedSection === sec;
-                    return (
-                      <button
-                        key={sec}
-                        type="button"
-                        aria-pressed={active}
-                        onClick={() => setSelectedSection(sec)}
-                        className={`rounded-xl px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                          active
-                            ? "bg-primary text-on-primary shadow-2xs"
-                            : "border border-line bg-surface text-ink hover:border-primary/50"
-                        }`}
-                      >
-                        {sec}
-                      </button>
-                    );
-                  })}
+              <div className="relative w-full sm:w-72">
+                <label htmlFor="tt-class-search" className="sr-only">
+                  Search Class
+                </label>
+                <div className="relative">
+                  <Search
+                    size={14}
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                  />
+                  <input
+                    id="tt-class-search"
+                    type="text"
+                    role="combobox"
+                    aria-expanded={showClassSuggestions}
+                    aria-controls="tt-class-suggestions"
+                    aria-label="Search Class"
+                    value={classSearchQuery}
+                    onFocus={() => setShowClassSuggestions(true)}
+                    onChange={(e) => {
+                      setClassSearchQuery(e.target.value);
+                      setShowClassSuggestions(true);
+                    }}
+                    placeholder={`Search Class (e.g. ${selectedSection}, 7B, BCS)...`}
+                    className="w-full min-h-[44px] rounded-xl border border-line bg-surface py-2 pl-8 pr-8 text-sm sm:text-xs font-semibold text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                  />
+                  {classSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setClassSearchQuery("");
+                        setShowClassSuggestions(false);
+                      }}
+                      aria-label="Clear class search"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted hover:text-ink"
+                    >
+                      <X size={13} />
+                    </button>
+                  )}
                 </div>
+
+                {showClassSuggestions && (classSearchQuery.trim().length > 0 || matchingClassOptions.length > 0) && (
+                  <div
+                    id="tt-class-suggestions"
+                    role="listbox"
+                    aria-label="Matching classes"
+                    className="absolute left-0 right-0 top-full z-30 mt-1.5 max-h-60 overflow-y-auto rounded-2xl border border-line bg-panel p-1.5 shadow-lg"
+                  >
+                    {matchingClassOptions.length === 0 ? (
+                      <p className="px-3 py-2 text-xs text-muted">
+                        No matching classes found for &ldquo;{classSearchQuery.trim()}&rdquo;.
+                      </p>
+                    ) : (
+                      matchingClassOptions.map((sec) => {
+                        const isSelected = selectedSection === sec;
+                        const count = STUDENT_TIMETABLES_BY_SECTION[sec]?.length ?? 0;
+                        return (
+                          <button
+                            key={sec}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            onClick={() => {
+                              setSelectedSection(sec);
+                              setClassSearchQuery("");
+                              setShowClassSuggestions(false);
+                            }}
+                            className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition cursor-pointer ${
+                              isSelected
+                                ? "bg-primary text-on-primary font-bold"
+                                : "text-ink hover:bg-surface font-semibold"
+                            }`}
+                          >
+                            <span>{sec}</span>
+                            <span
+                              className={`text-[11px] ${
+                                isSelected ? "text-on-primary/85" : "text-muted"
+                              }`}
+                            >
+                              {count} {count === 1 ? "lecture" : "lectures"}
+                            </span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -279,37 +361,45 @@ export function TimetableHub({
               </div>
             )}
 
+            {selectedRole === "student" && (
+              <span className="rounded-xl border border-primary/25 bg-primary-soft px-3 py-1.5 text-xs font-bold text-primary-ink">
+                {selectedSection}
+              </span>
+            )}
+
             <span className="rounded-xl border border-line bg-subtle/60 px-3 py-1.5 text-xs font-semibold text-ink">
               {totalWeeklyLectures} {totalWeeklyLectures === 1 ? "lecture" : "lectures"} a week
             </span>
           </div>
 
-          {/* Right: Search + View Mode Switch + Save Calendar */}
+          {/* Right: Search (Teacher only) + View Mode Switch + Save Calendar */}
           <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2">
-            <div className="relative w-full sm:w-56">
-              <Search
-                size={14}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search classes by subject, teacher, or room"
-                placeholder="Search classes..."
-                className="w-full rounded-xl border border-line bg-surface py-1.5 pl-8 pr-7 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-primary/40"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  aria-label="Clear search"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted hover:text-ink"
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
+            {selectedRole === "teacher" && (
+              <div className="relative w-full sm:w-56">
+                <Search
+                  size={14}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Search classes by subject, teacher, or room"
+                  placeholder="Search classes..."
+                  className="w-full rounded-xl border border-line bg-surface py-1.5 pl-8 pr-7 text-xs text-ink placeholder:text-muted focus:outline-hidden focus:ring-2 focus:ring-primary/40"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted hover:text-ink"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
               <div className="inline-flex rounded-xl border border-line bg-surface p-1 text-xs" role="group" aria-label="Layout view">

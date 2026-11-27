@@ -43,18 +43,18 @@ class UserRepository:
                 if user:
                     return user
 
-        # 3. Flexible resolution by prefix, domain, or name
+        # 3. Exact local-part match only when unambiguous (never broad substring matching)
         stmt = (
             select(User)
             .options(selectinload(User.roles))
-            .where(
-                (User.email.ilike(f"{clean}@%"))
-                | (User.email.ilike(f"%{clean}%"))
-                | (User.full_name.ilike(f"%{clean}%"))
-            )
+            .where(User.email.ilike(f"{clean}@%"))
             .order_by(User.is_active.desc(), User.created_at.desc())
+            .limit(2)
         )
-        return self.db.scalars(stmt).first()
+        matches = list(self.db.scalars(stmt).all())
+        if len(matches) == 1:
+            return matches[0]
+        return None
 
     def get_by_id(self, user_id: uuid.UUID) -> User | None:
         stmt = select(User).options(selectinload(User.roles)).where(User.id == user_id)

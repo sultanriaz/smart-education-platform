@@ -1,21 +1,25 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from smartedu_security import LoginSecurityGuard, PasswordPolicyError
+from smartedu_security import LoginSecurityGuard, PasswordPolicyError, require_trusted_origin
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.core.exceptions import AuthenticationError, ConflictError
-from app.db.session import get_db
+from app.db.session import SessionLocal, get_db
+from app.repositories.user_repository import UserRepository
 from app.security.dependencies import get_current_user
 from app.schemas.auth import LoginRequest
 from app.schemas.user import UserOut, UserRegister
 from app.services.auth_service import AuthService
-from app.sprint18 import login_lockout_store, security_settings
+from app.sprint18 import identity_rate_limiter, login_lockout_store, security_settings
 from app.sprint18_security.cookie_auth import (
     clear_browser_refresh_cookie,
     public_access_token_payload,
     refresh_token_from_cookie,
     set_browser_refresh_cookie,
 )
+from app.sprint18_security.throttle_store import DatabaseFixedWindowLimiter, DatabaseLockoutStore
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -24,36 +28,53 @@ def client_ip(request: Request) -> str | None:
     return request.client.host if request.client else None
 
 
+def _redis_configured() -> bool:
+    return bool(
+        os.environ.get("REDIS_URL")
+        or os.environ.get("REDIS_CACHE_URL")
+        or os.environ.get("AUTH_SECURITY_REDIS_URL")
+    )
+
+
 def login_guard():
-    try:
-        import os
-        if not os.environ.get("REDIS_URL") and not os.environ.get("REDIS_CACHE_URL"):
-            from smartedu_security.lockout import MemoryLockoutStore
-            return LoginSecurityGuard(MemoryLockoutStore())
-        return LoginSecurityGuard(login_lockout_store())
-    except Exception:
-        from smartedu_security.lockout import MemoryLockoutStore
-        return LoginSecurityGuard(MemoryLockoutStore())
+    if _redis_configured():
+        try:
+            return LoginSecurityGuard(login_lockout_store())
+        except Exception:
+            pass
+    cfg = security_settings()
+    return LoginSecurityGuard(
+        DatabaseLockoutStore(
+            SessionLocal,
+            max_failures=cfg.login_max_failures,
+            failure_window_seconds=cfg.login_failure_window_seconds,
+            lock_seconds=cfg.login_lock_seconds,
+        )
+    )
+
+
+async def _throttle_register(request: Request, db: Session) -> None:
+    ip = client_ip(request) or "unknown"
+    key = f"register:{ip}"
+    if _redis_configured():
+        try:
+            decision = await identity_rate_limiter().hit(key, limit=20, window_seconds=900)
+        except Exception:
+            decision = DatabaseFixedWindowLimiter(SessionLocal).hit_sync(db, key, limit=20, window_seconds=900)
+    else:
+        decision = DatabaseFixedWindowLimiter(SessionLocal).hit_sync(db, key, limit=20, window_seconds=900)
+    if not decision.allowed:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many registration attempts. Try again later.",
+            headers={"Retry-After": str(decision.retry_after_seconds)},
+        )
 
 
 def browser_pair(response, pair):
     set_browser_refresh_cookie(response, pair.refresh_token, security_settings())
     response.headers["Cache-Control"] = "no-store"
     return public_access_token_payload(pair.access_token, expires_in=pair.expires_in)
-
-
-@router.options("/register")
-@router.options("/register/")
-async def register_options():
-    return Response(
-        status_code=status.HTTP_200_OK,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
-            "Access-Control-Allow-Credentials": "true",
-        },
-    )
 
 
 @router.get("/register")
@@ -64,29 +85,16 @@ async def register_get_help():
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 @router.post("/register/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def register(payload: UserRegister, request: Request, db: Session = Depends(get_db)):
+async def register(payload: UserRegister, request: Request, db: Session = Depends(get_db)):
+    await _throttle_register(request, db)
     try:
-        return AuthService(db).register(payload, client_ip(request))
+        return await run_in_threadpool(AuthService(db).register, payload, client_ip(request))
     except ConflictError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     except PasswordPolicyError as exc:
         raise HTTPException(
             status_code=422, detail={"code": "password_policy_failed", "reasons": exc.reasons}
         ) from exc
-
-
-@router.options("/login")
-@router.options("/login/")
-async def login_options():
-    return Response(
-        status_code=status.HTTP_200_OK,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
-            "Access-Control-Allow-Credentials": "true",
-        },
-    )
 
 
 @router.get("/login")
@@ -104,37 +112,31 @@ async def login(
     db: Session = Depends(get_db),
     guard: LoginSecurityGuard = Depends(login_guard),
 ):
-    email = str(payload.email)
-    decision = await guard.precheck(email)
-    if not decision.allowed:
-        raise HTTPException(
-            status_code=429,
-            detail="Too many failed sign-in attempts. Try again later.",
-            headers={"Retry-After": str(decision.retry_after_seconds)},
-        )
+    identifier = str(payload.email).strip().casefold()
+    matched = await run_in_threadpool(UserRepository(db).get_by_identifier, identifier)
+    subjects = [identifier]
+    if matched is not None:
+        subjects.append(f"user:{matched.id}")
+
+    for subject in subjects:
+        decision = await guard.precheck(subject)
+        if not decision.allowed:
+            raise HTTPException(
+                status_code=429,
+                detail="Too many failed sign-in attempts. Try again later.",
+                headers={"Retry-After": str(decision.retry_after_seconds)},
+            )
     try:
         pair = await run_in_threadpool(
-            AuthService(db).login, email, payload.password, client_ip(request)
+            AuthService(db).login, identifier, payload.password, client_ip(request)
         )
     except AuthenticationError as exc:
-        await guard.failed(email)
+        for subject in subjects:
+            await guard.failed(subject)
         raise HTTPException(status_code=401, detail=str(exc)) from exc
-    await guard.succeeded(email)
+    for subject in subjects:
+        await guard.succeeded(subject)
     return browser_pair(response, pair)
-
-
-@router.options("/refresh")
-@router.options("/refresh/")
-async def refresh_options():
-    return Response(
-        status_code=status.HTTP_200_OK,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
-            "Access-Control-Allow-Credentials": "true",
-        },
-    )
 
 
 @router.get("/refresh")
@@ -153,20 +155,6 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
 
-@router.options("/logout")
-@router.options("/logout/")
-async def logout_options():
-    return Response(
-        status_code=status.HTTP_200_OK,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key",
-            "Access-Control-Allow-Credentials": "true",
-        },
-    )
-
-
 @router.get("/logout")
 @router.get("/logout/")
 async def logout_get_help():
@@ -176,9 +164,13 @@ async def logout_get_help():
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 @router.post("/logout/", status_code=status.HTTP_204_NO_CONTENT)
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
-    token = refresh_token_from_cookie(request, security_settings())
-    AuthService(db).logout(token)
-    clear_browser_refresh_cookie(response, security_settings())
+    sec = security_settings()
+    require_trusted_origin(request, sec.frontend_origins)
+    refresh_token = request.cookies.get(sec.refresh_cookie_name)
+    auth_header = request.headers.get("authorization", "")
+    access_token = auth_header[7:].strip() if auth_header.lower().startswith("bearer ") else None
+    AuthService(db).logout(refresh_token, access_token=access_token)
+    clear_browser_refresh_cookie(response, sec)
     response.headers["Cache-Control"] = "no-store"
 
 

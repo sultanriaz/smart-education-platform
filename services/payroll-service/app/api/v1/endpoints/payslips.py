@@ -56,8 +56,10 @@ def get_payslip(
     if not payslip:
         raise HTTPException(status_code=404, detail="Payslip not found")
 
-    # Enforce strict employee isolation: teacher/employee can only view their own payslip
-    if "teacher" in principal.roles and "admin" not in principal.roles:
+    is_payroll_staff = bool(principal.roles.intersection({"admin", "payroll_officer"})) or (
+        "payroll.payslips.read" in principal.permissions
+    )
+    if not is_payroll_staff:
         profile = db.get(EmployeePayrollProfile, payslip.employee_profile_id)
         if not profile or profile.user_id != principal.user_id:
             raise HTTPException(status_code=403, detail="Cannot access another employee's payslip")
@@ -75,7 +77,10 @@ def download_payslip(
     if not payslip:
         raise HTTPException(status_code=404, detail="Payslip not found")
 
-    if "teacher" in principal.roles and "admin" not in principal.roles:
+    is_payroll_staff = bool(principal.roles.intersection({"admin", "payroll_officer"})) or (
+        "payroll.payslips.read" in principal.permissions
+    )
+    if not is_payroll_staff:
         profile = db.get(EmployeePayrollProfile, payslip.employee_profile_id)
         if not profile or profile.user_id != principal.user_id:
             raise HTTPException(status_code=403, detail="Cannot access another employee's payslip")

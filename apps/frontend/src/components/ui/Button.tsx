@@ -18,7 +18,7 @@ export const Button = forwardRef<
       ref={ref}
       type={type}
       className={cn(
-        "inline-flex min-h-10 items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex min-h-11 items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60",
         variants[variant],
         className
       )}

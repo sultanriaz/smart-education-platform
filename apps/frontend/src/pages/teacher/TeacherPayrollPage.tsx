@@ -5,17 +5,18 @@ import { Card } from "../../components/ui/Card";
 import { StatCard } from "../../components/ui/StatCard";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { SectionLoader } from "../../components/ui/SectionLoader";
 import { InlineError } from "../../components/ui/InlineError";
 import { useToast } from "../../components/ui/useToast";
 import { payrollApi, Payslip } from "../../features/payroll/api";
-import { Banknote, FileCheck, Download, Calendar, ShieldCheck } from "lucide-react";
+import { Download, Calendar, ShieldCheck } from "lucide-react";
 
 export function TeacherPayrollPage() {
   const toast = useToast();
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
 
-  const { data: payslips = [], isLoading, error } = useQuery({
+  const { data: payslips = [], isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["teacher", "payroll", "my-payslips"],
     queryFn: () => payrollApi.getMyPayslips()
   });
@@ -32,7 +33,11 @@ export function TeacherPayrollPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Teacher Portal" title="My Payslips & Compensation" />
-        <InlineError message="Could not load your staff payroll records." />
+        <InlineError
+          message="Could not load your staff payroll records."
+          onRetry={() => void refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }
@@ -78,10 +83,10 @@ export function TeacherPayrollPage() {
         </div>
 
         {payslips.length === 0 ? (
-          <Card className="p-8 text-center text-muted">
-            <Banknote className="w-10 h-10 mx-auto mb-2 text-muted opacity-50" />
-            <p className="text-sm">No payroll statements or payslips have been generated yet for your faculty profile.</p>
-          </Card>
+          <EmptyState
+            title="No payslips available yet"
+            description="Payroll statements and salary slips generated for your faculty profile will appear here."
+          />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-3">

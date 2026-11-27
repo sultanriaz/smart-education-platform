@@ -10,7 +10,7 @@ import { InlineError } from "../../components/ui/InlineError";
 import { useToast } from "../../components/ui/useToast";
 import { apiRequest } from "../../lib/api-client";
 import { useSections } from "../../features/admin/hooks";
-import { Calendar, User, History, CheckCircle2 } from "lucide-react";
+import { Calendar, User, History } from "lucide-react";
 
 interface Session {
   id: string;
@@ -128,8 +128,20 @@ export function AdminAttendancePage() {
           </select>
         </label>
 
-        {sections.error && <InlineError message="Academic sections could not be loaded." />}
-        {sessions.error && <InlineError message="Attendance sessions could not be loaded." />}
+        {sections.error && (
+          <InlineError
+            message="Academic sections could not be loaded."
+            onRetry={() => void sections.refetch()}
+            isRetrying={sections.isFetching}
+          />
+        )}
+        {sessions.error && (
+          <InlineError
+            message="Attendance sessions could not be loaded."
+            onRetry={() => void sessions.refetch()}
+            isRetrying={sessions.isFetching}
+          />
+        )}
         {sessions.isLoading && <SectionLoader label="Loading sessions…" />}
 
         {sectionId && sessions.data && (
@@ -196,7 +208,13 @@ export function AdminAttendancePage() {
 
           <Card title="Attendance Records & Audited Corrections">
             {records.isLoading && <SectionLoader label="Loading records…" />}
-            {records.error && <InlineError message="Attendance records could not be loaded." />}
+            {records.error && (
+              <InlineError
+                message="Attendance records could not be loaded."
+                onRetry={() => void records.refetch()}
+                isRetrying={records.isFetching}
+              />
+            )}
 
             {records.data && (
               <div className="overflow-x-auto">
@@ -282,7 +300,13 @@ export function AdminAttendancePage() {
 
           <Card title="Session Audit History">
             {history.isLoading && <SectionLoader label="Loading history…" />}
-            {history.error && <InlineError message="History could not be loaded." />}
+            {history.error && (
+              <InlineError
+                message="History could not be loaded."
+                onRetry={() => void history.refetch()}
+                isRetrying={history.isFetching}
+              />
+            )}
             {history.data && (
               <ul className="space-y-2.5 text-sm">
                 {history.data.length === 0 ? (

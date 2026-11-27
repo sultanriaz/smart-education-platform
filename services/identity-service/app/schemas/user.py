@@ -16,9 +16,11 @@ class NonEmptyName(BaseModel):
 
 
 class UserRegister(NonEmptyName):
+    model_config = ConfigDict(extra="forbid")
+
     email: str = Field(min_length=3, max_length=255)
     full_name: str = Field(min_length=2, max_length=160)
-    password: str = Field(min_length=8, max_length=128)
+    password: str = Field(min_length=12, max_length=128)
 
 
 class AdminUserCreate(UserRegister):
@@ -26,6 +28,8 @@ class AdminUserCreate(UserRegister):
 
 
 class UserSelfUpdate(NonEmptyName):
+    model_config = ConfigDict(extra="forbid")
+
     full_name: str | None = Field(default=None, min_length=2, max_length=160)
 
 

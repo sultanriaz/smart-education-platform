@@ -12,7 +12,7 @@ function renderHub(initialRole: "student" | "teacher" = "student") {
 }
 
 describe("TimetableHub", () => {
-  it("renders Student and Teacher options, simple English controls, and BCS-7C schedule by default", () => {
+  it("renders Student and Teacher options, simple English controls, and Search Class with SP23-BCS-7C by default", () => {
     renderHub();
 
     const roleGroup = screen.getByRole("group", { name: "Choose schedule view" });
@@ -24,13 +24,16 @@ describe("TimetableHub", () => {
     expect(screen.getByRole("button", { name: "Table View" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Save Calendar" })).toHaveLength(1);
 
+    // No static section buttons under Student view
+    expect(screen.queryByRole("group", { name: "Select class or section" })).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Search Class" })).toBeInTheDocument();
+    expect(screen.getByText("SP23-BCS-7C")).toBeInTheDocument();
+
     // No technical jargon visible
     expect(screen.queryByText(/Matrix/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Export \.ics/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/Occupancy/i)).not.toBeInTheDocument();
 
-    // Default section and lectures count
-    expect(screen.getByRole("button", { name: "BCS-7C" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText("9 lectures a week")).toBeInTheDocument();
     expect(screen.getAllByText("Compiler Construction").length).toBeGreaterThan(0);
 
@@ -38,14 +41,27 @@ describe("TimetableHub", () => {
     expect(screen.getByText(/Room Change Notice \(Tuesday/i)).toBeInTheDocument();
   });
 
-  it("switches sections cleanly and updates lecture counts", () => {
+  it("shows matching class options below Search Class as the user types and switches sections", () => {
     renderHub();
 
-    fireEvent.click(screen.getByRole("button", { name: "BCS-7A" }));
+    const searchClassInput = screen.getByRole("combobox", { name: "Search Class" });
+    fireEvent.change(searchClassInput, { target: { value: "7" } });
+
+    const suggestions = screen.getByRole("listbox", { name: "Matching classes" });
+    expect(within(suggestions).getByRole("option", { name: /SP23-BCS-7A/i })).toBeInTheDocument();
+    expect(within(suggestions).getByRole("option", { name: /SP23-BCS-7B/i })).toBeInTheDocument();
+
+    fireEvent.click(within(suggestions).getByRole("option", { name: /SP23-BCS-7A/i }));
     expect(screen.getByText("6 lectures a week")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "BCS-7B" }));
-    expect(screen.getByText("5 lectures a week")).toBeInTheDocument();
+    fireEvent.change(searchClassInput, { target: { value: "BCS" } });
+    const bcsSuggestions = screen.getByRole("listbox", { name: "Matching classes" });
+    expect(within(bcsSuggestions).getByRole("option", { name: /FA24-BCS-5B/i })).toBeInTheDocument();
+    expect(within(bcsSuggestions).getByRole("option", { name: /SP25-BCS-4A/i })).toBeInTheDocument();
+
+    fireEvent.click(within(bcsSuggestions).getByRole("option", { name: /SP25-BCS-4A/i }));
+    expect(screen.getByText("SP25-BCS-4A")).toBeInTheDocument();
+    expect(screen.getByText("3 lectures a week")).toBeInTheDocument();
   });
 
   it("shows Sir Munir Wednesday Slot 2 BCS-7C class and includes Engr. Bilal Khan in Teacher view", () => {
@@ -65,18 +81,18 @@ describe("TimetableHub", () => {
     expect(wednesdaySection).toHaveTextContent("Room C-204");
   });
 
-  it("filters classes by search and shows empty state reset when no match exists", () => {
-    renderHub();
+  it("filters Teacher classes by search and shows empty state reset when no match exists", () => {
+    renderHub("teacher");
 
     const searchInput = screen.getByPlaceholderText("Search classes...");
-    fireEvent.change(searchInput, { target: { value: "Database" } });
-    expect(screen.getAllByText(/Database Systems/).length).toBeGreaterThan(0);
+    fireEvent.change(searchInput, { target: { value: "Compiler" } });
+    expect(screen.getAllByText(/Compiler Construction/).length).toBeGreaterThan(0);
 
     fireEvent.change(searchInput, { target: { value: "NonExistentClass999" } });
     expect(screen.getByText(/No classes matched/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Clear Search" }));
-    expect(screen.getByText("9 lectures a week")).toBeInTheDocument();
+    expect(screen.getAllByText(/Compiler Construction/).length).toBeGreaterThan(0);
   });
 
   it("switches to Table View cleanly with full teacher names and opens details popup", () => {

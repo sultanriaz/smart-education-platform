@@ -82,7 +82,21 @@ export function AdminFacilitiesPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Admin" title="Facilities" />
-        <InlineError message="Facility administration data could not be loaded." />
+        <InlineError
+          message="Facility administration data could not be loaded."
+          onRetry={() => {
+            void facilities.refetch();
+            void bookings.refetch();
+            void blocks.refetch();
+            void equipment.refetch();
+          }}
+          isRetrying={
+            facilities.isFetching ||
+            bookings.isFetching ||
+            blocks.isFetching ||
+            equipment.isFetching
+          }
+        />
       </div>
     );
   }

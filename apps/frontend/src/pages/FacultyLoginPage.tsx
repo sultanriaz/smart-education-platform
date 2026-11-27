@@ -109,7 +109,7 @@ export function FacultyLoginPage() {
             <p className="auth-overline">{runtimeConfig.appName}</p>
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-ink hover:underline transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-semibold text-primary-ink hover:underline transition"
             >
               <ArrowLeft size={14} />
               <span>Main Dashboard</span>
@@ -130,7 +130,7 @@ export function FacultyLoginPage() {
             <button
               type="button"
               onClick={fillDemoFaculty}
-              className="rounded-lg border border-line bg-panel px-2.5 py-1 text-xs font-semibold text-ink hover:border-secondary hover:text-secondary-ink transition"
+              className="inline-flex min-h-11 items-center rounded-lg border border-line bg-panel px-3 py-2 text-xs font-semibold text-ink hover:border-secondary hover:text-secondary-ink transition"
             >
               Auto-Fill FAC-101
             </button>
@@ -152,6 +152,7 @@ export function FacultyLoginPage() {
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 placeholder="Enter your faculty password"
+                className="pr-12"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -159,7 +160,7 @@ export function FacultyLoginPage() {
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-9 text-muted hover:text-ink transition"
+                className="absolute right-1 top-[30px] inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:text-ink transition"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -184,7 +185,7 @@ export function FacultyLoginPage() {
               <Lock size={13} className="text-secondary-ink" />
               <span>Teacher credentials strictly enforced</span>
             </span>
-            <Link to="/login/student" className="font-semibold text-primary-ink hover:underline">
+            <Link to="/login/student" className="inline-flex min-h-11 items-center font-semibold text-primary-ink hover:underline">
               Student? Go to Student Portal →
             </Link>
           </div>

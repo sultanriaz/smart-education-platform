@@ -12,6 +12,27 @@ def normalize_origin(origin: str) -> str:
     return f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
 
 
+def _request_origin(request: Request) -> str | None:
+    host = (
+        request.headers.get("x-forwarded-host")
+        or request.headers.get("host")
+        or ""
+    ).split(",")[0].strip()
+    if not host or host in {"testserver", "testserver.local"}:
+        return None
+    scheme = (
+        request.headers.get("x-forwarded-proto")
+        or request.url.scheme
+        or "https"
+    ).split(",")[0].strip().lower()
+    if scheme not in {"http", "https"}:
+        return None
+    try:
+        return normalize_origin(f"{scheme}://{host}")
+    except ValueError:
+        return None
+
+
 def require_trusted_origin(
     request: Request,
     trusted_origins: tuple[str, ...],
@@ -20,11 +41,7 @@ def require_trusted_origin(
 ) -> None:
     origin = request.headers.get("origin") or request.headers.get("referer")
     if not origin:
-        if (
-            allow_missing
-            or "*" in trusted_origins
-            or any(t.strip() == "*" for t in trusted_origins)
-        ):
+        if allow_missing:
             return
         raise HTTPException(status_code=403, detail="Missing request origin")
 
@@ -33,16 +50,18 @@ def require_trusted_origin(
     except ValueError as exc:
         raise HTTPException(status_code=403, detail="Untrusted request origin") from exc
 
-    # Automatically permit Vercel domains, localhost, and wildcard
-    if (
-        "*" in trusted_origins
-        or any(t.strip() == "*" for t in trusted_origins)
-        or normalized.endswith(".vercel.app")
-        or "localhost" in normalized
-        or "127.0.0.1" in normalized
-    ):
+    allowed: set[str] = set()
+    for value in trusted_origins:
+        candidate = value.strip()
+        if not candidate or candidate == "*":
+            continue
+        try:
+            allowed.add(normalize_origin(candidate))
+        except ValueError:
+            continue
+
+    same_origin = _request_origin(request)
+    if normalized in allowed or (same_origin is not None and normalized == same_origin):
         return
 
-    allowed = {normalize_origin(value) for value in trusted_origins if value.strip()}
-    if normalized not in allowed:
-        raise HTTPException(status_code=403, detail="Untrusted request origin")
+    raise HTTPException(status_code=403, detail="Untrusted request origin")

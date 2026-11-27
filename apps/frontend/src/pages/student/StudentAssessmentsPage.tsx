@@ -25,7 +25,14 @@ export function StudentAssessmentsPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Student" title="Assessments" />
-        <InlineError message="Assessment data could not be loaded." />
+        <InlineError
+          message="Assessment data could not be loaded."
+          onRetry={() => {
+            void assignments.refetch();
+            void results.refetch();
+          }}
+          isRetrying={assignments.isFetching || results.isFetching}
+        />
       </div>
     );
   }

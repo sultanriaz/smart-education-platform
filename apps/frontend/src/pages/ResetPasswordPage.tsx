@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
 import { z } from "zod";
+import { Eye, EyeOff } from "lucide-react";
 
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -46,6 +47,8 @@ export function ResetPasswordPage() {
 
   const [complete, setComplete] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const {
     register,
     handleSubmit,
@@ -69,7 +72,7 @@ export function ResetPasswordPage() {
   });
 
   return (
-    <main className="subtle-grid flex min-h-screen items-center justify-center px-4 py-10">
+    <main className="subtle-grid flex min-h-dvh items-center justify-center px-4 py-10">
       <section className="panel w-full max-w-md p-7 sm:p-8">
         <h1 className="text-2xl font-bold">Choose a new password</h1>
         <p className="mt-2 text-sm leading-6 text-muted">
@@ -81,26 +84,51 @@ export function ResetPasswordPage() {
             <div className="rounded-xl border border-line bg-surface p-4 text-sm">
               Your password was changed and previous refresh sessions were revoked.
             </div>
-            <Link className="font-semibold text-brand-700 hover:underline" to="/login">
+            <Link
+              className="inline-flex min-h-11 items-center font-semibold text-brand-700 hover:underline"
+              to="/login"
+            >
               Sign in with the new password
             </Link>
           </div>
         ) : (
           <form className="mt-7 space-y-4" onSubmit={onSubmit} noValidate>
-            <Input
-              label="New password"
-              type="password"
-              autoComplete="new-password"
-              error={errors.password?.message}
-              {...register("password")}
-            />
-            <Input
-              label="Confirm password"
-              type="password"
-              autoComplete="new-password"
-              error={errors.confirmPassword?.message}
-              {...register("confirmPassword")}
-            />
+            <div className="relative">
+              <Input
+                label="New password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                className="pr-12"
+                error={errors.password?.message}
+                {...register("password")}
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? "Hide new password" : "Show new password"}
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-1 top-[30px] inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:text-ink transition"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            <div className="relative">
+              <Input
+                label="Confirm password"
+                type={showConfirm ? "text" : "password"}
+                autoComplete="new-password"
+                className="pr-12"
+                error={errors.confirmPassword?.message}
+                {...register("confirmPassword")}
+              />
+              <button
+                type="button"
+                aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
+                onClick={() => setShowConfirm((prev) => !prev)}
+                className="absolute right-1 top-[30px] inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:text-ink transition"
+              >
+                {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {serverError ? (
               <div
                 className="rounded-xl border border-danger/40 bg-danger-soft px-3 py-2 text-sm text-danger-ink"
@@ -114,6 +142,12 @@ export function ResetPasswordPage() {
             </Button>
           </form>
         )}
+
+        <p className="mt-6 text-center text-sm text-muted">
+          <Link className="inline-flex min-h-11 items-center px-3 font-semibold text-brand-700 hover:underline" to="/login">
+            Back to sign in
+          </Link>
+        </p>
       </section>
     </main>
   );

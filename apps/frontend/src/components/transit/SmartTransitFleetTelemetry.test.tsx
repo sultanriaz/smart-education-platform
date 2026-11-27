@@ -26,7 +26,7 @@ describe("SmartTransitFleetTelemetry", () => {
     expect(screen.getByText(/3 buses found/)).toBeInTheDocument();
     expect(screen.getAllByText(/Jeewan City/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/10:00 AM/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText(/Bus 1/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Bus #01/i).length).toBeGreaterThanOrEqual(1);
   });
 
   it("opens Shuttle Schedule, navigates to direction selector, and displays selected direction timings inline", () => {
@@ -49,7 +49,7 @@ describe("SmartTransitFleetTelemetry", () => {
     expect(toUniBtn).toBeInTheDocument();
 
     fireEvent.click(fromUniBtn);
-    expect(screen.getAllByText(/Bus 1/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Bus #01/i).length).toBeGreaterThanOrEqual(1);
 
     fireEvent.click(toUniBtn);
     expect(screen.getAllByText(/From University|To University/i).length).toBeGreaterThanOrEqual(2);

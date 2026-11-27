@@ -87,3 +87,20 @@ class EmailVerificationToken(Sprint18SecurityBase):
             "expires_at",
         ),
     )
+
+
+class AuthRateLimitBucket(Sprint18SecurityBase):
+    __tablename__ = "auth_rate_limit_buckets"
+
+    bucket_key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    count: Mapped[int] = mapped_column(nullable=False, default=0)
+    window_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class LoginLockoutBucket(Sprint18SecurityBase):
+    __tablename__ = "login_lockout_buckets"
+
+    subject_key: Mapped[str] = mapped_column(String(128), primary_key=True)
+    failure_count: Mapped[int] = mapped_column(nullable=False, default=0)
+    window_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

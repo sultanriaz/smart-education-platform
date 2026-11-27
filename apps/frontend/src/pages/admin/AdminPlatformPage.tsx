@@ -135,7 +135,15 @@ export function AdminPlatformPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Admin" title="Platform operations" />
-        <InlineError message="Platform operations data could not be loaded." />
+        <InlineError
+          message="Platform operations data could not be loaded."
+          onRetry={() => {
+            queries.forEach((query) => {
+              void query.refetch();
+            });
+          }}
+          isRetrying={queries.some((query) => query.isFetching)}
+        />
       </div>
     );
   }

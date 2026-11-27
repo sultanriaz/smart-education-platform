@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { Calendar, Clock, Users } from "lucide-react";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -8,6 +10,7 @@ import { Input } from "../../components/ui/Input";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { SectionLoader } from "../../components/ui/SectionLoader";
 import { useToast } from "../../components/ui/useToast";
+import { InteractiveClassRosterSheet } from "../../components/teacher/InteractiveClassRosterSheet";
 import {
   useAttendanceSessions,
   useCreateAttendanceSession,
@@ -18,6 +21,12 @@ import {
   useTeacherSections
 } from "../../features/teacher/hooks";
 import { correctAttendanceRecord } from "../../features/teacher/teacher-api";
+import {
+  FACULTY_CLASSES,
+  FACULTY_TIME_SLOTS,
+  loadSavedAttendanceSheets,
+  type SavedAttendanceSheet
+} from "../../features/teacher/teacher-portal-data";
 import type { AttendanceEntry } from "../../features/teacher/types";
 
 const statuses: AttendanceEntry["status"][] = [
@@ -30,7 +39,31 @@ const statuses: AttendanceEntry["status"][] = [
 export function TeacherClassesAttendancePage() {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const sections = useTeacherSections();
+
+  const initialClassParam = searchParams.get("class") ?? "";
+  const initialSlotParam = searchParams.get("slot") ?? "Slot 2";
+  const isTakeMode = searchParams.get("mode") === "take";
+
+  const [selectedFacultyClassId, setSelectedFacultyClassId] = useState<string>(
+    FACULTY_CLASSES.some((c) => c.id === initialClassParam)
+      ? initialClassParam
+      : FACULTY_CLASSES[0]!.id
+  );
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().slice(0, 10)
+  );
+  const [selectedSlot, setSelectedSlot] = useState<string>(
+    FACULTY_TIME_SLOTS.some((s) => s.slot === initialSlotParam)
+      ? initialSlotParam
+      : FACULTY_TIME_SLOTS[1]!.slot
+  );
+  const [sheetActive, setSheetActive] = useState<boolean>(true);
+  const [savedSheets, setSavedSheets] = useState<Record<string, SavedAttendanceSheet>>(() =>
+    loadSavedAttendanceSheets()
+  );
+
   const [sectionId, setSectionId] = useState("");
   const [sessionId, setSessionId] = useState("");
   const [scheduleOccurrenceId, setScheduleOccurrenceId] = useState("");
@@ -60,7 +93,6 @@ export function TeacherClassesAttendancePage() {
       setEntries([]);
       return;
     }
-    // Keep every enrolled member even when only part of the sheet is persisted.
     const marked = new Map(
       sessionAttendance.data.map((entry) => [entry.studentUserId, entry])
     );
@@ -80,6 +112,13 @@ export function TeacherClassesAttendancePage() {
     [sectionId, sections.data]
   );
 
+  const activeFacultyClass = useMemo(
+    () =>
+      FACULTY_CLASSES.find((c) => c.id === selectedFacultyClassId) ??
+      FACULTY_CLASSES[0]!,
+    [selectedFacultyClassId]
+  );
+
   if (sections.isLoading) {
     return (
       <div className="page-container">
@@ -88,14 +127,9 @@ export function TeacherClassesAttendancePage() {
     );
   }
 
-  if (sections.error) {
-    return (
-      <div className="page-container">
-        <PageHeader eyebrow="Teacher" title="Classes & attendance" />
-        <InlineError message="Your assigned sections could not be loaded." />
-      </div>
-    );
-  }
+  const hasApiSections = Boolean(sections.data?.length);
+  const activeSheetKey = `${activeFacultyClass.id}__${selectedDate}__${selectedSlot}`;
+  const activeSavedSheet = savedSheets[activeSheetKey];
 
   const createNewSession = async (event: FormEvent) => {
     event.preventDefault();
@@ -197,20 +231,134 @@ export function TeacherClassesAttendancePage() {
   };
 
   return (
-    <div className="page-container">
+    <div className="page-container space-y-6">
       <PageHeader
         eyebrow="Teacher"
-        title="Classes & attendance"
-        description="Open assigned sections, review rosters, create attendance sessions, bulk mark students, finalize sheets, and record corrections."
+        title={isTakeMode ? "Take Class Attendance" : "Classes & attendance"}
+        description="Select a class, date, and lecture slot to mark Present or Absent across the enrolled student roster, submit, or edit."
       />
 
-      {!sections.data?.length ? (
-        <Card>
-          <p className="text-sm text-muted">No academic sections are currently assigned to you.</p>
-        </Card>
-      ) : (
-        <>
-          <Card title="Assigned class">
+      {sections.error ? (
+        <InlineError
+          message="Live section sync was unavailable; local faculty classes remain active."
+          onRetry={() => void sections.refetch()}
+          isRetrying={sections.isFetching}
+        />
+      ) : null}
+
+      {/* Enrolled Classes Grid */}
+      <div className="space-y-4">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-muted">
+          Your Enrolled Classes
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {FACULTY_CLASSES.map((cls) => {
+            const isSelected = cls.id === activeFacultyClass.id;
+            return (
+              <button
+                key={cls.id}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => {
+                  setSelectedFacultyClassId(cls.id);
+                  setSheetActive(true);
+                }}
+                className={`rounded-2xl border p-4 text-left transition cursor-pointer ${
+                  isSelected
+                    ? "border-primary bg-primary-soft/35 shadow-xs"
+                    : "border-line bg-panel hover:border-primary/50"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs font-bold text-primary-ink">
+                    {cls.courseCode}
+                  </span>
+                  <span className="rounded-md bg-surface border border-line px-2 py-0.5 text-xs font-bold text-ink">
+                    {cls.section}
+                  </span>
+                </div>
+                <p className="mt-1.5 font-bold text-sm text-ink">{cls.courseTitle}</p>
+                <p className="mt-1 text-xs text-muted">{cls.scheduleSummary}</p>
+                <div className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-primary-ink">
+                  <Users size={13} />
+                  <span>{cls.students.length} Students on Roster</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Day & Slot Controls */}
+      <Card
+        title={isTakeMode ? "Select Date & Time Slot" : "Session Date & Lecture Slot"}
+        description="Choose the session date and slot to take or edit attendance for the selected class."
+      >
+        <div className="grid gap-4 sm:grid-cols-3 items-end">
+          <label className="block text-xs font-bold text-ink">
+            <span className="mb-1.5 flex items-center gap-1.5 text-muted">
+              <Calendar size={13} className="text-primary-ink" />
+              <span>Date</span>
+            </span>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+                setSheetActive(true);
+              }}
+              className="w-full min-h-11 rounded-xl border border-line bg-surface px-3 py-2 text-sm sm:text-xs font-semibold text-ink"
+            />
+          </label>
+
+          <label className="block text-xs font-bold text-ink">
+            <span className="mb-1.5 flex items-center gap-1.5 text-muted">
+              <Clock size={13} className="text-primary-ink" />
+              <span>Time Slot</span>
+            </span>
+            <select
+              value={selectedSlot}
+              onChange={(e) => {
+                setSelectedSlot(e.target.value);
+                setSheetActive(true);
+              }}
+              className="w-full min-h-11 rounded-xl border border-line bg-surface px-3 py-2 text-sm sm:text-xs font-semibold text-ink"
+            >
+              {FACULTY_TIME_SLOTS.map((opt) => (
+                <option key={opt.slot} value={opt.slot}>
+                  {opt.slot} ({opt.timeRange})
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            type="button"
+            onClick={() => setSheetActive(true)}
+            className="min-h-11 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-on-primary shadow-xs hover:bg-primary-hover transition cursor-pointer"
+          >
+            {activeSavedSheet ? "Open Saved Sheet" : "Take Attendance"}
+          </button>
+        </div>
+      </Card>
+
+      {/* Interactive Student Roster & Attendance Sheet */}
+      {sheetActive && (
+        <InteractiveClassRosterSheet
+          classInfo={activeFacultyClass}
+          date={selectedDate}
+          slot={selectedSlot}
+          savedSheet={activeSavedSheet}
+          onSubmitted={(sheet) => {
+            setSavedSheets((prev) => ({ ...prev, [sheet.key]: sheet }));
+            toast.push(`Attendance submitted for ${activeFacultyClass.section}.`, "success");
+          }}
+        />
+      )}
+
+      {!hasApiSections ? null : (
+        <div className="space-y-6 pt-2">
+          <Card title="Synced Server Section">
             <label className="block text-sm font-medium">
               Section
               <select
@@ -222,7 +370,7 @@ export function TeacherClassesAttendancePage() {
                   setEntries([]);
                 }}
               >
-                {sections.data.map((section) => (
+                {sections.data!.map((section) => (
                   <option key={section.id} value={section.id}>
                     {section.courseCode ? `${section.courseCode} · ` : ""}
                     {section.name}
@@ -257,12 +405,16 @@ export function TeacherClassesAttendancePage() {
             ) : null}
           </Card>
 
-          <div className="mt-6 grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-            <Card title="Roster">
+          <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+            <Card title="Server Roster">
               {roster.isLoading ? (
                 <SectionLoader label="Loading roster…" />
               ) : roster.error ? (
-                <InlineError message="The section roster could not be loaded." />
+                <InlineError
+                  message="The section roster could not be loaded."
+                  onRetry={() => void roster.refetch()}
+                  isRetrying={roster.isFetching}
+                />
               ) : roster.data?.length ? (
                 <div className="max-h-[34rem] overflow-auto focus-visible:outline-2 focus-visible:outline-offset-2" role="region" aria-label="Student roster" tabIndex={0}>
                   <table className="w-full min-w-[440px] text-left text-sm">
@@ -304,7 +456,7 @@ export function TeacherClassesAttendancePage() {
                 onSubmit={(event) => void createNewSession(event)}
               >
                 <Input label="Scheduling occurrence UUID (optional)" hint="Link the session to a published timetable occurrence; the server validates the owner/date." value={scheduleOccurrenceId} onChange={e => setScheduleOccurrenceId(e.target.value)} />
-            <Input
+                <Input
                   label="Session date"
                   type="date"
                   value={sessionDate}
@@ -349,7 +501,7 @@ export function TeacherClassesAttendancePage() {
           </div>
 
           {sessionId ? (
-            <Card className="mt-6" title="Attendance sheet">
+            <Card className="mt-6" title="Server Attendance sheet">
               {sessionAttendance.isLoading ? (
                 <SectionLoader label="Loading attendance sheet…" />
               ) : (
@@ -465,7 +617,7 @@ export function TeacherClassesAttendancePage() {
               )}
             </Card>
           ) : null}
-        </>
+        </div>
       )}
     </div>
   );

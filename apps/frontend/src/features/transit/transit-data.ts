@@ -123,7 +123,7 @@ export interface ShuttleScheduleRouteSet {
 export const PLANNED_CITY_BUSES: PlannedCityBus[] = [
   {
     id: "planned-bus-1",
-    busName: "Bus 1",
+    busName: "Bus #01",
     city: "Sahiwal",
     routeTitle: "Jeewan City · Stadium Road",
     stops: [
@@ -137,7 +137,7 @@ export const PLANNED_CITY_BUSES: PlannedCityBus[] = [
   },
   {
     id: "planned-bus-2",
-    busName: "Bus 2",
+    busName: "Bus #02",
     city: "Sahiwal",
     routeTitle: "Pakka Anna · Farid Town Point",
     stops: [
@@ -151,7 +151,7 @@ export const PLANNED_CITY_BUSES: PlannedCityBus[] = [
   },
   {
     id: "planned-bus-3",
-    busName: "Bus 3",
+    busName: "Bus #03",
     city: "Sahiwal",
     routeTitle: "Mall Road · Bypass Line",
     stops: [
@@ -165,7 +165,7 @@ export const PLANNED_CITY_BUSES: PlannedCityBus[] = [
   },
   {
     id: "planned-bus-cw-1",
-    busName: "Bus 4",
+    busName: "Bus #04",
     city: "Chichawatni",
     routeTitle: "Chichawatni · Harappa Express",
     stops: [
@@ -186,7 +186,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
       from_university: [
         {
           id: "reg-out-1",
-          busName: "Bus 1",
+          busName: "Bus #01",
           city: "Sahiwal",
           routeTitle: "Afternoon Departure — City Line",
           stops: [
@@ -200,7 +200,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
         },
         {
           id: "reg-out-2",
-          busName: "Bus 2",
+          busName: "Bus #02",
           city: "Sahiwal",
           routeTitle: "Evening Departure — Mall Line",
           stops: [
@@ -216,7 +216,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
       to_university: [
         {
           id: "reg-in-1",
-          busName: "Bus 1",
+          busName: "Bus #01",
           city: "Sahiwal",
           routeTitle: "Morning Arrival — City Line",
           stops: [
@@ -230,7 +230,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
         },
         {
           id: "reg-in-2",
-          busName: "Bus 2",
+          busName: "Bus #02",
           city: "Sahiwal",
           routeTitle: "Morning Arrival — Bypass Line",
           stops: [
@@ -253,7 +253,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
       from_university: [
         {
           id: "ex-out-1",
-          busName: "Bus 1",
+          busName: "Bus #01",
           city: "Sahiwal",
           routeTitle: "Paper Dispersal — Shift 1",
           stops: [
@@ -265,7 +265,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
         },
         {
           id: "ex-out-2",
-          busName: "Bus 2",
+          busName: "Bus #02",
           city: "Sahiwal",
           routeTitle: "Paper Dispersal — Shift 2",
           stops: [
@@ -279,7 +279,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
       to_university: [
         {
           id: "ex-in-1",
-          busName: "Bus 1",
+          busName: "Bus #01",
           city: "Sahiwal",
           routeTitle: "Morning Exam Arrival",
           stops: [
@@ -300,7 +300,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
       from_university: [
         {
           id: "rm-out-1",
-          busName: "Bus 1",
+          busName: "Bus #01",
           city: "Sahiwal",
           routeTitle: "Early Ramzan Return",
           stops: [
@@ -314,7 +314,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
       to_university: [
         {
           id: "rm-in-1",
-          busName: "Bus 1",
+          busName: "Bus #01",
           city: "Sahiwal",
           routeTitle: "Morning Ramzan Pickup",
           stops: [
@@ -335,7 +335,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
       from_university: [
         {
           id: "sp-out-1",
-          busName: "Bus 1",
+          busName: "Bus #01",
           city: "Sahiwal",
           routeTitle: "Post-Match Departure",
           stops: [
@@ -349,7 +349,7 @@ export const SHUTTLE_SCHEDULE_SETS: ShuttleScheduleRouteSet[] = [
       to_university: [
         {
           id: "sp-in-1",
-          busName: "Bus 1",
+          busName: "Bus #01",
           city: "Sahiwal",
           routeTitle: "Morning Sports Ground Drop",
           stops: [

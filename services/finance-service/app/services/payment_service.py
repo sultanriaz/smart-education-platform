@@ -39,10 +39,14 @@ class PaymentService:
         installment_id: uuid.UUID | None = None,
         amount: Decimal,
         provider: str = "JAZZ_CASH",
+        allow_any_student: bool = False,
     ) -> tuple[PaymentIntent, dict[str, Any]]:
         invoice = self.db.scalar(select(Invoice).where(Invoice.id == invoice_id).with_for_update())
         if not invoice:
             raise EntityNotFoundError(f"Invoice {invoice_id} not found")
+
+        if not allow_any_student and invoice.student_user_id != student_user_id:
+            raise FinanceDomainError("Cannot create a payment intent for another student's invoice", status_code=403)
 
         if invoice.status in {"PAID", "CANCELLED"}:
             raise FinanceDomainError(f"Invoice {invoice.invoice_number} is already {invoice.status}")

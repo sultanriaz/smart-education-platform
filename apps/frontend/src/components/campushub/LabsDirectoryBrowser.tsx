@@ -9,10 +9,7 @@ import {
   X,
   Users,
   Monitor,
-  UserCheck,
-  Wifi,
-  Wind,
-  Tv
+  UserCheck
 } from "lucide-react";
 
 import {
@@ -307,26 +304,6 @@ export function LabsDirectoryBrowser({ onBack }: { onBack?: () => void } = {}) {
               <span>
                 <strong>In-Charge:</strong> {detailLab.inCharge}
               </span>
-            </div>
-
-            <div>
-              <span className="block text-[11px] font-extrabold uppercase tracking-wider text-muted mb-2">
-                Room Features
-              </span>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className={`flex items-center gap-1.5 rounded-xl border border-line bg-surface p-2.5 ${detailLab.hasWifi ? "text-ink" : "text-muted/55"}`}>
-                  <Wifi size={13} className="shrink-0" />
-                  <span>Wi-Fi</span>
-                </div>
-                <div className={`flex items-center gap-1.5 rounded-xl border border-line bg-surface p-2.5 ${detailLab.hasAC ? "text-ink" : "text-muted/55"}`}>
-                  <Wind size={13} className="shrink-0" />
-                  <span>AC</span>
-                </div>
-                <div className={`flex items-center gap-1.5 rounded-xl border border-line bg-surface p-2.5 ${detailLab.hasProjector ? "text-ink" : "text-muted/55"}`}>
-                  <Tv size={13} className="shrink-0" />
-                  <span>Projector</span>
-                </div>
-              </div>
             </div>
 
             <button

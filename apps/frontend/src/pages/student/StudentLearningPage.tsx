@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { lazy, Suspense, useState, useEffect, useCallback } from "react";
 import {
   BookOpen,
   FolderOpen,
   FileQuestion,
   BarChart2,
   Library,
-  Sparkles,
   ArrowLeft,
 } from "lucide-react";
 import { PageHeader } from "../../components/ui/PageHeader";
@@ -27,13 +26,34 @@ import {
 } from "../../features/student/student-api";
 import type { LearningResource } from "../../features/student/types";
 
-// Self-Learning components and API
+// Self-Learning components and API (lazy-loaded per tab to keep KaTeX & radar chart off initial render)
 import { SubjectSwitcher } from "../../features/self-learning/components/SubjectSwitcher";
-import { MaterialLibraryTab } from "../../features/self-learning/components/MaterialLibraryTab";
-import { PracticeTestsTab } from "../../features/self-learning/components/PracticeTestsTab";
-import { MasteryAnalyticsTab } from "../../features/self-learning/components/MasteryAnalyticsTab";
-import { TestRunner } from "../../features/self-learning/components/TestRunner";
-import { TestReviewScreen } from "../../features/self-learning/components/TestReviewScreen";
+
+const MaterialLibraryTab = lazy(() =>
+  import("../../features/self-learning/components/MaterialLibraryTab").then((m) => ({
+    default: m.MaterialLibraryTab,
+  }))
+);
+const PracticeTestsTab = lazy(() =>
+  import("../../features/self-learning/components/PracticeTestsTab").then((m) => ({
+    default: m.PracticeTestsTab,
+  }))
+);
+const MasteryAnalyticsTab = lazy(() =>
+  import("../../features/self-learning/components/MasteryAnalyticsTab").then((m) => ({
+    default: m.MasteryAnalyticsTab,
+  }))
+);
+const TestRunner = lazy(() =>
+  import("../../features/self-learning/components/TestRunner").then((m) => ({
+    default: m.TestRunner,
+  }))
+);
+const TestReviewScreen = lazy(() =>
+  import("../../features/self-learning/components/TestReviewScreen").then((m) => ({
+    default: m.TestReviewScreen,
+  }))
+);
 import {
   getSubjects,
   createSubject,
@@ -161,9 +181,11 @@ export function StudentLearningPage() {
   const [activeReviewResult, setActiveReviewResult] = useState<TestResultOut | null>(null);
   const [reviewedTestId, setReviewedTestId] = useState<string | null>(null);
 
-  // Loading states
+  // Loading & error states
   const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [loadingSubjectData, setLoadingSubjectData] = useState(false);
+  const [subjectError, setSubjectError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -178,6 +200,8 @@ export function StudentLearningPage() {
 
   // Load subjects & quota on mount
   const refreshSubjects = useCallback(async () => {
+    setLoadError(null);
+    setLoadingInitial(true);
     try {
       const [subs, q] = await Promise.all([getSubjects(), getStorageQuota()]);
       setSubjects(subs);
@@ -186,7 +210,11 @@ export function StudentLearningPage() {
         setActiveSubject(subs[0] ?? null);
       }
     } catch (err) {
-      console.error("Failed to load subjects:", err);
+      setLoadError(
+        err instanceof Error
+          ? err.message
+          : "Could not load Self-Directed Learning Hub."
+      );
     } finally {
       setLoadingInitial(false);
     }
@@ -198,6 +226,7 @@ export function StudentLearningPage() {
 
   // Load subject-specific data when active subject changes
   const loadSubjectData = useCallback(async (subjectId: string) => {
+    setSubjectError(null);
     setLoadingSubjectData(true);
     try {
       const [mats, tsts, mst] = await Promise.all([
@@ -209,8 +238,9 @@ export function StudentLearningPage() {
       setTests(tsts);
       setMastery(mst);
     } catch (err) {
-      console.error("Failed to load subject materials/tests:", err);
-      toast.push("Could not load subject data.", "error");
+      const message = err instanceof Error ? err.message : "Could not load subject data.";
+      setSubjectError(message);
+      toast.push(message, "error");
     } finally {
       setLoadingSubjectData(false);
     }
@@ -393,12 +423,14 @@ export function StudentLearningPage() {
   if (activeRunningTest) {
     return (
       <div className="page-container py-6">
-        <TestRunner
-          test={activeRunningTest}
-          onSubmit={handleSubmitTest}
-          onCancel={() => setActiveRunningTest(null)}
-          isSubmitting={isSubmitting}
-        />
+        <Suspense fallback={<SectionLoader label="Preparing assessment runner…" />}>
+          <TestRunner
+            test={activeRunningTest}
+            onSubmit={handleSubmitTest}
+            onCancel={() => setActiveRunningTest(null)}
+            isSubmitting={isSubmitting}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -416,12 +448,14 @@ export function StudentLearningPage() {
           <span>Back to Subject Workspace</span>
         </button>
 
-        <TestReviewScreen
-          result={activeReviewResult}
-          onRegenerateSmartTest={handleRegenerateSmartTest}
-          onBackToDashboard={() => setActiveReviewResult(null)}
-          isRegenerating={isRegenerating}
-        />
+        <Suspense fallback={<SectionLoader label="Rendering graded solution review…" />}>
+          <TestReviewScreen
+            result={activeReviewResult}
+            onRegenerateSmartTest={handleRegenerateSmartTest}
+            onBackToDashboard={() => setActiveReviewResult(null)}
+            isRegenerating={isRegenerating}
+          />
+        </Suspense>
       </div>
     );
   }
@@ -430,6 +464,21 @@ export function StudentLearningPage() {
     return (
       <div className="page-container">
         <SectionLoader label="Initializing Self-Directed Learning Hub…" />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="page-container space-y-4">
+        <PageHeader
+          eyebrow="Gemini RAG & LangGraph Studio"
+          title="AI Self-Learning & Adaptive Assessment Studio"
+        />
+        <InlineError
+          message={loadError}
+          onRetry={() => void refreshSubjects()}
+        />
       </div>
     );
   }
@@ -524,44 +573,51 @@ export function StudentLearningPage() {
         </Card>
       ) : loadingSubjectData ? (
         <SectionLoader label="Loading subject workspace data…" />
+      ) : subjectError && activeTab !== "institutional" && activeSubject ? (
+        <InlineError
+          message={subjectError}
+          onRetry={() => void loadSubjectData(activeSubject.id)}
+        />
       ) : (
         <div>
-          {activeTab === "materials" && (
-            <MaterialLibraryTab
-              materials={materials}
-              quota={quota}
-              onUpload={handleUploadMaterial}
-              onDeleteMaterial={handleDeleteMaterial}
-              isUploading={isUploading}
-            />
-          )}
+          <Suspense fallback={<SectionLoader label="Loading learning workspace module…" />}>
+            {activeTab === "materials" && (
+              <MaterialLibraryTab
+                materials={materials}
+                quota={quota}
+                onUpload={handleUploadMaterial}
+                onDeleteMaterial={handleDeleteMaterial}
+                isUploading={isUploading}
+              />
+            )}
 
-          {activeTab === "tests" && (
-            <PracticeTestsTab
-              tests={tests}
-              materials={materials}
-              onGenerateTest={handleGenerateTest}
-              onStartTest={handleStartTest}
-              onViewResult={handleViewResult}
-              onDeleteTest={handleDeleteTest}
-              isGenerating={isGenerating}
-              preselectedTopic={preselectedTopic}
-              onClearPreselectedTopic={() => setPreselectedTopic(null)}
-            />
-          )}
+            {activeTab === "tests" && (
+              <PracticeTestsTab
+                tests={tests}
+                materials={materials}
+                onGenerateTest={handleGenerateTest}
+                onStartTest={handleStartTest}
+                onViewResult={handleViewResult}
+                onDeleteTest={handleDeleteTest}
+                isGenerating={isGenerating}
+                preselectedTopic={preselectedTopic}
+                onClearPreselectedTopic={() => setPreselectedTopic(null)}
+              />
+            )}
 
-          {activeTab === "mastery" && (
-            <MasteryAnalyticsTab
-              mastery={mastery}
-              tests={tests}
-              onTakeTestForTopic={(topic) => {
-                setPreselectedTopic(topic);
-                setActiveTab("tests");
-              }}
-              onSmartRegenerateGaps={handleSmartRegenerateGaps}
-              isRegenerating={isRegenerating}
-            />
-          )}
+            {activeTab === "mastery" && (
+              <MasteryAnalyticsTab
+                mastery={mastery}
+                tests={tests}
+                onTakeTestForTopic={(topic) => {
+                  setPreselectedTopic(topic);
+                  setActiveTab("tests");
+                }}
+                onSmartRegenerateGaps={handleSmartRegenerateGaps}
+                isRegenerating={isRegenerating}
+              />
+            )}
+          </Suspense>
 
           {activeTab === "institutional" && (
             <div className="space-y-8">
@@ -618,8 +674,14 @@ export function StudentLearningPage() {
                   <p className="mb-3 text-sm text-muted">
                     Recent resource views and downloads help personalize recommendations.
                   </p>
-                  {activity.isLoading ? <p className="text-sm">Loading activity…</p> : null}
-                  {activity.error ? <InlineError message="Activity history could not be loaded." /> : null}
+                  {activity.isLoading ? <SectionLoader label="Loading learning activity…" /> : null}
+                  {activity.error ? (
+                    <InlineError
+                      message="Activity history could not be loaded."
+                      onRetry={() => void activity.refetch()}
+                      isRetrying={activity.isFetching}
+                    />
+                  ) : null}
                   <ul className="space-y-2 text-sm">
                     {(activity.data ?? []).map((item) => (
                       <li key={item.id} className="flex justify-between gap-3 border-b border-line pb-2">

@@ -7,6 +7,7 @@ and connects directly to Neon PostgreSQL via DATABASE_URL or POSTGRES_URL.
 from __future__ import annotations
 
 import importlib
+import json as _json
 import logging
 import os
 import sys
@@ -14,7 +15,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -59,13 +60,35 @@ def resolve_database_url() -> str:
     return f"sqlite+pysqlite:///{tmp_db}"
 
 
+def _default_allowed_origins() -> list[str]:
+    candidates = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "https://smart-education-platform-teal.vercel.app",
+    ]
+    for env_key in ("VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
+        val = (os.environ.get(env_key) or "").strip()
+        if val:
+            origin = val if val.startswith(("http://", "https://")) else f"https://{val}"
+            candidates.append(origin)
+    for raw in (os.environ.get("TRUSTED_FRONTEND_ORIGINS") or "").split(","):
+        item = raw.strip().rstrip("/")
+        if item and item != "*" and item.startswith(("http://", "https://")):
+            candidates.append(item)
+    return list(dict.fromkeys(o.rstrip("/") for o in candidates))
+
+
+ALLOWED_ORIGINS = _default_allowed_origins()
+
 DB_URL = resolve_database_url()
 os.environ["DATABASE_URL"] = DB_URL
 os.environ["ENVIRONMENT"] = os.environ.get("ENVIRONMENT", "development")
 os.environ["JWT_ISSUER"] = os.environ.get("JWT_ISSUER", "http://localhost:8001")
 os.environ["JWT_KEY_ID"] = os.environ.get("JWT_KEY_ID", "identity-dev-1")
-os.environ["TRUSTED_FRONTEND_ORIGINS"] = "*"
-os.environ["CORS_ORIGINS"] = '["*"]'
+os.environ["TRUSTED_FRONTEND_ORIGINS"] = ",".join(ALLOWED_ORIGINS)
+os.environ["CORS_ORIGINS"] = _json.dumps(ALLOWED_ORIGINS)
+if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"):
+    os.environ.setdefault("REFRESH_COOKIE_SECURE", "true")
 os.environ["IDENTITY_SERVICE_BASE_URL"] = "http://localhost:8001"
 os.environ["JWT_JWKS_URL"] = "http://localhost:8001/.well-known/jwks.json"
 os.environ["SECURITY_TOKEN_PEPPER"] = os.environ.get("SECURITY_TOKEN_PEPPER", "smartedu-serverless-pepper-key-2026")
@@ -129,19 +152,27 @@ MC4CAQAwBQYDK2VwBCIEIDVLMLM6bXaAj573iZi2xnThD3BUh29sb9Q7XejI4Heb
 def setup_jwt_keys():
     """Ensure persistent RSA private key and Ed25519 keys exist across all serverless invocations."""
     import tempfile
+
+    env_rsa_pem = (os.environ.get("JWT_PRIVATE_KEY_PEM") or "").strip()
     local_key = ROOT / "services" / "identity-service" / ".secrets" / "identity-private.pem"
-    if local_key.exists():
+    if env_rsa_pem:
+        tmp_key = Path(tempfile.gettempdir()) / "smartedu-identity-private.pem"
+        tmp_key.write_text(env_rsa_pem, encoding="utf-8")
+        os.environ["JWT_PRIVATE_KEY_FILE"] = str(tmp_key)
+    elif local_key.exists():
         os.environ["JWT_PRIVATE_KEY_FILE"] = str(local_key)
     else:
         tmp_key = Path(tempfile.gettempdir()) / "smartedu-identity-private.pem"
         tmp_key.write_text(STATIC_PRIVATE_KEY_PEM.strip(), encoding="utf-8")
         os.environ["JWT_PRIVATE_KEY_FILE"] = str(tmp_key)
 
+    env_ed_pem = (os.environ.get("INTERNAL_SERVICE_PRIVATE_KEY_PEM") or "").strip()
+    ed_pem = env_ed_pem or STATIC_ED25519_PRIVATE_KEY_PEM.strip()
     tmp_ed_key = Path(tempfile.gettempdir()) / "smartedu-internal-ed25519-private.pem"
-    tmp_ed_key.write_text(STATIC_ED25519_PRIVATE_KEY_PEM.strip(), encoding="utf-8")
+    tmp_ed_key.write_text(ed_pem, encoding="utf-8")
     os.environ["INTERNAL_SERVICE_PRIVATE_KEY_FILE"] = str(tmp_ed_key)
-    os.environ["INTERNAL_SERVICE_PRIVATE_KEY_PEM"] = STATIC_ED25519_PRIVATE_KEY_PEM.strip()
-    os.environ["INTERNAL_SERVICE_KEY_ID"] = "internal-service-key-1"
+    os.environ["INTERNAL_SERVICE_PRIVATE_KEY_PEM"] = ed_pem
+    os.environ["INTERNAL_SERVICE_KEY_ID"] = os.environ.get("INTERNAL_SERVICE_KEY_ID", "internal-service-key-1")
 
 
 setup_jwt_keys()
@@ -149,101 +180,363 @@ setup_jwt_keys()
 
 def get_in_memory_jwks() -> dict:
     try:
-        service_path = str(ROOT / "services" / "identity-service")
-        if service_path not in sys.path:
-            sys.path.insert(0, service_path)
-        for k in list(sys.modules.keys()):
-            if k == "app" or k.startswith("app."):
-                sys.modules.pop(k, None)
-        from app.security.jwt import public_jwks
-        return public_jwks()
+        import jwt as _jwt
+        from cryptography.hazmat.primitives import serialization as _ser
+
+        key_path = Path(os.environ["JWT_PRIVATE_KEY_FILE"])
+        priv = _ser.load_pem_private_key(key_path.read_bytes(), password=None)
+        jwk = _jwt.algorithms.RSAAlgorithm.to_jwk(priv.public_key(), as_dict=True)
+        jwk.update(kid=os.environ.get("JWT_KEY_ID", "identity-dev-1"), use="sig", alg="RS256")
+        return {"keys": [jwk]}
     except Exception as exc:
         logger.warning("Could not generate in-memory JWKS: %s", exc)
         return {"keys": []}
 
 
-# Monkeypatch httpx and PyJWKClient for zero-network cross-service auth in serverless
+_IN_PROCESS_ENGINES: dict[str, Any] = {}
+
+
+def _gateway_engine():
+    url = os.environ.get("DATABASE_URL") or DB_URL
+    eng = _IN_PROCESS_ENGINES.get(url)
+    if eng is None:
+        from smartedu_infra import DatabaseSettings, build_engine
+
+        eng = build_engine(DatabaseSettings(DATABASE_URL=url, DB_APPLICATION_NAME="smartedu-gateway"))
+        _IN_PROCESS_ENGINES[url] = eng
+    return eng
+
+
+def _gateway_tables():
+    from sqlalchemy import Boolean, Column, Integer, MetaData, String, Table, Uuid
+
+    md = MetaData()
+    return {
+        "users": Table("users", md, Column("id", Uuid(as_uuid=True), primary_key=True), Column("is_active", Boolean), Column("auth_version", Integer)),
+        "roles": Table("roles", md, Column("id", Uuid(as_uuid=True), primary_key=True), Column("name", String)),
+        "user_roles": Table("user_roles", md, Column("user_id", Uuid(as_uuid=True)), Column("role_id", Uuid(as_uuid=True))),
+        "permissions": Table("permissions", md, Column("id", Uuid(as_uuid=True), primary_key=True), Column("code", String)),
+        "role_permissions": Table("role_permissions", md, Column("role_id", Uuid(as_uuid=True)), Column("permission_id", Uuid(as_uuid=True))),
+        "sections": Table("sections", md, Column("id", Uuid(as_uuid=True), primary_key=True), Column("course_id", Uuid(as_uuid=True)), Column("semester_id", Uuid(as_uuid=True)), Column("is_active", Boolean)),
+        "enrollments": Table("enrollments", md, Column("id", Uuid(as_uuid=True), primary_key=True), Column("student_profile_id", Uuid(as_uuid=True)), Column("section_id", Uuid(as_uuid=True)), Column("status", String)),
+        "student_profiles": Table("student_academic_profiles", md, Column("id", Uuid(as_uuid=True), primary_key=True), Column("external_user_id", Uuid(as_uuid=True)), Column("student_number", String), Column("is_active", Boolean)),
+        "teacher_profiles": Table("teacher_academic_profiles", md, Column("id", Uuid(as_uuid=True), primary_key=True), Column("external_user_id", Uuid(as_uuid=True)), Column("is_active", Boolean)),
+        "teacher_assignments": Table("teacher_assignments", md, Column("id", Uuid(as_uuid=True), primary_key=True), Column("teacher_profile_id", Uuid(as_uuid=True)), Column("section_id", Uuid(as_uuid=True)), Column("is_active", Boolean)),
+    }
+
+
+_GATEWAY_TABLES = None
+
+
+def _tables():
+    global _GATEWAY_TABLES
+    if _GATEWAY_TABLES is None:
+        _GATEWAY_TABLES = _gateway_tables()
+    return _GATEWAY_TABLES
+
+
+def _verify_access_status_in_process(headers: dict[str, str] | None) -> tuple[int, dict[str, Any]]:
+    """Verify bearer JWT signature, active state, auth_version, roles, and permissions via DB without mutating sys.modules."""
+    auth_header = ""
+    if headers:
+        for k, v in headers.items():
+            if k.lower() == "authorization":
+                auth_header = v
+                break
+    if not auth_header.startswith("Bearer "):
+        return 401, {"detail": "Missing or invalid access token."}
+
+    token = auth_header[7:].strip()
+    try:
+        import uuid as _uuid
+
+        import jwt
+        from smartedu_security import decode_service_access_jwt
+        from sqlalchemy import select
+
+        header = jwt.get_unverified_header(token)
+        kid = header.get("kid")
+        jwks = get_in_memory_jwks()
+        key_data = next(k for k in jwks.get("keys", []) if k.get("kid") == kid)
+        public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key_data)
+        payload = decode_service_access_jwt(
+            token,
+            public_key,
+            issuer=os.environ.get("JWT_ISSUER", "http://localhost:8001"),
+            audience=os.environ.get("JWT_ACCESS_AUDIENCE", "smart-education-api"),
+            algorithms=("RS256",),
+            leeway=int(os.environ.get("JWT_LEEWAY_SECONDS", "5")),
+        )
+        user_id = _uuid.UUID(payload["sub"])
+        t = _tables()
+
+        with _gateway_engine().connect() as conn:
+            row = conn.execute(
+                select(t["users"].c.is_active, t["users"].c.auth_version).where(t["users"].c.id == user_id)
+            ).first()
+            if row is None or not bool(row.is_active):
+                return 401, {"detail": "User account is unavailable."}
+            if int(payload.get("auth_version", 0)) != int(row.auth_version):
+                return 401, {"detail": "Access token has been invalidated."}
+
+            role_rows = conn.execute(
+                select(t["roles"].c.name)
+                .select_from(t["roles"].join(t["user_roles"], t["user_roles"].c.role_id == t["roles"].c.id))
+                .where(t["user_roles"].c.user_id == user_id)
+            ).all()
+            live_roles = {str(r.name).lower() for r in role_rows}
+            perm_rows = conn.execute(
+                select(t["permissions"].c.code)
+                .select_from(
+                    t["permissions"]
+                    .join(t["role_permissions"], t["role_permissions"].c.permission_id == t["permissions"].c.id)
+                    .join(t["user_roles"], t["user_roles"].c.role_id == t["role_permissions"].c.role_id)
+                )
+                .where(t["user_roles"].c.user_id == user_id)
+            ).all()
+            live_perms = {str(p.code) for p in perm_rows}
+
+            token_roles = {str(r).lower() for r in payload.get("roles", [])}
+            token_perms = set(payload.get("permissions", []))
+            if token_roles != live_roles or token_perms != live_perms:
+                return 401, {"detail": "Access token claims are stale."}
+
+            return 200, {
+                "active": True,
+                "user_id": str(user_id),
+                "roles": sorted(live_roles),
+            }
+    except Exception:
+        return 401, {"detail": "Invalid or expired access token."}
+
+
+def _resolve_academic_in_process(url: str, headers: dict[str, str] | None, params: dict[str, Any] | None = None) -> tuple[int, Any]:
+    """Resolve internal Academic checks directly against PostgreSQL/SQLite without mutating sys.modules."""
+    import re as _re
+    import uuid as _uuid
+    from urllib.parse import parse_qs, urlparse
+
+    from sqlalchemy import func, select
+
+    status_code, actor_info = _verify_access_status_in_process(headers)
+    is_internal = "/internal/" in url
+    if not is_internal and status_code != 200:
+        return 401, {"detail": "Authentication required."}
+
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+    if params:
+        for k, v in params.items():
+            query[str(k)] = [str(v)]
+    path = parsed.path
+    t = _tables()
+    sec, enr, sp, tp, ta = t["sections"], t["enrollments"], t["student_profiles"], t["teacher_profiles"], t["teacher_assignments"]
+
+    with _gateway_engine().connect() as conn:
+        def _teacher_has_section(uid: _uuid.UUID, sec_id: _uuid.UUID) -> bool:
+            row = conn.execute(
+                select(ta.c.id)
+                .select_from(ta.join(tp, tp.c.id == ta.c.teacher_profile_id))
+                .where(
+                    tp.c.external_user_id == uid,
+                    tp.c.is_active.is_(True),
+                    ta.c.section_id == sec_id,
+                    ta.c.is_active.is_(True),
+                )
+                .limit(1)
+            ).first()
+            return row is not None
+
+        def _student_sections(uid: _uuid.UUID) -> list[Any]:
+            return conn.execute(
+                select(sec.c.id, sec.c.course_id, sec.c.semester_id, sec.c.is_active)
+                .distinct()
+                .select_from(
+                    sec.join(enr, enr.c.section_id == sec.c.id).join(sp, sp.c.id == enr.c.student_profile_id)
+                )
+                .where(
+                    sp.c.external_user_id == uid,
+                    sp.c.is_active.is_(True),
+                    func.upper(enr.c.status) == "ENROLLED",
+                    sec.c.is_active.is_(True),
+                )
+                .order_by(sec.c.id)
+            ).all()
+
+        def _teacher_sections(uid: _uuid.UUID) -> list[Any]:
+            return conn.execute(
+                select(sec.c.id, sec.c.course_id, sec.c.semester_id, sec.c.is_active)
+                .distinct()
+                .select_from(
+                    sec.join(ta, ta.c.section_id == sec.c.id).join(tp, tp.c.id == ta.c.teacher_profile_id)
+                )
+                .where(
+                    tp.c.external_user_id == uid,
+                    tp.c.is_active.is_(True),
+                    ta.c.is_active.is_(True),
+                    sec.c.is_active.is_(True),
+                )
+                .order_by(sec.c.id)
+            ).all()
+
+        actor_roles = set(actor_info.get("roles", [])) if status_code == 200 else set()
+        actor_uid = _uuid.UUID(actor_info["user_id"]) if status_code == 200 else None
+        is_priv = "admin" in actor_roles
+
+        m = _re.search(r"/teachers/([0-9a-fA-F-]+)/sections/([0-9a-fA-F-]+)/assignment", path)
+        if m:
+            uid, sec_id = _uuid.UUID(m.group(1)), _uuid.UUID(m.group(2))
+            if not is_priv and actor_uid != uid:
+                return 403, {"detail": "Forbidden"}
+            assigned = _teacher_has_section(uid, sec_id)
+            return 200, {"assigned": assigned, "valid": assigned}
+
+        if "teacher-assignments/validate" in path:
+            uid = _uuid.UUID(query["teacher_user_id"][0])
+            sec_id = _uuid.UUID(query["section_id"][0])
+            if not is_priv and actor_uid != uid:
+                return 403, {"detail": "Forbidden"}
+            assigned = _teacher_has_section(uid, sec_id)
+            return 200, {"assigned": assigned, "valid": assigned}
+
+        m = _re.search(r"/students/([0-9a-fA-F-]+)/sections/([0-9a-fA-F-]+)/enrollment", path)
+        if m:
+            uid, sec_id = _uuid.UUID(m.group(1)), _uuid.UUID(m.group(2))
+            if not is_priv and actor_uid != uid:
+                return 403, {"detail": "Forbidden"}
+            enrolled = any(s.id == sec_id for s in _student_sections(uid))
+            return 200, {"enrolled": enrolled, "valid": enrolled}
+
+        if "enrollments/validate" in path:
+            uid = _uuid.UUID(query["student_user_id"][0])
+            sec_id = _uuid.UUID(query["section_id"][0])
+            if not is_priv and actor_uid != uid:
+                return 403, {"detail": "Forbidden"}
+            enrolled = any(s.id == sec_id for s in _student_sections(uid))
+            return 200, {"enrolled": enrolled, "valid": enrolled}
+
+        m = _re.search(r"/internal/access/students/([0-9a-fA-F-]+)/targets", path)
+        if m:
+            uid = _uuid.UUID(m.group(1))
+            sections = _student_sections(uid)
+            return 200, {
+                "section_ids": [str(s.id) for s in sections],
+                "course_ids": sorted({str(s.course_id) for s in sections}),
+            }
+
+        m = _re.search(r"/students/([0-9a-fA-F-]+)/sections/?$", path)
+        if m:
+            uid = _uuid.UUID(m.group(1))
+            if not is_priv and actor_uid != uid:
+                return 403, {"detail": "Forbidden"}
+            sections = _student_sections(uid)
+            return 200, {"section_ids": [str(s.id) for s in sections]}
+
+        m = _re.search(r"/internal/access/(teachers|students)/([0-9a-fA-F-]+)/(courses|sections)/([0-9a-fA-F-]+)", path)
+        if m:
+            kind, uid, target_kind, target_id = m.group(1), _uuid.UUID(m.group(2)), m.group(3), _uuid.UUID(m.group(4))
+            rows = _teacher_sections(uid) if kind == "teachers" else _student_sections(uid)
+            allowed = any((s.course_id if target_kind == "courses" else s.id) == target_id for s in rows)
+            return 200, {"allowed": allowed}
+
+        m = _re.search(r"/sections/([0-9a-fA-F-]+)/roster", path)
+        if m:
+            sec_id = _uuid.UUID(m.group(1))
+            if not is_internal and not is_priv and (actor_uid is None or not _teacher_has_section(actor_uid, sec_id)):
+                return 403, {"detail": "Forbidden"}
+            rows = conn.execute(
+                select(enr.c.id.label("enrollment_id"), sp.c.id.label("sp_id"), sp.c.external_user_id, sp.c.student_number)
+                .select_from(enr.join(sp, sp.c.id == enr.c.student_profile_id))
+                .where(enr.c.section_id == sec_id, func.upper(enr.c.status) == "ENROLLED")
+            ).all()
+            return 200, {
+                "section_id": str(sec_id),
+                "total": len(rows),
+                "limit": 1000,
+                "offset": 0,
+                "students": [
+                    {
+                        "enrollment_id": str(r.enrollment_id),
+                        "student_profile_id": str(r.sp_id),
+                        "external_user_id": str(r.external_user_id),
+                        "student_number": r.student_number,
+                    }
+                    for r in rows
+                ],
+            }
+
+        m = _re.search(r"/sections/([0-9a-fA-F-]+)$", path)
+        if m:
+            sec_id = _uuid.UUID(m.group(1))
+            sec_row = conn.execute(
+                select(sec.c.id, sec.c.course_id, sec.c.semester_id, sec.c.is_active).where(sec.c.id == sec_id)
+            ).first()
+            if sec_row is None:
+                return 404, {"detail": "Section not found."}
+            if not is_priv:
+                if "teacher" in actor_roles and actor_uid and _teacher_has_section(actor_uid, sec_id):
+                    pass
+                elif "student" in actor_roles and actor_uid and any(s.id == sec_id for s in _student_sections(actor_uid)):
+                    pass
+                else:
+                    return 403, {"detail": "Forbidden"}
+            return 200, {
+                "id": str(sec_row.id),
+                "course_id": str(sec_row.course_id),
+                "semester_id": str(sec_row.semester_id),
+                "is_active": bool(sec_row.is_active),
+            }
+        return 404, {"detail": "Unknown internal academic route."}
+
+
+# In-process JWKS, access-status, and academic relationship resolver for serverless calls
 try:
     import httpx
     from jwt import PyJWKClient
 
     _orig_httpx_get = httpx.get
     _orig_client_get = httpx.Client.get
+    _orig_async_get = httpx.AsyncClient.get
 
-    def _mock_auth_response(url, kwargs):
+    def _in_process_response(url, kwargs):
         u = str(url)
         req = httpx.Request("GET", u)
         if "jwks.json" in u:
             return httpx.Response(200, json=get_in_memory_jwks(), request=req)
         if "access-status" in u:
-            headers = kwargs.get("headers") or {}
-            auth = headers.get("Authorization", "")
-            uid = "anonymous"
-            if auth.startswith("Bearer "):
-                try:
-                    import jwt
-                    payload = jwt.decode(auth[7:], options={"verify_signature": False})
-                    uid = payload.get("sub", "anonymous")
-                except Exception:
-                    pass
-            return httpx.Response(200, json={"active": True, "user_id": uid, "eligible": True}, request=req)
-        # In-process mock for cross-service calls to Academic Service (port 8002) in serverless
-        if "8002" in u or "academic" in u or "/sections" in u or "targets" in u or "internal/access" in u:
-            if "student-sections" in u or "targets" in u:
-                return httpx.Response(200, json={"section_ids": [], "course_ids": []}, request=req)
-            if "teacher-assignments" in u:
-                return httpx.Response(200, json={"valid": True, "assigned": True}, request=req)
-            if "student-enrollments" in u or "internal/access" in u:
-                return httpx.Response(200, json={"valid": True, "enrolled": True, "allowed": True}, request=req)
-            if "/sections/" in u:
-                import uuid as _uuid
-                sec_id = u.rstrip("/").split("/")[-1]
-                try:
-                    sec_id_val = str(_uuid.UUID(sec_id))
-                except Exception:
-                    sec_id_val = str(_uuid.uuid4())
-                # Return valid section structure to satisfy schema
-                return httpx.Response(
-                    200,
-                    json={
-                        "id": sec_id_val,
-                        "course_id": str(_uuid.uuid4()),
-                        "semester_id": str(_uuid.uuid4()),
-                        "is_active": True,
-                    },
-                    request=req,
-                )
-            return httpx.Response(200, json=[], request=req)
+            code, body = _verify_access_status_in_process(kwargs.get("headers"))
+            return httpx.Response(code, json=body, request=req)
+        if any(seg in u for seg in (":8002/", "academic-service", "/teacher-assignments/", "/enrollments/validate", "/internal/access/", "/students/", "/sections/")):
+            if u.startswith(("http://localhost:8002", "http://127.0.0.1:8002", "http://academic")):
+                code, body = _resolve_academic_in_process(u, kwargs.get("headers"), kwargs.get("params"))
+                return httpx.Response(code, json=body, request=req)
         return None
 
     def patched_httpx_get(url, *args, **kwargs):
-        mocked = _mock_auth_response(url, kwargs)
-        if mocked is not None:
-            return mocked
-        try:
-            return _orig_httpx_get(url, *args, **kwargs)
-        except Exception:
-            if "jwks.json" in str(url):
-                return httpx.Response(200, json=get_in_memory_jwks(), request=httpx.Request("GET", str(url)))
-            raise
+        resolved = _in_process_response(url, kwargs)
+        if resolved is not None:
+            return resolved
+        return _orig_httpx_get(url, *args, **kwargs)
 
     def patched_client_get(self, url, *args, **kwargs):
-        mocked = _mock_auth_response(url, kwargs)
-        if mocked is not None:
-            return mocked
-        try:
-            return _orig_client_get(self, url, *args, **kwargs)
-        except Exception:
-            if "jwks.json" in str(url):
-                return httpx.Response(200, json=get_in_memory_jwks(), request=httpx.Request("GET", str(url)))
-            raise
+        resolved = _in_process_response(url, kwargs)
+        if resolved is not None:
+            return resolved
+        return _orig_client_get(self, url, *args, **kwargs)
+
+    async def patched_async_get(self, url, *args, **kwargs):
+        resolved = _in_process_response(url, kwargs)
+        if resolved is not None:
+            return resolved
+        return await _orig_async_get(self, url, *args, **kwargs)
 
     httpx.get = patched_httpx_get
     httpx.Client.get = patched_client_get
+    httpx.AsyncClient.get = patched_async_get
     PyJWKClient.fetch_data = lambda self: get_in_memory_jwks()
-    logger.info("Installed in-process JWKS and auth interceptors for serverless microservices.")
+    logger.info("Installed strict in-process JWKS and relationship resolvers for serverless microservices.")
 except Exception as exc:
-    logger.warning("Could not patch in-process auth: %s", exc)
+    logger.warning("Could not install in-process resolvers: %s", exc)
 
 # ==============================================================================
 # 4. Database Bootstrap & Seeding (Auto-Migration & Seed on Startup)
@@ -461,13 +754,13 @@ async def vercel_path_fix_middleware(request: Request, call_next):
 
     return await call_next(request)
 
-# CORS Middleware (Allows credentials, cookies, and dynamic origins)
+# CORS Middleware (Strict explicit origins with credentials support)
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^https?://.*",
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Idempotency-Key"],
 )
 
 # Services mapping: {url_slug: directory_name}
@@ -497,26 +790,6 @@ for slug, service_dir in SERVICES_MAP:
         app.include_router(router, prefix=prefix)
         if slug not in mounted_services:
             mounted_services.append(slug)
-
-# Serverless lockout guard override (Memory store when Redis is absent)
-try:
-    if not os.environ.get("REDIS_URL") and not os.environ.get("REDIS_CACHE_URL"):
-        from smartedu_security import LoginSecurityGuard
-        from smartedu_security.lockout import MemoryLockoutStore
-
-        id_service_path = str(ROOT / "services" / "identity-service")
-        if id_service_path not in sys.path:
-            sys.path.insert(0, id_service_path)
-        for k in list(sys.modules.keys()):
-            if k == "app" or k.startswith("app."):
-                sys.modules.pop(k, None)
-
-        from app.api.v1.endpoints.auth import login_guard
-        memory_guard = LoginSecurityGuard(MemoryLockoutStore())
-        app.dependency_overrides[login_guard] = lambda: memory_guard
-        logger.info("Configured in-memory lockout guard for serverless.")
-except Exception as exc:
-    logger.warning("Lockout override note: %s", exc)
 
 logger.info("Mounted services on Vercel: %s", mounted_services)
 
@@ -560,29 +833,5 @@ async def jwks_endpoint():
 @app.get("/api/v1/auth/access-status")
 @app.get("/api/v1/identity/auth/access-status")
 async def access_status_endpoint(request: Request):
-    auth = request.headers.get("Authorization", "")
-    uid = "anonymous"
-    if auth.startswith("Bearer "):
-        try:
-            import jwt
-            payload = jwt.decode(auth[7:], options={"verify_signature": False})
-            uid = payload.get("sub", "anonymous")
-        except Exception:
-            pass
-    return {"active": True, "user_id": uid, "eligible": True}
-
-
-# Global OPTIONS catch-all for CORS preflights and methods probing
-@app.options("/{full_path:path}")
-async def global_options_catchall(full_path: str, request: Request):
-    origin = request.headers.get("origin") or "*"
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key, Accept, Origin",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "86400",
-        },
-    )
+    code, body = _verify_access_status_in_process(dict(request.headers))
+    return JSONResponse(status_code=code, content=body, headers={"Cache-Control": "no-store"})

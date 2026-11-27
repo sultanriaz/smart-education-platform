@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import {
   CheckCircle,
   AlertCircle,
@@ -9,8 +9,14 @@ import {
   Target,
   TrendingDown,
 } from "lucide-react";
+import { SectionLoader } from "../../../components/ui/SectionLoader";
 import type { SelfLearningTest, SubjectMasteryOut } from "../types";
-import { TopicMasteryRadarChart } from "./TopicMasteryRadarChart";
+
+const TopicMasteryRadarChart = lazy(() =>
+  import("./TopicMasteryRadarChart").then((module) => ({
+    default: module.TopicMasteryRadarChart,
+  }))
+);
 
 interface MasteryAnalyticsTabProps {
   mastery: SubjectMasteryOut | null;
@@ -118,10 +124,12 @@ export const MasteryAnalyticsTab: React.FC<MasteryAnalyticsTabProps> = ({
           </div>
 
           {mastery.topics.length > 0 ? (
-            <TopicMasteryRadarChart
-              topics={mastery.topics}
-              onSelectTopic={(topic) => onTakeTestForTopic(topic)}
-            />
+            <Suspense fallback={<SectionLoader label="Rendering topic mastery radar…" />}>
+              <TopicMasteryRadarChart
+                topics={mastery.topics}
+                onSelectTopic={(topic) => onTakeTestForTopic(topic)}
+              />
+            </Suspense>
           ) : (
             <p className="text-xs text-muted py-8 text-center">
               Submit at least one practice test to plot your syllabus radar polygon.

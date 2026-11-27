@@ -85,7 +85,7 @@ export function WorkspaceShell() {
       <nav aria-label="Primary navigation" className="workspace-nav">
         {items.map(item => {
           const Icon = iconFor(item.label);
-          return <NavLink key={item.path} to={item.path} end onClick={closeMenus} title={collapsed ? item.label : undefined} className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}><Icon size={18} /><span>{item.label}</span>{item.label === "Notifications" && Boolean(unread.data) && <small>{unread.data}</small>}</NavLink>;
+          return <NavLink key={item.path} to={item.path} end={item.path === `/app/${role}`} onClick={closeMenus} title={collapsed ? item.label : undefined} className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}><Icon size={18} /><span>{item.label}</span>{item.label === "Notifications" && Boolean(unread.data) && <small>{unread.data}</small>}</NavLink>;
         })}
       </nav>
       <div className="workspace-help"><LifeBuoy size={20} /><strong>A little help goes a long way.</strong><p>Find your profile and account details in one place.</p><Link to="/app/profile" onClick={closeMenus}>Account settings <ArrowUpRight size={15} /></Link></div>

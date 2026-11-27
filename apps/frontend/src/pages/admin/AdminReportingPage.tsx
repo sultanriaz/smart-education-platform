@@ -61,7 +61,14 @@ export function AdminReportingPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Admin" title="Reporting & analytics" />
-        <InlineError message="Reporting data could not be loaded." />
+        <InlineError
+          message="Reporting data could not be loaded."
+          onRetry={() => {
+            void overview.refetch();
+            void snapshots.refetch();
+          }}
+          isRetrying={overview.isFetching || snapshots.isFetching}
+        />
       </div>
     );
   }
@@ -171,7 +178,11 @@ export function AdminReportingPage() {
           {metricRows.isLoading ? (
             <SectionLoader label="Loading metric rows…" />
           ) : metricRows.error ? (
-            <InlineError message="Metric rows could not be loaded." />
+            <InlineError
+              message="Metric rows could not be loaded."
+              onRetry={() => void metricRows.refetch()}
+              isRetrying={metricRows.isFetching}
+            />
           ) : metricRows.data?.length ? (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] text-left text-sm">

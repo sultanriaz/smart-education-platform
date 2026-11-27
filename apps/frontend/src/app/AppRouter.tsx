@@ -13,6 +13,7 @@ const StudentLoginPage = lazy(() => import("../pages/StudentLoginPage").then(mod
 const FacultyLoginPage = lazy(() => import("../pages/FacultyLoginPage").then(module => ({ default: module.FacultyLoginPage })));
 const CampusExplorerPage = lazy(() => import("../pages/CampusExplorerPage").then(module => ({ default: module.CampusExplorerPage })));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage").then(module => ({ default: module.NotFoundPage })));
+const ServerErrorPage = lazy(() => import("../pages/ServerErrorPage").then(module => ({ default: module.ServerErrorPage })));
 const NotificationsPage = lazy(() => import("../pages/NotificationsPage").then(module => ({ default: module.NotificationsPage })));
 const ProfilePage = lazy(() => import("../pages/ProfilePage").then(module => ({ default: module.ProfilePage })));
 const RegisterPage = lazy(() => import("../pages/RegisterPage").then(module => ({ default: module.RegisterPage })));
@@ -69,6 +70,8 @@ export function AppRouter() {
         element={<EmailVerificationRequestPage />}
       />
       <Route path="/forbidden" element={<ForbiddenPage />} />
+      <Route path="/500" element={<ServerErrorPage />} />
+      <Route path="/error" element={<ServerErrorPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/app" element={<AppShell />}>

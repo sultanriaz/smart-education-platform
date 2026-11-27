@@ -75,7 +75,16 @@ describe("StudentCourseDetailPage", () => {
     expect(screen.getByText("Attendance Type:")).toBeInTheDocument();
     expect(screen.getByText("Start Time")).toBeInTheDocument();
     expect(screen.getByText("End Time")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Present" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Absent" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Late" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Excused" })).not.toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("button", { name: "Lab" }));
+    expect(screen.getAllByText("PRESENT").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("ABSENT").length).toBeGreaterThanOrEqual(1);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "All" })[0]!);
     fireEvent.click(screen.getByRole("button", { name: "Absent" }));
     expect(screen.getAllByText("ABSENT").length).toBeGreaterThanOrEqual(1);
 
@@ -104,8 +113,21 @@ describe("StudentCourseDetailPage", () => {
 
       fireEvent.click(screen.getByRole("button", { name: "Marks" }));
       expect(screen.getByRole("heading", { name: "Marks" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Quizzes" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Assignments" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Mid Term" })).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Final Term" })).toBeInTheDocument();
+      expect(screen.getByText("Quiz 1")).toBeInTheDocument();
+      expect(screen.getByText("Ass 1")).toBeInTheDocument();
+      expect(screen.queryByText(/Pending/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Upgrade/i)).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: "Assignments" }));
+      expect(screen.queryByText("Pending")).not.toBeInTheDocument();
+      expect(screen.queryByText("Graded")).not.toBeInTheDocument();
+      expect(screen.queryByText(/Weightage:/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Marks:/i)).not.toBeInTheDocument();
+
       const fileInput = screen.getByLabelText("Select assignment file to upload");
       const [firstUpload] = screen.getAllByRole("button", { name: /Upload submission for/i });
       if (!firstUpload) throw new Error("Expected at least one Upload button");
@@ -121,6 +143,14 @@ describe("StudentCourseDetailPage", () => {
       fireEvent.click(firstDownload);
       expect(createObjectUrlSpy).toHaveBeenCalledTimes(1);
       expect(anchorClickSpy).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(screen.getByRole("button", { name: "Quizzes" }));
+      expect(screen.queryByText("Graded")).not.toBeInTheDocument();
+      expect(screen.queryByText(/Topics:/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Marks:/i)).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "Lecture Hub" }));
+      expect(screen.queryByText("Recorded Lectures")).not.toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: "Resources" }));
       expect(screen.getByRole("heading", { name: "Resources" })).toBeInTheDocument();

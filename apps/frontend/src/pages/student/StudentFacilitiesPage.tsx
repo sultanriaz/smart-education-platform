@@ -15,7 +15,7 @@ import {
   useFacilities
 } from "../../features/student/hooks";
 import { DynamicSpaceFinder } from "../../components/facilities/DynamicSpaceFinder";
-import { Sparkles, CalendarDays, Building2 } from "lucide-react";
+import { Sparkles, Building2 } from "lucide-react";
 
 export function StudentFacilitiesPage() {
   const facilities = useFacilities();
@@ -79,7 +79,14 @@ export function StudentFacilitiesPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Student" title="Campus Space & Facility Navigator" />
-        <InlineError message="Facility information could not be loaded." />
+        <InlineError
+          message="Facility information could not be loaded."
+          onRetry={() => {
+            void facilities.refetch();
+            void bookings.refetch();
+          }}
+          isRetrying={facilities.isFetching || bookings.isFetching}
+        />
       </div>
     );
   }

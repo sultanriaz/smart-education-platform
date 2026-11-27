@@ -9,13 +9,13 @@ import { SectionLoader } from "../../components/ui/SectionLoader";
 import { InlineError } from "../../components/ui/InlineError";
 import { useToast } from "../../components/ui/useToast";
 import { financeApi, Invoice, InvoiceInstallment } from "../../features/finance/api";
-import { CreditCard, CheckCircle2, AlertCircle, FileText, Download, ShieldCheck } from "lucide-react";
+import { AlertCircle, CreditCard, ShieldCheck, X } from "lucide-react";
 
 export function StudentFinancePage() {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const { data: portal, isLoading, error } = useQuery({
+  const { data: portal, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: ["student", "finance", "portal"],
     queryFn: () => financeApi.getStudentPortalOverview()
   });
@@ -24,7 +24,6 @@ export function StudentFinancePage() {
   const [selectedInstallment, setSelectedInstallment] = useState<InvoiceInstallment | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>("jazzcash");
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const processPaymentMutation = useMutation({
     mutationFn: async () => {
@@ -77,7 +76,11 @@ export function StudentFinancePage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Student" title="Fee & Payments" />
-        <InlineError message="Could not load your student financial profile." />
+        <InlineError
+          message="Could not load your student financial profile."
+          onRetry={() => void refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }
@@ -160,7 +163,7 @@ export function StudentFinancePage() {
                   <div className="text-xs text-muted">Balance: PKR {Number(inv.balance_amount).toLocaleString()}</div>
                   {inv.status !== "PAID" && (
                     <Button
-                      className="mt-2 text-xs px-3 py-1 min-h-8"
+                      className="mt-2 text-xs px-3 py-2"
                       onClick={() => handleOpenPayment(inv)}
                     >
                       Pay Full Balance
@@ -207,7 +210,7 @@ export function StudentFinancePage() {
                               {inst.status !== "PAID" && (
                                 <Button
                                   variant="secondary"
-                                  className="text-xs px-2.5 py-1 min-h-8"
+                                  className="text-xs px-3 py-2"
                                   onClick={() => handleOpenPayment(inv, inst)}
                                 >
                                   Pay Installment
@@ -275,10 +278,12 @@ export function StudentFinancePage() {
                 Simulated Fee Payment Checkout
               </h3>
               <button
-                className="text-muted hover:text-foreground text-sm font-bold"
+                type="button"
+                aria-label="Close payment modal"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:text-ink transition"
                 onClick={() => setIsPayModalOpen(false)}
               >
-                ✕
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 

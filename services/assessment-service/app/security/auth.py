@@ -8,9 +8,10 @@ import httpx
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from smartedu_security import decode_service_access_jwt
+from smartedu_security.live_permissions import live_permission
 
 from app.core.config import settings
-from smartedu_security.live_permissions import live_permission
 
 bearer = HTTPBearer(auto_error=True)
 _jwks_cache: tuple[float, dict] | None = None
@@ -45,26 +46,23 @@ def current_principal(
         jwks = _jwks()
         key_data = next(k for k in jwks["keys"] if k.get("kid") == header.get("kid"))
         public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key_data)
-        payload = jwt.decode(
+        payload = decode_service_access_jwt(
             token,
             public_key,
-            algorithms=settings.JWT_ALGORITHMS,
             issuer=settings.JWT_ISSUER,
             audience=settings.JWT_AUDIENCE,
-            options={"require": ["exp", "iat", "sub", "iss", "aud", "jti"]},
+            algorithms=settings.JWT_ALGORITHMS,
         )
-        if payload.get("type") != "access":
-            raise ValueError("wrong token type")
         user_id = uuid.UUID(payload["sub"])
         roles = {str(x).lower() for x in payload.get("roles", [])}
         raw = payload.get("permissions", [])
-        if not isinstance(raw, list) or any(not isinstance(v, str) or not v for v in raw):
-            raise ValueError("Invalid permissions claim")
         if not roles.intersection({"admin", "teacher", "student"}) and not any(
             scope.startswith("assessment.") for scope in raw
         ):
-            raise ValueError("No Assessment role or permission")
+            raise HTTPException(status_code=403, detail="No Assessment role or permission")
         return Principal(user_id=user_id, roles=roles, token=token, permissions=frozenset(raw))
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(status_code=401, detail="Invalid access token") from exc
 

@@ -79,7 +79,14 @@ export function TeacherFacilitiesPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Teacher" title="Faculty Facility & Space Booking" />
-        <InlineError message="Facility booking data could not be loaded." />
+        <InlineError
+          message="Facility booking data could not be loaded."
+          onRetry={() => {
+            void facilities.refetch();
+            void bookings.refetch();
+          }}
+          isRetrying={facilities.isFetching || bookings.isFetching}
+        />
       </div>
     );
   }

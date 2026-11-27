@@ -1,6 +1,8 @@
 from .auth_guard import LoginSecurityGuard, enforce_new_password
 from .clamav import ClamAVScanner, MalwareScanError, MalwareScanResult, parse_clamav_response
 from .cookies import clear_refresh_cookie, set_refresh_cookie
+from .jwt_validation import decode_service_access_token
+from .jwt_validation import decode_service_access_jwt
 from .files import (
     FilePolicy,
     FileValidationError,
@@ -63,6 +65,8 @@ __all__ = [
     "SENSITIVE_KEYS",
     "clear_refresh_cookie",
     "constant_time_token_match",
+    "decode_service_access_token",
+    "decode_service_access_jwt",
     "decrypt_sensitive_json",
     "enforce_new_password",
     "encrypt_sensitive_json",

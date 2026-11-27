@@ -55,9 +55,12 @@ def create_profile(
 def get_profile_by_user(
     user_id: uuid.UUID,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("payroll.profiles.read", "admin", "payroll_officer", "teacher")),
+    principal: Principal = Depends(require_scoped_roles("payroll.profiles.read", "admin", "payroll_officer", "teacher", "employee")),
 ):
-    if "teacher" in principal.roles and "admin" not in principal.roles and principal.user_id != user_id:
+    is_payroll_staff = bool(principal.roles.intersection({"admin", "payroll_officer"})) or (
+        "payroll.profiles.read" in principal.permissions
+    )
+    if not is_payroll_staff and principal.user_id != user_id:
         raise HTTPException(status_code=403, detail="Cannot access another employee's profile")
 
     profile = db.scalar(select(EmployeePayrollProfile).where(EmployeePayrollProfile.user_id == user_id))

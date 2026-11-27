@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { lazy, Suspense, useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   GraduationCap,
@@ -13,11 +13,34 @@ import {
 } from "lucide-react";
 import { useAuth } from "../features/auth/useAuth";
 import { primaryRole } from "../features/auth/permissions";
-import { FreeSlotsNavigator } from "../components/facilities/FreeSlotsNavigator";
-import { SmartTransitFleetTelemetry } from "../components/transit/SmartTransitFleetTelemetry";
-import { CampusHubWayfindingEngine, type HubTab } from "../components/campushub/CampusHubWayfindingEngine";
-import { MarqueeEventsPortal } from "../components/events/MarqueeEventsPortal";
-import { TimetableHub } from "../components/timetable/TimetableHub";
+import { SectionLoader } from "../components/ui/SectionLoader";
+import type { HubTab } from "../components/campushub/CampusHubWayfindingEngine";
+
+const FreeSlotsNavigator = lazy(() =>
+  import("../components/facilities/FreeSlotsNavigator").then((m) => ({
+    default: m.FreeSlotsNavigator
+  }))
+);
+const SmartTransitFleetTelemetry = lazy(() =>
+  import("../components/transit/SmartTransitFleetTelemetry").then((m) => ({
+    default: m.SmartTransitFleetTelemetry
+  }))
+);
+const CampusHubWayfindingEngine = lazy(() =>
+  import("../components/campushub/CampusHubWayfindingEngine").then((m) => ({
+    default: m.CampusHubWayfindingEngine
+  }))
+);
+const MarqueeEventsPortal = lazy(() =>
+  import("../components/events/MarqueeEventsPortal").then((m) => ({
+    default: m.MarqueeEventsPortal
+  }))
+);
+const TimetableHub = lazy(() =>
+  import("../components/timetable/TimetableHub").then((m) => ({
+    default: m.TimetableHub
+  }))
+);
 
 type ExplorerTab = "overview" | "hub" | "free_slots" | "timetable" | "transport" | "sports";
 const VALID_TABS: ExplorerTab[] = ["overview", "hub", "free_slots", "timetable", "transport", "sports"];
@@ -90,18 +113,24 @@ export function CampusExplorerPage() {
   const role = user ? primaryRole(user.roles) : null;
 
   if (activeTab === "free_slots") {
-    return <FreeSlotsNavigator onBack={() => selectTab("overview")} />;
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <Suspense fallback={<SectionLoader label="Loading free classroom slots…" />}>
+          <FreeSlotsNavigator onBack={() => selectTab("overview")} />
+        </Suspense>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background text-ink transition">
+    <div className="min-h-dvh bg-background text-ink transition">
       {/* Top Header */}
       <header className="sticky top-0 z-40 border-b border-line bg-panel/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
           <button
             type="button"
             onClick={() => selectTab("overview")}
-            className="flex items-center gap-2.5 text-left min-w-0 cursor-pointer"
+            className="flex min-h-11 items-center gap-2.5 text-left min-w-0 cursor-pointer"
           >
             <span className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-on-primary shadow-xs">
               <GraduationCap size={20} />
@@ -118,7 +147,7 @@ export function CampusExplorerPage() {
             {state === "authenticated" && user ? (
               <Link
                 to={role ? `/app/${role}` : "/app"}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition whitespace-nowrap"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition whitespace-nowrap"
               >
                 <span>My Dashboard</span>
                 <ArrowRight size={14} />
@@ -126,7 +155,7 @@ export function CampusExplorerPage() {
             ) : (
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition whitespace-nowrap"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs sm:text-sm font-semibold text-on-primary shadow-xs hover:bg-primary-hover transition whitespace-nowrap"
               >
                 <span>Sign In</span>
                 <ArrowRight size={14} />
@@ -151,7 +180,7 @@ export function CampusExplorerPage() {
                     type="button"
                     data-active={isActive ? "true" : "false"}
                     onClick={() => selectTab(tab.id)}
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap cursor-pointer ${
+                    className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition whitespace-nowrap cursor-pointer ${
                       isActive
                         ? "bg-primary text-on-primary shadow-2xs"
                         : "bg-panel text-muted hover:text-ink border border-line"
@@ -352,31 +381,39 @@ export function CampusExplorerPage() {
               </p>
             </div>
 
-            <TimetableHub
-              signedInRole={role === "student" || role === "teacher" ? role : null}
-            />
+            <Suspense fallback={<SectionLoader label="Loading timetable engine…" />}>
+              <TimetableHub
+                signedInRole={role === "student" || role === "teacher" ? role : null}
+              />
+            </Suspense>
           </div>
         )}
 
         {/* ================= SECTION 2: CAMPUS HUB & DIRECTORY ================= */}
         {activeTab === "hub" && (
-          <CampusHubWayfindingEngine
-            activeSection={activeHubSection}
-            onSelectSection={(sec) =>
-              setSearchParams(sec ? { tab: "hub", section: sec } : { tab: "hub" })
-            }
-            onBack={() => selectTab("overview")}
-          />
+          <Suspense fallback={<SectionLoader label="Loading Campus Hub directory…" />}>
+            <CampusHubWayfindingEngine
+              activeSection={activeHubSection}
+              onSelectSection={(sec) =>
+                setSearchParams(sec ? { tab: "hub", section: sec } : { tab: "hub" })
+              }
+              onBack={() => selectTab("overview")}
+            />
+          </Suspense>
         )}
 
         {/* ================= SECTION 4: TRANSPORT SERVICE ================= */}
         {activeTab === "transport" && (
-          <SmartTransitFleetTelemetry onBack={() => selectTab("overview")} />
+          <Suspense fallback={<SectionLoader label="Loading transport routes & shuttles…" />}>
+            <SmartTransitFleetTelemetry onBack={() => selectTab("overview")} />
+          </Suspense>
         )}
 
         {/* ================= SECTION 5: SPORTS WEEK ================= */}
         {activeTab === "sports" && (
-          <MarqueeEventsPortal onBack={() => selectTab("overview")} />
+          <Suspense fallback={<SectionLoader label="Loading Sports Week schedule…" />}>
+            <MarqueeEventsPortal onBack={() => selectTab("overview")} />
+          </Suspense>
         )}
       </main>
 
@@ -386,12 +423,12 @@ export function CampusExplorerPage() {
           <p className="text-xs text-muted">
             COMSATS University Islamabad · Sahiwal Campus · Smart Education Platform 2026
           </p>
-          <div className="mt-2 flex items-center justify-center gap-4 text-xs font-semibold text-primary-ink">
-            <Link to="/login" className="hover:underline">
+          <div className="mt-2 flex items-center justify-center gap-2 text-xs font-semibold text-primary-ink">
+            <Link to="/login" className="inline-flex min-h-11 items-center px-3 hover:underline">
               Sign In
             </Link>
-            <span>·</span>
-            <Link to="/register" className="hover:underline">
+            <span aria-hidden="true">·</span>
+            <Link to="/register" className="inline-flex min-h-11 items-center px-3 hover:underline">
               Create Student Account
             </Link>
           </div>

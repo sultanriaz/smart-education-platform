@@ -64,7 +64,11 @@ export function StudentAssessmentAttemptPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Student" title="Assessment" />
-        <InlineError message="This assessment could not be loaded." />
+        <InlineError
+          message="This assessment could not be loaded."
+          onRetry={() => void detail.refetch()}
+          isRetrying={detail.isFetching}
+        />
       </div>
     );
   }

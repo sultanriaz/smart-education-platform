@@ -2,6 +2,9 @@ import { Badge } from "../components/ui/Badge";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "../lib/api-client";
 import { Card } from "../components/ui/Card";
+import { EmptyState } from "../components/ui/EmptyState";
+import { InlineError } from "../components/ui/InlineError";
+import { SectionLoader } from "../components/ui/SectionLoader";
 import { useAuth } from "../features/auth/useAuth";
 
 export function ProfilePage() {
@@ -9,7 +12,10 @@ export function ProfilePage() {
   const history = useQuery({
     queryKey: ["identity", "security-history", user?.id],
     enabled: Boolean(user?.id),
-    queryFn: () => apiRequest<Array<{ id: string; action: string; outcome: string; created_at: string; ip_address: string | null }>>("/api/v1/identity/users/me/security-history?limit=25")
+    queryFn: () =>
+      apiRequest<
+        Array<{ id: string; action: string; outcome: string; created_at: string; ip_address: string | null }>
+      >("/api/v1/identity/users/me/security-history?limit=25")
   });
   return (
     <div className="page-container">
@@ -36,8 +42,14 @@ export function ProfilePage() {
         </dl>
       </Card>
       <Card className="mt-6" title="Recent account security activity" description="Your own sign-in and security events only.">
-        {history.isLoading ? <p role="status">Loading your account activity…</p> : history.isError ? (
-          <p role="alert">Unable to retrieve security history.</p>
+        {history.isLoading ? (
+          <SectionLoader label="Loading your account activity…" />
+        ) : history.isError ? (
+          <InlineError
+            message="Unable to retrieve security history."
+            onRetry={() => void history.refetch()}
+            isRetrying={history.isFetching}
+          />
         ) : (history.data ?? []).length ? (
           <ul className="space-y-3" aria-label="Recent account activity">
             {(history.data ?? []).map((event) => (
@@ -47,7 +59,12 @@ export function ProfilePage() {
               </li>
             ))}
           </ul>
-        ) : <p className="text-sm text-muted">No security history is available.</p>}
+        ) : (
+          <EmptyState
+            title="No security history yet"
+            description="Recent sign-in and security events for your account will appear here."
+          />
+        )}
       </Card>
     </div>
   );

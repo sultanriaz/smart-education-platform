@@ -493,16 +493,201 @@ const MASTER_SLOTS: TimetableSlot[] = [
   }
 ];
 
-export const STUDENT_SCHEDULE: TimetableSlot[] = MASTER_SLOTS.filter((s) => s.section === "BCS-7C");
+function mapSectionSlots(sourceSection: string, displaySection: string): TimetableSlot[] {
+  return MASTER_SLOTS.filter((s) => s.section === sourceSection).map((s) => ({
+    ...s,
+    id: `${s.id}-${displaySection.toLowerCase()}`,
+    section: displaySection
+  }));
+}
+
+const EXTRA_STUDENT_SLOTS: TimetableSlot[] = [
+  {
+    id: "slot-mon-1-bcs5b",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-301",
+    courseTitle: "Design & Analysis of Algorithms",
+    instructorName: "Dr. Muhammad Asim",
+    instructorOffice: "C Block, 2nd Floor, Room C-203",
+    section: "FA24-BCS-5B",
+    room: "Room B-202",
+    block: "C Block",
+    floor: "2nd Floor",
+    capacity: 60,
+    enrolledStudents: 53,
+    day: "Monday",
+    colorScheme: COLOR_SCHEMES.os
+  },
+  {
+    id: "slot-tue-2-bcs5b",
+    slotNumber: 2,
+    timeRange: "10:15 AM – 11:45 AM",
+    startTime: "10:15",
+    endTime: "11:45",
+    courseCode: "CSC-322",
+    courseTitle: "Operating Systems",
+    instructorName: "Engr. Tariq Mehmood",
+    instructorOffice: "C Block, 1st Floor, Room C-108",
+    section: "FA24-BCS-5B",
+    room: "Room C-105",
+    block: "C Block",
+    floor: "1st Floor",
+    capacity: 60,
+    enrolledStudents: 53,
+    day: "Tuesday",
+    colorScheme: COLOR_SCHEMES.compiler
+  },
+  {
+    id: "slot-wed-3-bcs5b",
+    slotNumber: 3,
+    timeRange: "12:00 PM – 01:30 PM",
+    startTime: "12:00",
+    endTime: "13:30",
+    courseCode: "CSC-336",
+    courseTitle: "Web Engineering",
+    instructorName: "Engr. Bilal Khan",
+    instructorOffice: "C Block, Ground Floor, Room C-02",
+    section: "FA24-BCS-5B",
+    room: "Software Lab 1",
+    block: "C Block",
+    floor: "Ground Floor",
+    capacity: 50,
+    enrolledStudents: 48,
+    day: "Wednesday",
+    colorScheme: COLOR_SCHEMES.se
+  },
+  {
+    id: "slot-thu-1-bcs5b",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-312",
+    courseTitle: "Theory of Automata",
+    instructorName: "Dr. Munir Ahmad",
+    instructorOffice: "C Block, 2nd Floor, Room C-201",
+    section: "FA24-BCS-5B",
+    room: "Room A-104",
+    block: "A Block",
+    floor: "1st Floor",
+    capacity: 60,
+    enrolledStudents: 52,
+    day: "Thursday",
+    colorScheme: COLOR_SCHEMES.ai
+  },
+  {
+    id: "slot-mon-2-bcs4a",
+    slotNumber: 2,
+    timeRange: "10:15 AM – 11:45 AM",
+    startTime: "10:15",
+    endTime: "11:45",
+    courseCode: "CSC-331",
+    courseTitle: "Database Systems",
+    instructorName: "Dr. Majid Hussain",
+    instructorOffice: "A Block, 3rd Floor, Room A-302",
+    section: "SP25-BCS-4A",
+    room: "Room A-201",
+    block: "A Block",
+    floor: "2nd Floor",
+    capacity: 65,
+    enrolledStudents: 56,
+    day: "Monday",
+    colorScheme: COLOR_SCHEMES.db
+  },
+  {
+    id: "slot-wed-1-bcs4a",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-371",
+    courseTitle: "Software Engineering",
+    instructorName: "Dr. Majid Hussain",
+    instructorOffice: "A Block, 3rd Floor, Room A-302",
+    section: "SP25-BCS-4A",
+    room: "Room C-102",
+    block: "C Block",
+    floor: "1st Floor",
+    capacity: 65,
+    enrolledStudents: 56,
+    day: "Wednesday",
+    colorScheme: COLOR_SCHEMES.se
+  },
+  {
+    id: "slot-fri-2-bcs4a",
+    slotNumber: 2,
+    timeRange: "10:15 AM – 11:45 AM",
+    startTime: "10:15",
+    endTime: "11:45",
+    courseCode: "CSC-291",
+    courseTitle: "Computer Organization",
+    instructorName: "Engr. Tariq Mehmood",
+    instructorOffice: "C Block, 1st Floor, Room C-108",
+    section: "SP25-BCS-4A",
+    room: "Room C-103",
+    block: "C Block",
+    floor: "1st Floor",
+    capacity: 60,
+    enrolledStudents: 54,
+    day: "Friday",
+    colorScheme: COLOR_SCHEMES.os
+  },
+  {
+    id: "slot-tue-1-bcs3c",
+    slotNumber: 1,
+    timeRange: "08:30 AM – 10:00 AM",
+    startTime: "08:30",
+    endTime: "10:00",
+    courseCode: "CSC-211",
+    courseTitle: "Data Structures & Algorithms",
+    instructorName: "Engr. Bilal Khan",
+    instructorOffice: "C Block, Ground Floor, Room C-02",
+    section: "FA25-BCS-3C",
+    room: "Room A-101",
+    block: "A Block",
+    floor: "1st Floor",
+    capacity: 60,
+    enrolledStudents: 57,
+    day: "Tuesday",
+    colorScheme: COLOR_SCHEMES.compiler
+  },
+  {
+    id: "slot-thu-3-bcs3c",
+    slotNumber: 3,
+    timeRange: "12:00 PM – 01:30 PM",
+    startTime: "12:00",
+    endTime: "13:30",
+    courseCode: "MTH-231",
+    courseTitle: "Discrete Structures",
+    instructorName: "Dr. Muhammad Asim",
+    instructorOffice: "C Block, 2nd Floor, Room C-203",
+    section: "FA25-BCS-3C",
+    room: "Room D-104",
+    block: "D Block",
+    floor: "1st Floor",
+    capacity: 55,
+    enrolledStudents: 57,
+    day: "Thursday",
+    colorScheme: COLOR_SCHEMES.db
+  }
+];
+
+export const STUDENT_SCHEDULE: TimetableSlot[] = mapSectionSlots("BCS-7C", "SP23-BCS-7C");
 
 export const TEACHER_SCHEDULE: TimetableSlot[] = MASTER_SLOTS.filter(
   (s) => s.instructorName === "Dr. Munir Ahmad"
 );
 
 export const STUDENT_TIMETABLES_BY_SECTION: Record<string, TimetableSlot[]> = {
-  "BCS-7C": MASTER_SLOTS.filter((s) => s.section === "BCS-7C"),
-  "BCS-7A": MASTER_SLOTS.filter((s) => s.section === "BCS-7A"),
-  "BCS-7B": MASTER_SLOTS.filter((s) => s.section === "BCS-7B")
+  "SP23-BCS-7C": mapSectionSlots("BCS-7C", "SP23-BCS-7C"),
+  "SP23-BCS-7B": mapSectionSlots("BCS-7B", "SP23-BCS-7B"),
+  "SP23-BCS-7A": mapSectionSlots("BCS-7A", "SP23-BCS-7A"),
+  "FA24-BCS-5B": EXTRA_STUDENT_SLOTS.filter((s) => s.section === "FA24-BCS-5B"),
+  "SP25-BCS-4A": EXTRA_STUDENT_SLOTS.filter((s) => s.section === "SP25-BCS-4A"),
+  "FA25-BCS-3C": EXTRA_STUDENT_SLOTS.filter((s) => s.section === "FA25-BCS-3C")
 };
 
 export const TEACHER_TIMETABLES_BY_NAME: Record<string, TimetableSlot[]> = {

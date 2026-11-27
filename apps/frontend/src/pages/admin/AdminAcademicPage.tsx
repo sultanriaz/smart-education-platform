@@ -98,6 +98,7 @@ export function AdminAcademicPage() {
     teacher_profile_id: "",
     section_id: ""
   });
+  const [activeTab, setActiveTab] = useState<"structure" | "calendar" | "courses" | "enrollment">("structure");
 
   const allQueries = [
     campuses, departments, programs, years, semesters, courses, sections,
@@ -116,12 +117,18 @@ export function AdminAcademicPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Admin" title="Academic setup" />
-        <InlineError message="Academic master data could not be loaded. The merge pass must reconcile Sprint 2 route/schema names with this Admin adapter." />
+        <InlineError
+          message="Academic master data could not be loaded."
+          onRetry={() => {
+            allQueries.forEach((query) => {
+              void query.refetch();
+            });
+          }}
+          isRetrying={allQueries.some((query) => query.isFetching)}
+        />
       </div>
     );
   }
-
-  const [activeTab, setActiveTab] = useState<"structure" | "calendar" | "courses" | "enrollment">("structure");
 
   async function perform<T>(action: () => Promise<T>, success: string) {
     try {

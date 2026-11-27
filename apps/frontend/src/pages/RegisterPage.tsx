@@ -82,7 +82,7 @@ export function RegisterPage() {
   });
 
   return (
-    <main className="subtle-grid relative flex min-h-screen items-center justify-center px-4 py-10">
+    <main className="subtle-grid relative flex min-h-dvh items-center justify-center px-4 py-10">
       <section className="panel w-full max-w-md p-7 sm:p-8 shadow-md">
         <div className="flex items-center gap-2 mb-4 text-primary-ink">
           <GraduationCap size={28} />
@@ -115,6 +115,7 @@ export function RegisterPage() {
               label="Password"
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
+              className="pr-12"
               error={errors.password?.message}
               {...register("password")}
             />
@@ -122,7 +123,7 @@ export function RegisterPage() {
               type="button"
               aria-label={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-[38px] text-muted hover:text-ink transition"
+              className="absolute right-1 top-[30px] inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:text-ink transition"
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -155,6 +156,7 @@ export function RegisterPage() {
               label="Confirm password"
               type={showConfirm ? "text" : "password"}
               autoComplete="new-password"
+              className="pr-12"
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
             />
@@ -162,7 +164,7 @@ export function RegisterPage() {
               type="button"
               aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
               onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute right-3 top-[38px] text-muted hover:text-ink transition"
+              className="absolute right-1 top-[30px] inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:text-ink transition"
             >
               {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -184,7 +186,7 @@ export function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-muted">
           Already have an account?{" "}
-          <Link className="font-semibold text-primary-ink hover:underline" to="/login">
+          <Link className="inline-flex min-h-11 items-center px-1 font-semibold text-primary-ink hover:underline" to="/login">
             Sign in
           </Link>
         </p>

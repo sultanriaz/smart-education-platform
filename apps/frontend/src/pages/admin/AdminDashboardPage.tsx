@@ -49,7 +49,23 @@ export function AdminDashboardPage() {
 
       {error ? (
         <div className="mb-5">
-          <InlineError message="Some administration data could not be loaded. Individual modules may still be available." />
+          <InlineError
+            message="Some administration data could not be loaded. Individual modules may still be available."
+            onRetry={() => {
+              void overview.refetch();
+              void users.refetch();
+              void bookings.refetch();
+              void services.refetch();
+              void tickets.refetch();
+            }}
+            isRetrying={
+              overview.isFetching ||
+              users.isFetching ||
+              bookings.isFetching ||
+              services.isFetching ||
+              tickets.isFetching
+            }
+          />
         </div>
       ) : null}
 

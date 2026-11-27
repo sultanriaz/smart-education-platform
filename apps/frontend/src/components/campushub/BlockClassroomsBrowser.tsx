@@ -8,10 +8,7 @@ import {
   Users,
   Search,
   X,
-  MapPin,
-  Wifi,
-  Wind,
-  Tv
+  MapPin
 } from "lucide-react";
 
 import {
@@ -573,26 +570,6 @@ export function BlockClassroomsBrowser({ onBack }: { onBack?: () => void } = {})
                 <div>
                   <span className="block text-[10px] uppercase font-bold text-muted">Seats</span>
                   <span className="font-semibold text-ink">{detailRoom.capacity} Students</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <span className="block text-[11px] font-extrabold uppercase tracking-wider text-muted mb-2">
-                Room Features
-              </span>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="flex items-center gap-1.5 rounded-xl border border-line bg-surface p-2.5 text-ink">
-                  <Wifi size={13} className="text-primary-ink shrink-0" />
-                  <span>Wi-Fi</span>
-                </div>
-                <div className="flex items-center gap-1.5 rounded-xl border border-line bg-surface p-2.5 text-ink">
-                  <Wind size={13} className="text-secondary-ink shrink-0" />
-                  <span>AC</span>
-                </div>
-                <div className="flex items-center gap-1.5 rounded-xl border border-line bg-surface p-2.5 text-ink">
-                  <Tv size={13} className="text-accent-ink shrink-0" />
-                  <span>Projector</span>
                 </div>
               </div>
             </div>

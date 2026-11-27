@@ -63,17 +63,17 @@ def verify_access_token(token: str) -> Principal:
             issuer=settings.JWT_ISSUER,
             audience=settings.JWT_ACCESS_AUDIENCE,
             leeway=settings.JWT_LEEWAY_SECONDS,
-            options={"require": ["sub", "iss", "aud", "iat", "exp", "roles"]},
+            options={"require": ["sub", "iss", "aud", "iat", "nbf", "exp", "jti", "type", "roles"]},
         )
     except (ValueError, TypeError, OverflowError) as exc:
         raise jwt.InvalidTokenError("Malformed access token claims.") from exc
-    if claims.get("type", "access") != "access" or not isinstance(claims["sub"], str):
+    if claims["type"] != "access" or not isinstance(claims["sub"], str):
         raise jwt.InvalidTokenError("Invalid token type or subject.")
     try:
         subject = UUID(claims["sub"])
     except ValueError as exc:
         raise jwt.InvalidTokenError("Invalid subject.") from exc
-    if "jti" in claims and (not isinstance(claims["jti"], str) or not claims["jti"]):
+    if not isinstance(claims["jti"], str) or not claims["jti"]:
         raise jwt.InvalidTokenError("Invalid token identifier.")
     if not isinstance(claims["roles"], list) or any(
         not isinstance(role, str) or not role for role in claims["roles"]

@@ -57,7 +57,7 @@ export function VerifyEmailPage() {
   }, [token]);
 
   return (
-    <main className="subtle-grid flex min-h-screen items-center justify-center px-4 py-10">
+    <main className="subtle-grid flex min-h-dvh items-center justify-center px-4 py-10">
       <section className="panel w-full max-w-md p-7 sm:p-8">
         <h1 className="text-2xl font-bold">Email verification</h1>
         <div
@@ -72,7 +72,7 @@ export function VerifyEmailPage() {
         </div>
         {state !== "working" ? (
           <p className="mt-6 text-center text-sm">
-            <Link className="font-semibold text-brand-700 hover:underline" to="/login">
+            <Link className="inline-flex min-h-11 items-center px-3 font-semibold text-brand-700 hover:underline" to="/login">
               Continue to sign in
             </Link>
           </p>

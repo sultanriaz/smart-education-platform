@@ -1,22 +1,15 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.endpoints.health import router as health_router
 from app.api.v1.endpoints.jwks import router as jwks_router
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.db.session import get_db
 from app.security.jwt import get_signing_keys
 from app.sprint16 import install_sprint16
-from app.sprint18 import identity_rate_limiter, install_sprint18, security_settings
-from app.sprint18_security.adapters import (
-    AccountAdapter,
-    SecurityAuditAdapter,
-    SecurityNotificationAdapter,
-)
-from app.sprint18_security.router import build_identity_security_router
+from app.sprint18 import install_sprint18, security_settings
 from app.sprint21 import install_sprint21
 
 
@@ -46,40 +39,19 @@ async def trailing_slash_middleware(request: Request, call_next):
     return await call_next(request)
 
 
+def _allowed_cors_origins() -> list[str]:
+    origins = [*settings.CORS_ORIGINS, *security_settings().frontend_origins]
+    return list(dict.fromkeys(o.strip().rstrip("/") for o in origins if o and o.strip() != "*"))
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^https?://.*",
+    allow_origins=_allowed_cors_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With", "Idempotency-Key"],
 )
 
 app.include_router(health_router)
 app.include_router(jwks_router)
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
-app.include_router(
-    build_identity_security_router(
-        get_db=get_db,
-        account_adapter_factory=AccountAdapter,
-        notification_sink_factory=SecurityNotificationAdapter,
-        audit_sink_factory=SecurityAuditAdapter,
-        rate_limiter=identity_rate_limiter(),
-        settings=security_settings(),
-    ),
-    prefix=settings.API_V1_PREFIX,
-)
-
-
-@app.options("/{full_path:path}")
-async def global_options_catchall(full_path: str, request: Request):
-    origin = request.headers.get("origin") or "*"
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Idempotency-Key, Accept, Origin",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "86400",
-        },
-    )

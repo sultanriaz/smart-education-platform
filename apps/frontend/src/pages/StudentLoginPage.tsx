@@ -124,7 +124,7 @@ export function StudentLoginPage() {
             <p className="auth-overline">{runtimeConfig.appName}</p>
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-ink hover:underline transition"
+              className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-semibold text-primary-ink hover:underline transition"
             >
               <ArrowLeft size={14} />
               <span>Main Dashboard</span>
@@ -145,7 +145,7 @@ export function StudentLoginPage() {
             <button
               type="button"
               onClick={fillDemoStudent}
-              className="rounded-lg border border-line bg-panel px-2.5 py-1 text-xs font-semibold text-ink hover:border-primary hover:text-primary-ink transition"
+              className="inline-flex min-h-11 items-center rounded-lg border border-line bg-panel px-3 py-2 text-xs font-semibold text-ink hover:border-primary hover:text-primary-ink transition"
             >
               Auto-Fill BCS-155
             </button>
@@ -160,7 +160,7 @@ export function StudentLoginPage() {
                 id="student-dept"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                className="w-full rounded-xl border border-line bg-panel px-3.5 py-2.5 text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-primary"
+                className="min-h-11 w-full rounded-xl border border-line bg-panel px-3.5 py-2.5 text-base md:text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-primary"
               >
                 {DEPARTMENTS.map((d) => (
                   <option key={d.code} value={d.code}>
@@ -196,6 +196,7 @@ export function StudentLoginPage() {
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 placeholder="Enter your password"
+                className="pr-12"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -203,7 +204,7 @@ export function StudentLoginPage() {
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-9 text-muted hover:text-ink transition"
+                className="absolute right-1 top-[30px] inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:text-ink transition"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -228,7 +229,7 @@ export function StudentLoginPage() {
               <ShieldCheck size={14} className="text-success-ink" />
               <span>Student-only access enforced</span>
             </span>
-            <Link to="/login/faculty" className="font-semibold text-secondary-ink hover:underline">
+            <Link to="/login/faculty" className="inline-flex min-h-11 items-center font-semibold text-secondary-ink hover:underline">
               Are you a Teacher? Faculty Login →
             </Link>
           </div>

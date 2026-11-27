@@ -105,7 +105,7 @@ const SECTION_CARDS: SectionCardMeta[] = [
 ];
 
 type AttendanceTypeFilter = "All" | "Class" | "Lab";
-type AttendanceStatusFilter = "All" | "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
+type AttendanceStatusFilter = "All" | "PRESENT" | "ABSENT";
 
 function triggerTextDownload(filename: string, contents: string) {
   const blob = new Blob([contents], { type: "text/plain;charset=utf-8" });
@@ -125,9 +125,7 @@ function getAttendanceRingStats(
 ) {
   const filtered = records.filter((item) => item.sessionType === sessionType);
   const total = filtered.length;
-  const attended = filtered.filter(
-    (item) => item.status === "PRESENT" || item.status === "LATE"
-  ).length;
+  const attended = filtered.filter((item) => item.status === "PRESENT").length;
   const percentage = total > 0 ? Math.round((attended / total) * 100) : 0;
   return { total, attended, percentage };
 }
@@ -228,6 +226,9 @@ interface CourseworkSectionProps {
   emptyLabel: string;
   items: CourseworkCardItem[];
   allowUpload?: boolean;
+  hideStatus?: boolean;
+  hideMarks?: boolean;
+  hideDetailLine?: boolean;
   uploadedFiles?: Record<string, string>;
   onUploadFile?: (itemId: string, filename: string) => void;
   courseTitle: string;
@@ -238,6 +239,9 @@ function CourseworkSection({
   emptyLabel,
   items,
   allowUpload = false,
+  hideStatus = false,
+  hideMarks = false,
+  hideDetailLine = false,
   uploadedFiles = {},
   onUploadFile,
   courseTitle,
@@ -311,27 +315,31 @@ function CourseworkSection({
                 <div className="space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <h4 className="text-sm font-bold text-ink">{item.title}</h4>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${getStatusBadgeClasses(
-                        effectiveStatus
-                      )}`}
-                    >
-                      {effectiveStatus}
-                    </span>
+                    {!hideStatus && (
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${getStatusBadgeClasses(
+                          effectiveStatus
+                        )}`}
+                      >
+                        {effectiveStatus}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
                     <span>Uploaded: {item.uploadedDate}</span>
                     <span>Due Date: {item.dueDate}</span>
-                    <span>
-                      Marks:{" "}
-                      {item.status === "Graded" && item.obtainedScore !== undefined
-                        ? `${item.obtainedScore}/${item.maxPoints}`
-                        : `${item.maxPoints} pts`}
-                    </span>
+                    {!hideMarks && (
+                      <span>
+                        Marks:{" "}
+                        {item.status === "Graded" && item.obtainedScore !== undefined
+                          ? `${item.obtainedScore}/${item.maxPoints}`
+                          : `${item.maxPoints} pts`}
+                      </span>
+                    )}
                   </div>
 
-                  {item.detailLine && (
+                  {!hideDetailLine && item.detailLine && (
                     <p className="text-xs text-muted">{item.detailLine}</p>
                   )}
 
@@ -380,17 +388,92 @@ function CourseworkSection({
   );
 }
 
+interface MarksBlockRow {
+  id: string;
+  label: string;
+  date: string;
+  obtained: number;
+  maxPoints: number;
+}
+
+interface MarksCategoryCardProps {
+  title: string;
+  icon: LucideIcon;
+  headerBgClass: string;
+  iconBoxClass: string;
+  titleColorClass: string;
+  rows: MarksBlockRow[];
+}
+
+/** Renders a grouped academic result card matching the Quizzes / Assignments / Mid Term / Final Term mobile layout. */
+function MarksCategoryCard({
+  title,
+  icon: Icon,
+  headerBgClass,
+  iconBoxClass,
+  titleColorClass,
+  rows,
+}: MarksCategoryCardProps) {
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-line bg-panel shadow-2xs">
+      <div className={`flex items-center gap-3 px-4 py-3 ${headerBgClass}`}>
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBoxClass}`}
+        >
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <h4 className={`text-sm font-bold ${titleColorClass}`}>{title}</h4>
+      </div>
+
+      <div className="divide-y divide-line/60">
+        {rows.map((row) => {
+          const ratio = row.maxPoints > 0 ? row.obtained / row.maxPoints : 0;
+          const badgeTone =
+            ratio >= 0.8
+              ? "bg-success-soft text-success-ink"
+              : "bg-danger-soft text-danger-ink";
+
+          return (
+            <div
+              key={row.id}
+              className="flex items-center justify-between gap-3 px-4 py-3.5"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBoxClass}`}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-ink">{row.label}</p>
+                  <p className="mt-0.5 text-xs text-muted">{row.date}</p>
+                </div>
+              </div>
+
+              <span
+                className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-extrabold tabular-nums ${badgeTone}`}
+              >
+                {row.obtained}/{row.maxPoints}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 interface PdfMaterialListProps {
   heading: string;
   materials: EnrolledCourse["lectureHub"]["materials"];
-  recordings?: EnrolledCourse["lectureHub"]["recordings"];
   courseTitle: string;
 }
 
 function PdfMaterialList({
   heading,
   materials,
-  recordings,
   courseTitle,
 }: PdfMaterialListProps) {
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null);
@@ -455,29 +538,6 @@ function PdfMaterialList({
           ))}
         </div>
       )}
-
-      {recordings && recordings.length > 0 && (
-        <div className="space-y-2 pt-2">
-          <h4 className="text-xs font-bold tracking-wider text-muted uppercase">
-            Recorded Lectures
-          </h4>
-          <div className="space-y-2">
-            {recordings.map((rec) => (
-              <div
-                key={rec.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-xs"
-              >
-                <div className="font-semibold text-ink">
-                  Lecture {rec.lectureNo}: {rec.title}
-                </div>
-                <div className="text-muted">
-                  {rec.date} • {rec.duration}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -535,35 +595,6 @@ export function StudentCourseDetailPage() {
     const matchesStatus = statusFilter === "All" || record.status === statusFilter;
     return matchesType && matchesStatus;
   });
-
-  const combinedMarksRows = [
-    ...course.coursework.quizzes.map((q) => ({
-      id: q.id,
-      type: "Quiz",
-      title: q.title,
-      obtained: q.obtainedScore,
-      total: q.maxPoints,
-      status: q.status,
-    })),
-    ...course.coursework.assignments
-      .filter((a) => a.obtainedScore !== undefined)
-      .map((a) => ({
-        id: a.id,
-        type: "Assignment",
-        title: a.title,
-        obtained: a.obtainedScore ?? 0,
-        total: a.maxPoints,
-        status: a.status,
-      })),
-    ...course.coursework.exams.map((e) => ({
-      id: e.id,
-      type: "Exam",
-      title: e.title,
-      obtained: e.obtainedScore,
-      total: e.maxPoints,
-      status: e.status,
-    })),
-  ];
 
   function handleAddDiscussionReply(boardKey: string) {
     const trimmed = (discussionDrafts[boardKey] ?? "").trim();
@@ -761,8 +792,6 @@ export function StudentCourseDetailPage() {
                       { value: "All", label: "All" },
                       { value: "PRESENT", label: "Present" },
                       { value: "ABSENT", label: "Absent" },
-                      { value: "LATE", label: "Late" },
-                      { value: "EXCUSED", label: "Excused" },
                     ] as { value: AttendanceStatusFilter; label: string }[]
                   ).map((option) => (
                     <button
@@ -833,49 +862,74 @@ export function StudentCourseDetailPage() {
 
           {activeSection === "marks" && (
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
                 <h3 className="text-base font-bold text-ink">Marks</h3>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary-ink">
-                    Score: {course.standing.scorePercentage}%
-                  </span>
-                  <span className="rounded-full bg-success-soft px-3 py-1 text-xs font-bold text-success-ink">
-                    Grade: {course.standing.estimatedGrade}
-                  </span>
-                </div>
               </div>
 
-              <div className="space-y-2.5">
-                {combinedMarksRows.map((row) => (
-                  <div
-                    key={row.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="rounded-md bg-subtle px-2 py-0.5 text-[11px] font-bold text-muted">
-                          {row.type}
-                        </span>
-                        <h4 className="text-sm font-bold text-ink">{row.title}</h4>
-                      </div>
-                    </div>
+              <div className="space-y-4">
+                <MarksCategoryCard
+                  title="Quizzes"
+                  icon={ClipboardList}
+                  headerBgClass="bg-primary-soft/65"
+                  iconBoxClass="bg-primary-soft text-primary-ink"
+                  titleColorClass="text-primary-ink"
+                  rows={course.coursework.quizzes.map((q, index) => ({
+                    id: q.id,
+                    label: `Quiz ${index + 1}`,
+                    date: q.date || q.dueDate.split(",")[0] || q.dueDate,
+                    obtained: q.obtainedScore ?? 0,
+                    maxPoints: q.maxPoints,
+                  }))}
+                />
 
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${getStatusBadgeClasses(
-                          row.status
-                        )}`}
-                      >
-                        {row.status}
-                      </span>
-                      <span className="text-sm font-bold text-ink">
-                        {row.obtained !== undefined
-                          ? `${row.obtained} / ${row.total}`
-                          : `Pending (${row.total})`}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                <MarksCategoryCard
+                  title="Assignments"
+                  icon={FileText}
+                  headerBgClass="bg-accent-soft/65"
+                  iconBoxClass="bg-accent-soft text-accent-ink"
+                  titleColorClass="text-accent-ink"
+                  rows={course.coursework.assignments.map((a, index) => ({
+                    id: a.id,
+                    label: `Ass ${index + 1}`,
+                    date: a.submittedAt || "April 13, 2025",
+                    obtained: a.obtainedScore ?? 0,
+                    maxPoints: a.maxPoints,
+                  }))}
+                />
+
+                <MarksCategoryCard
+                  title="Mid Term"
+                  icon={BookOpen}
+                  headerBgClass="bg-warning-soft/65"
+                  iconBoxClass="bg-warning-soft text-warning-ink"
+                  titleColorClass="text-warning-ink"
+                  rows={course.coursework.exams
+                    .filter((ex) => ex.title.toLowerCase().includes("mid"))
+                    .map((ex) => ({
+                      id: ex.id,
+                      label: "Marks",
+                      date: ex.date,
+                      obtained: ex.obtainedScore ?? 0,
+                      maxPoints: ex.maxPoints,
+                    }))}
+                />
+
+                <MarksCategoryCard
+                  title="Final Term"
+                  icon={Award}
+                  headerBgClass="bg-success-soft/65"
+                  iconBoxClass="bg-success-soft text-success-ink"
+                  titleColorClass="text-success-ink"
+                  rows={course.coursework.exams
+                    .filter((ex) => ex.title.toLowerCase().includes("final"))
+                    .map((ex) => ({
+                      id: ex.id,
+                      label: "Marks",
+                      date: ex.date,
+                      obtained: ex.obtainedScore ?? 0,
+                      maxPoints: ex.maxPoints,
+                    }))}
+                />
               </div>
             </div>
           )}
@@ -885,6 +939,9 @@ export function StudentCourseDetailPage() {
               heading="Assignments"
               emptyLabel="No assignments posted yet."
               allowUpload
+              hideStatus
+              hideMarks
+              hideDetailLine
               uploadedFiles={uploadedAssignments}
               onUploadFile={(itemId, filename) =>
                 setUploadedAssignments((prev) => ({ ...prev, [itemId]: filename }))
@@ -898,7 +955,6 @@ export function StudentCourseDetailPage() {
                 status: item.status,
                 maxPoints: item.maxPoints,
                 obtainedScore: item.obtainedScore,
-                detailLine: `Weightage: ${item.weight}`,
               }))}
             />
           )}
@@ -907,6 +963,9 @@ export function StudentCourseDetailPage() {
             <CourseworkSection
               heading="Quizzes"
               emptyLabel="No quizzes posted yet."
+              hideStatus
+              hideMarks
+              hideDetailLine
               courseTitle={course.title}
               items={course.coursework.quizzes.map((item) => ({
                 id: item.id,
@@ -916,7 +975,6 @@ export function StudentCourseDetailPage() {
                 status: item.status,
                 maxPoints: item.maxPoints,
                 obtainedScore: item.obtainedScore,
-                detailLine: `Topics: ${item.topics}`,
               }))}
             />
           )}
@@ -924,10 +982,7 @@ export function StudentCourseDetailPage() {
           {activeSection === "lecture_hub" && (
             <PdfMaterialList
               heading="Lecture Hub"
-              materials={course.lectureHub.materials.filter(
-                (m) => m.category === "Slides" || m.category === "Handout"
-              )}
-              recordings={course.lectureHub.recordings}
+              materials={course.lectureHub.materials.filter((m) => m.format === "PDF")}
               courseTitle={course.title}
             />
           )}

@@ -87,7 +87,15 @@ export function AdminSchedulingPage() {
     return (
       <div className="page-container">
         <PageHeader eyebrow="Admin" title="Scheduling" />
-        <InlineError message="Scheduling administration data could not be loaded." />
+        <InlineError
+          message="Scheduling administration data could not be loaded."
+          onRetry={() => {
+            void schedules.refetch();
+            void sections.refetch();
+            void teachers.refetch();
+          }}
+          isRetrying={schedules.isFetching || sections.isFetching || teachers.isFetching}
+        />
       </div>
     );
   }

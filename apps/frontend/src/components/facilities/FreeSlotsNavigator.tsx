@@ -4,10 +4,6 @@ import {
   Users,
   DoorClosed,
   FlaskConical,
-  Wifi,
-  Tv,
-  Wind,
-  Zap,
   MapPin,
   Clock,
   X,
@@ -45,8 +41,7 @@ const BLOCK_FILTER_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "Block A", label: "A Block" },
   { value: "Block B", label: "B Block" },
   { value: "Block C", label: "C Block" },
-  { value: "Block D", label: "D Block" },
-  { value: "Engineering Labs", label: "Engg. Labs" }
+  { value: "Block D", label: "D Block" }
 ];
 
 const SEAT_OPTIONS: Array<{ value: number; label: string }> = [
@@ -147,24 +142,6 @@ const BLOCK_THEMES: Record<string, BlockTheme> = {
     labText: "text-accent-ink",
     iconBg: "bg-accent-soft",
     iconColor: "text-accent-ink"
-  },
-  "Engineering Labs": {
-    letter: "E",
-    displayName: "Engineering Labs",
-    badgeBg: "bg-warning text-warning-fg",
-    titleColor: "text-warning-ink",
-    headerBg: "bg-warning-soft/55",
-    borderColor: "border-warning/30",
-    itemBorder: "border-warning/30",
-    itemBg: "bg-warning-soft/35",
-    itemHoverBg: "hover:bg-warning-soft/75",
-    roomCodeColor: "text-warning-ink",
-    capacityColor: "text-warning-ink/85",
-    labBorder: "border-warning/30",
-    labBg: "bg-warning-soft/55",
-    labText: "text-warning-ink",
-    iconBg: "bg-warning-soft",
-    iconColor: "text-warning-ink"
   }
 };
 
@@ -186,20 +163,13 @@ function matchesSearchText(room: CampusRoom, query: string): boolean {
     ? `${blockLower.replace("block ", "")} block`
     : blockLower;
 
-  const amenityWords: string[] = [];
-  if (room.equipment.hasWifi) amenityWords.push("wifi", "wi-fi");
-  if (room.equipment.hasAC) amenityWords.push("ac", "air conditioned");
-  if (room.equipment.hasProjector) amenityWords.push("projector");
-  if (room.equipment.hasPowerSockets) amenityWords.push("sockets", "power");
-
   return (
     room.code.toLowerCase().includes(q) ||
     room.name.toLowerCase().includes(q) ||
     blockLower.includes(q) ||
     blockAlias.includes(q) ||
     room.floor.toLowerCase().includes(q) ||
-    (isLabRoom(room) ? "lab" : "classroom").includes(q) ||
-    amenityWords.some((word) => word.includes(q))
+    (isLabRoom(room) ? "lab" : "classroom").includes(q)
   );
 }
 
@@ -210,10 +180,6 @@ export function FreeSlotsNavigator({ onBack }: Props) {
   const [selectedBlock, setSelectedBlock] = useState<string>("All");
   const [roomType, setRoomType] = useState<RoomTypeFilter>("all");
   const [minSeats, setMinSeats] = useState<number>(0);
-  const [needWifi, setNeedWifi] = useState<boolean>(false);
-  const [needAC, setNeedAC] = useState<boolean>(false);
-  const [needProjector, setNeedProjector] = useState<boolean>(false);
-  const [needSockets, setNeedSockets] = useState<boolean>(false);
   const [showOptions, setShowOptions] = useState<boolean>(false);
   const [detailRoom, setDetailRoom] = useState<CampusRoom | null>(null);
 
@@ -233,11 +199,7 @@ export function FreeSlotsNavigator({ onBack }: Props) {
 
   const extraOptionsCount =
     (roomType !== "all" ? 1 : 0) +
-    (minSeats > 0 ? 1 : 0) +
-    (needWifi ? 1 : 0) +
-    (needAC ? 1 : 0) +
-    (needProjector ? 1 : 0) +
-    (needSockets ? 1 : 0);
+    (minSeats > 0 ? 1 : 0);
 
   const hasActiveFilters =
     searchQuery.trim().length > 0 || selectedBlock !== "All" || extraOptionsCount > 0;
@@ -247,10 +209,6 @@ export function FreeSlotsNavigator({ onBack }: Props) {
     setSelectedBlock("All");
     setRoomType("all");
     setMinSeats(0);
-    setNeedWifi(false);
-    setNeedAC(false);
-    setNeedProjector(false);
-    setNeedSockets(false);
   };
 
   // Filter free rooms for active day, slot, and user search options
@@ -264,10 +222,6 @@ export function FreeSlotsNavigator({ onBack }: Props) {
       if (roomType === "classroom" && isLabRoom(room)) return false;
       if (roomType === "lab" && !isLabRoom(room)) return false;
       if (minSeats > 0 && room.capacity < minSeats) return false;
-      if (needWifi && !room.equipment.hasWifi) return false;
-      if (needAC && !room.equipment.hasAC) return false;
-      if (needProjector && !room.equipment.hasProjector) return false;
-      if (needSockets && !room.equipment.hasPowerSockets) return false;
       if (!matchesSearchText(room, searchQuery)) return false;
 
       return true;
@@ -278,16 +232,12 @@ export function FreeSlotsNavigator({ onBack }: Props) {
     selectedBlock,
     roomType,
     minSeats,
-    needWifi,
-    needAC,
-    needProjector,
-    needSockets,
     searchQuery
   ]);
 
   // Group free rooms by block
   const blockGroups = useMemo(() => {
-    const blocksOrder = ["Block A", "Block B", "Block C", "Block D", "Engineering Labs"];
+    const blocksOrder = ["Block A", "Block B", "Block C", "Block D"];
     return blocksOrder.map((blockName) => {
       const roomsInBlock = freeRooms.filter((r) => r.block === blockName);
       const classrooms = roomsInBlock.filter((r) => !isLabRoom(r));
@@ -438,7 +388,7 @@ export function FreeSlotsNavigator({ onBack }: Props) {
             </button>
           </div>
 
-          {/* Row 4: Quick Block Filter Pills */}
+          {/* Row 4: Quick Block & Lab Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" role="group" aria-label="Filter by block">
             {BLOCK_FILTER_OPTIONS.map((opt) => {
               const active = selectedBlock === opt.value;
@@ -458,6 +408,20 @@ export function FreeSlotsNavigator({ onBack }: Props) {
                 </button>
               );
             })}
+
+            <button
+              type="button"
+              aria-pressed={roomType === "lab"}
+              onClick={() => setRoomType((prev) => (prev === "lab" ? "all" : "lab"))}
+              className={`shrink-0 inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[11px] font-semibold transition cursor-pointer ${
+                roomType === "lab"
+                  ? "bg-secondary text-secondary-fg shadow-2xs"
+                  : "bg-subtle/75 text-muted hover:text-ink"
+              }`}
+            >
+              <FlaskConical size={12} />
+              <span>Lab</span>
+            </button>
           </div>
 
           {/* Expandable More Search Options */}
@@ -514,33 +478,6 @@ export function FreeSlotsNavigator({ onBack }: Props) {
                       </button>
                     );
                   })}
-                </div>
-              </div>
-
-              {/* Room Facilities */}
-              <div className="space-y-1.5">
-                <span className="block text-[11px] font-bold text-muted">Room Features</span>
-                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Room features">
-                  {[
-                    { key: "wifi", label: "Wi-Fi", active: needWifi, toggle: () => setNeedWifi((v) => !v) },
-                    { key: "ac", label: "AC", active: needAC, toggle: () => setNeedAC((v) => !v) },
-                    { key: "projector", label: "Projector", active: needProjector, toggle: () => setNeedProjector((v) => !v) },
-                    { key: "sockets", label: "Power Sockets", active: needSockets, toggle: () => setNeedSockets((v) => !v) }
-                  ].map((feat) => (
-                    <button
-                      key={feat.key}
-                      type="button"
-                      aria-pressed={feat.active}
-                      onClick={feat.toggle}
-                      className={`rounded-xl px-3 py-1.5 font-semibold transition ${
-                        feat.active
-                          ? "bg-secondary text-secondary-fg"
-                          : "border border-line bg-panel text-muted hover:text-ink"
-                      }`}
-                    >
-                      {feat.label}
-                    </button>
-                  ))}
                 </div>
               </div>
 
@@ -787,30 +724,6 @@ export function FreeSlotsNavigator({ onBack }: Props) {
                 <p className="text-xs text-muted mt-1">
                   Open for self-study and group work during this time.
                 </p>
-              </div>
-
-              <div>
-                <span className="block text-[11px] font-extrabold uppercase tracking-wider text-muted mb-2">
-                  Room Features
-                </span>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className={`flex items-center gap-2 rounded-xl p-2.5 border ${detailRoom.equipment.hasWifi ? "bg-surface border-line text-ink" : "bg-surface/50 border-line/60 text-muted/60"}`}>
-                    <Wifi size={14} className={detailRoom.equipment.hasWifi ? "text-primary-ink" : "text-muted/45"} />
-                    <span>Campus Wi-Fi</span>
-                  </div>
-                  <div className={`flex items-center gap-2 rounded-xl p-2.5 border ${detailRoom.equipment.hasAC ? "bg-surface border-line text-ink" : "bg-surface/50 border-line/60 text-muted/60"}`}>
-                    <Wind size={14} className={detailRoom.equipment.hasAC ? "text-secondary-ink" : "text-muted/45"} />
-                    <span>Air Conditioned</span>
-                  </div>
-                  <div className={`flex items-center gap-2 rounded-xl p-2.5 border ${detailRoom.equipment.hasProjector ? "bg-surface border-line text-ink" : "bg-surface/50 border-line/60 text-muted/60"}`}>
-                    <Tv size={14} className={detailRoom.equipment.hasProjector ? "text-accent-ink" : "text-muted/45"} />
-                    <span>Projector</span>
-                  </div>
-                  <div className={`flex items-center gap-2 rounded-xl p-2.5 border ${detailRoom.equipment.hasPowerSockets ? "bg-surface border-line text-ink" : "bg-surface/50 border-line/60 text-muted/60"}`}>
-                    <Zap size={14} className={detailRoom.equipment.hasPowerSockets ? "text-warning-ink" : "text-muted/45"} />
-                    <span>Power Sockets</span>
-                  </div>
-                </div>
               </div>
 
               <button

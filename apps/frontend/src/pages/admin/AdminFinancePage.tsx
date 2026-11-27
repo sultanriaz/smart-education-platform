@@ -34,7 +34,13 @@ export function AdminFinancePage() {
   >("overview");
 
   // Queries
-  const { data: summary, isLoading: isSummaryLoading } = useQuery({
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    isFetching: isSummaryFetching,
+    error: summaryError,
+    refetch: refetchSummary
+  } = useQuery({
     queryKey: ["admin", "finance", "summary"],
     queryFn: () => financeApi.getSummary()
   });
@@ -142,6 +148,22 @@ export function AdminFinancePage() {
     return (
       <div className="page-container">
         <SectionLoader label="Loading institutional finance workbench…" />
+      </div>
+    );
+  }
+
+  if (summaryError) {
+    return (
+      <div className="page-container">
+        <PageHeader
+          eyebrow="Institutional Management"
+          title="Finance, Fees & General Ledger"
+        />
+        <InlineError
+          message="Finance administration data could not be loaded."
+          onRetry={() => void refetchSummary()}
+          isRetrying={isSummaryFetching}
+        />
       </div>
     );
   }

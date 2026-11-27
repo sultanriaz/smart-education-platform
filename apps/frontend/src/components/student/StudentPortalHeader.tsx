@@ -5,6 +5,53 @@ import { useAuth } from "../../features/auth/useAuth";
 
 export const STUDENT_PHOTO_STORAGE_KEY = "smartedu_student_photo";
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+const AVATAR_MAX_DIMENSION = 256;
+
+async function optimizeProfilePhotoDataUrl(
+  file: File,
+  rawDataUrl: string
+): Promise<string> {
+  if (typeof document === "undefined" || file.type === "image/svg+xml") {
+    return rawDataUrl;
+  }
+
+  return await new Promise<string>((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const naturalW = img.naturalWidth || img.width;
+        const naturalH = img.naturalHeight || img.height;
+        if (!naturalW || !naturalH) {
+          resolve(rawDataUrl);
+          return;
+        }
+        const scale = Math.min(1, AVATAR_MAX_DIMENSION / Math.max(naturalW, naturalH));
+        const targetW = Math.max(1, Math.round(naturalW * scale));
+        const targetH = Math.max(1, Math.round(naturalH * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(rawDataUrl);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, targetW, targetH);
+        const webpUrl = canvas.toDataURL("image/webp", 0.84);
+        if (webpUrl.startsWith("data:image/webp") && webpUrl.length < rawDataUrl.length) {
+          resolve(webpUrl);
+          return;
+        }
+        const jpegUrl = canvas.toDataURL("image/jpeg", 0.84);
+        resolve(jpegUrl.length < rawDataUrl.length ? jpegUrl : rawDataUrl);
+      } catch {
+        resolve(rawDataUrl);
+      }
+    };
+    img.onerror = () => resolve(rawDataUrl);
+    img.src = rawDataUrl;
+  });
+}
 
 function formatStudentRegistration(email?: string): string {
   if (!email) {
@@ -91,13 +138,15 @@ export function StudentPortalHeader({
         setPhotoError("Could not load selected image.");
         return;
       }
-      setPhotoUrl(result);
-      setPhotoError(null);
-      try {
-        window.localStorage.setItem(STUDENT_PHOTO_STORAGE_KEY, result);
-      } catch {
-        setPhotoError("Photo preview updated, but browser storage is full.");
-      }
+      void optimizeProfilePhotoDataUrl(file, result).then((optimizedUrl) => {
+        setPhotoUrl(optimizedUrl);
+        setPhotoError(null);
+        try {
+          window.localStorage.setItem(STUDENT_PHOTO_STORAGE_KEY, optimizedUrl);
+        } catch {
+          setPhotoError("Photo preview updated, but browser storage is full.");
+        }
+      });
     };
     reader.onerror = () => {
       setPhotoError("Could not read selected image.");
@@ -184,7 +233,11 @@ export function StudentPortalHeader({
                 <img
                   src={photoUrl}
                   alt="Student profile photo"
-                  className="h-full w-full object-cover"
+                  width={88}
+                  height={88}
+                  decoding="async"
+                  fetchPriority="high"
+                  className="aspect-square h-full w-full object-cover"
                 />
                 <span className="absolute inset-x-0 bottom-0 bg-hero-bg/75 py-0.5 text-center text-[10px] font-semibold text-hero-fg opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
                   Change

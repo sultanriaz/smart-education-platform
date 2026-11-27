@@ -129,7 +129,7 @@ export function LoginPage() {
             <p className="auth-overline">{runtimeConfig.appName}</p>
             <Link
               to="/explore"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-ink hover:underline transition"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-primary-ink hover:underline transition"
             >
               <Compass size={14} />
               <span>Campus Explorer</span>
@@ -151,21 +151,21 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={() => fillDemoAccount("student")}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-ink hover:border-primary hover:text-primary-ink transition shadow-2xs"
+                className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-2 text-xs font-medium text-ink hover:border-primary hover:text-primary-ink transition shadow-2xs"
               >
                 🎓 <span>Student (155)</span>
               </button>
               <button
                 type="button"
                 onClick={() => fillDemoAccount("teacher")}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-ink hover:border-primary hover:text-primary-ink transition shadow-2xs"
+                className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-2 text-xs font-medium text-ink hover:border-primary hover:text-primary-ink transition shadow-2xs"
               >
                 📚 <span>Faculty (Munir)</span>
               </button>
               <button
                 type="button"
                 onClick={() => fillDemoAccount("admin")}
-                className="flex items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-1.5 text-xs font-medium text-ink hover:border-primary hover:text-primary-ink transition shadow-2xs"
+                className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-line bg-panel px-2.5 py-2 text-xs font-medium text-ink hover:border-primary hover:text-primary-ink transition shadow-2xs"
               >
                 🛡️ <span>Admin</span>
               </button>
@@ -177,7 +177,7 @@ export function LoginPage() {
             <button
               type="button"
               onClick={() => setMode("universal")}
-              className={`flex-1 rounded-lg py-1.5 font-medium transition ${
+              className={`min-h-11 flex-1 rounded-lg px-2 py-2 font-medium transition ${
                 mode === "universal"
                   ? "bg-panel text-primary-ink font-semibold shadow-xs"
                   : "text-muted hover:text-ink"
@@ -191,7 +191,7 @@ export function LoginPage() {
                 setMode("student_reg");
                 handleStudentRegChange(selectedDept, regNumber);
               }}
-              className={`flex-1 rounded-lg py-1.5 font-medium transition ${
+              className={`min-h-11 flex-1 rounded-lg px-2 py-2 font-medium transition ${
                 mode === "student_reg"
                   ? "bg-panel text-primary-ink font-semibold shadow-xs"
                   : "text-muted hover:text-ink"
@@ -220,7 +220,7 @@ export function LoginPage() {
                   <select
                     value={selectedDept}
                     onChange={(e) => handleStudentRegChange(e.target.value, regNumber)}
-                    className="w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-primary"
+                    className="min-h-11 w-full rounded-xl border border-line bg-panel px-3 py-2 text-base md:text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-primary"
                   >
                     {DEPARTMENTS.map((d) => (
                       <option key={d.code} value={d.code}>
@@ -233,10 +233,11 @@ export function LoginPage() {
                   <label className="block text-xs font-semibold text-ink mb-1">Registration Number</label>
                   <input
                     type="text"
+                    autoComplete="username"
                     placeholder="e.g. 155"
                     value={regNumber}
                     onChange={(e) => handleStudentRegChange(selectedDept, e.target.value)}
-                    className="w-full rounded-xl border border-line bg-panel px-3 py-2 text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-primary"
+                    className="min-h-11 w-full rounded-xl border border-line bg-panel px-3 py-2 text-base md:text-sm text-ink focus:outline-hidden focus:ring-2 focus:ring-primary"
                   />
                   <p className="mt-1 text-xs text-muted">
                     Resolved identifier: <span className="font-mono font-semibold text-primary-ink">{watch("email") || "—"}</span>
@@ -250,6 +251,7 @@ export function LoginPage() {
                 label="Password"
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
+                className="pr-12"
                 error={errors.password?.message}
                 {...register("password")}
               />
@@ -257,7 +259,7 @@ export function LoginPage() {
                 type="button"
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[38px] text-muted hover:text-ink transition"
+                className="absolute right-1 top-[30px] inline-flex h-11 w-11 items-center justify-center rounded-lg text-muted hover:text-ink transition"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -265,7 +267,7 @@ export function LoginPage() {
 
             <div className="text-right">
               <Link
-                className="text-xs font-semibold text-primary-ink hover:underline"
+                className="inline-flex min-h-11 items-center px-1 text-xs font-semibold text-primary-ink hover:underline"
                 to="/forgot-password"
               >
                 Forgot password?
@@ -299,24 +301,24 @@ export function LoginPage() {
             </div>
             <Link
               to="/explore"
-              className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-panel px-3 py-1.5 text-xs font-semibold text-primary-ink border border-line hover:border-primary transition shadow-2xs"
+              className="shrink-0 inline-flex min-h-11 items-center gap-1 rounded-lg bg-panel px-3.5 py-2 text-xs font-semibold text-primary-ink border border-line hover:border-primary transition shadow-2xs"
             >
               <span>Explore</span>
               <ArrowRight size={13} />
             </Link>
           </div>
 
-          <div className="mt-5 space-y-2 text-center text-xs text-muted">
+          <div className="mt-5 space-y-1 text-center text-xs text-muted">
             <p>
               Need a Student account?{" "}
-              <Link className="font-semibold text-primary-ink hover:underline" to="/register">
+              <Link className="inline-flex min-h-11 items-center px-1 font-semibold text-primary-ink hover:underline" to="/register">
                 Register with Email
               </Link>
             </p>
             <p>
               Missing verification email?{" "}
               <Link
-                className="font-semibold text-primary-ink hover:underline"
+                className="inline-flex min-h-11 items-center px-1 font-semibold text-primary-ink hover:underline"
                 to="/verify-email/request"
               >
                 Request another

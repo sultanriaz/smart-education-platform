@@ -25,6 +25,9 @@ def create_payment_intent(
     principal: Principal = Depends(require_scoped_roles("finance.payments.create", "admin", "student", "finance_officer")),
 ):
     svc = PaymentService(db)
+    is_privileged = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.payments.manage" in principal.permissions
+    )
     try:
         intent, checkout = svc.create_payment_intent(
             student_user_id=principal.user_id,
@@ -32,6 +35,7 @@ def create_payment_intent(
             installment_id=data.installment_id,
             amount=data.amount,
             provider=data.provider,
+            allow_any_student=is_privileged,
         )
         return {
             "intent": PaymentIntentOut.model_validate(intent),
@@ -89,10 +93,20 @@ def simulate_payment(
     db: Session = Depends(get_db),
     principal: Principal = Depends(require_scoped_roles("finance.payments.manage", "admin", "student", "finance_officer")),
 ):
+    from app.core.config import settings
+
+    is_privileged = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.payments.manage" in principal.permissions
+    )
+    if settings.ENVIRONMENT.lower() in {"production", "prod"} and not is_privileged:
+        raise HTTPException(status_code=403, detail="Payment simulation is disabled in production")
+
     svc = PaymentService(db)
     intent = db.get(PaymentIntent, data.payment_intent_id)
     if not intent:
         raise HTTPException(status_code=404, detail="Payment intent not found")
+    if not is_privileged and intent.student_user_id != principal.user_id:
+        raise HTTPException(status_code=403, detail="Cannot simulate payment for another student's intent")
 
     if data.fail:
         intent.status = "FAILED"
@@ -115,10 +129,13 @@ def simulate_payment(
 def list_payments(
     student_user_id: uuid.UUID | None = None,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("finance.payments.read", "admin", "teacher", "finance_officer", "student")),
+    principal: Principal = Depends(require_scoped_roles("finance.payments.read", "admin", "finance_officer", "student")),
 ):
     query = select(Payment).order_by(Payment.created_at.desc())
-    if "student" in principal.roles and "admin" not in principal.roles:
+    is_finance_staff = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.payments.read" in principal.permissions
+    )
+    if not is_finance_staff:
         query = query.where(Payment.student_user_id == principal.user_id)
     elif student_user_id is not None:
         query = query.where(Payment.student_user_id == student_user_id)
@@ -129,13 +146,16 @@ def list_payments(
 def get_payment(
     id: uuid.UUID,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("finance.payments.read", "admin", "teacher", "finance_officer", "student")),
+    principal: Principal = Depends(require_scoped_roles("finance.payments.read", "admin", "finance_officer", "student")),
 ):
     payment = db.get(Payment, id)
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
 
-    if "student" in principal.roles and "admin" not in principal.roles and principal.user_id != payment.student_user_id:
+    is_finance_staff = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.payments.read" in principal.permissions
+    )
+    if not is_finance_staff and principal.user_id != payment.student_user_id:
         raise HTTPException(status_code=403, detail="Cannot access another student's payment record")
 
     return payment
@@ -145,13 +165,16 @@ def get_payment(
 def get_receipt(
     id: uuid.UUID,
     db: Session = Depends(get_db),
-    principal: Principal = Depends(require_scoped_roles("finance.payments.read", "admin", "teacher", "finance_officer", "student")),
+    principal: Principal = Depends(require_scoped_roles("finance.payments.read", "admin", "finance_officer", "student")),
 ):
     receipt = db.get(Receipt, id)
     if not receipt:
         raise HTTPException(status_code=404, detail="Receipt not found")
 
-    if "student" in principal.roles and "admin" not in principal.roles and principal.user_id != receipt.student_user_id:
+    is_finance_staff = bool(principal.roles.intersection({"admin", "finance_officer"})) or (
+        "finance.payments.read" in principal.permissions
+    )
+    if not is_finance_staff and principal.user_id != receipt.student_user_id:
         raise HTTPException(status_code=403, detail="Cannot access another student's receipt")
 
     return receipt
